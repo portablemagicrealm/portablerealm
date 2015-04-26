@@ -44,6 +44,8 @@ public class MRClearing : MonoBehaviour, MRILocation
 	public int clearingNumber;
 	public eType type;
 
+	// MRILocation properties
+
 	public GameObject Owner
 	{
 		get{
@@ -134,7 +136,7 @@ public class MRClearing : MonoBehaviour, MRILocation
 	// Update is called once per frame
 	void Update () 
 	{
-		if (MRGame.TheGame.CurrentView != MRGame.eViews.Map)
+		if (MRGame.TheGame.CurrentView != MRGame.eViews.Map && MRGame.TheGame.CurrentView != MRGame.eViews.SelectClearing)
 			return;
 
 		if (mMyTileSide.Tile.Front == mMyTileSide.type && MRGame.IsDoubleTapped)
@@ -149,18 +151,40 @@ public class MRClearing : MonoBehaviour, MRILocation
 		}
 	}
 
-	// Returns the road connecting this clearing to another clearing, or null if the clearings aren't connected.
-	public MRRoad RoadTo(MRClearing clearing)
+	/// <summary>
+	/// Returns the road connecting this location to another location, or null if the locations aren't connected.
+	/// </summary>
+	/// <returns>The road.</returns>
+	/// <param name="clearing">Clearing.</param>
+	public MRRoad RoadTo(MRILocation target)
 	{
 		foreach (MRRoad road in mRoads)
 		{
-			if ((road.clearingConnection0 == this && road.clearingConnection1 == clearing) ||
-			    (road.clearingConnection1 == this && road.clearingConnection0 == clearing))
+			if ((road.clearingConnection0 == this && road.clearingConnection1 != null && road.clearingConnection1.Id == target.Id) ||
+			    (road.clearingConnection1 == this && road.clearingConnection0 != null && road.clearingConnection0.Id == target.Id))
 			{
 				return road;
 			}
 		}
 		return null;
+	}
+
+	/// <summary>
+	/// Adds a piece to the top of the location.
+	/// </summary>
+	/// <param name="piece">the piece</param>
+	public void AddPieceToTop(MRIGamePiece piece)
+	{
+		Pieces.AddPieceToTop(piece);
+	}
+	
+	/// <summary>
+	/// Removes a piece from the location.
+	/// </summary>
+	/// <param name="piece">the piece to remove</param>
+	public void RemovePiece(MRIGamePiece piece)
+	{
+		Pieces.RemovePiece(piece);
 	}
 
 	public void AddRoad(MRRoad road)
@@ -176,6 +200,18 @@ public class MRClearing : MonoBehaviour, MRILocation
 			return false;
 		if (!mAbandonedItems.Load((JSONObject)root["items"]))
 			return false;
+		// make sure controllable locations are set
+		List<MRControllable> controllables = new List<MRControllable>();
+		foreach (MRIGamePiece piece in mPieces.Pieces)
+		{
+			if (piece is MRControllable)
+				controllables.Add((MRControllable)piece);
+		}
+		foreach (MRControllable controllable in controllables)
+		{
+			if (controllable.Location == null || controllable.Location.Id != Id)
+				controllable.Location = this;
+		}
 		return true;
 	}
 

@@ -333,7 +333,8 @@ public class MRCharacterMat : MonoBehaviour
 			mWoundedChitsArea.SetActive(true);
 
 			if (MRGame.TheGame.CurrentView == MRGame.eViews.SelectAttack ||
-			    MRGame.TheGame.CurrentView == MRGame.eViews.SelectManeuver)
+			    MRGame.TheGame.CurrentView == MRGame.eViews.SelectManeuver ||
+			    MRGame.TheGame.CurrentView == MRGame.eViews.SelectChit)
 			{
 				// hide fatigued and wounded chits
 				mFatiguedChitsArea.SetActive(false);
@@ -496,6 +497,10 @@ public class MRCharacterMat : MonoBehaviour
 			{
 				MRMainUI.TheUI.DisplayInstructionMessage("Select Maneuver");
 			}
+			else if (MRGame.TheGame.CurrentView == MRGame.eViews.SelectChit)
+			{
+				MRMainUI.TheUI.DisplayInstructionMessage("Select Chit");
+			}
 
 			// see if an action chit has been selected
 			if (MRGame.IsDoubleTapped)
@@ -550,6 +555,19 @@ public class MRCharacterMat : MonoBehaviour
 								character.HealChit(selectedChit);
 
 						}
+						else if (MRGame.TheGame.CurrentView == MRGame.eViews.SelectChit)
+						{
+							if (character.SelectChitData != null)
+							{
+								character.SelectChitData.SelectedChit = selectedChit;
+							}
+							else
+							{
+								MRMainUI.TheUI.HideAttackManeuverDialog();
+								MRMainUI.TheUI.DisplayInstructionMessage(null);
+								MRGame.TheGame.PopView();
+							}
+						}
 						else if (MRGame.TheGame.CurrentView == MRGame.eViews.SelectAttack && selectedChit is MRFightChit)
 						{
 							if (MRGame.TheGame.CombatManager.SetAttack(character, (MRFightChit)selectedChit, MRCombatManager.eAttackType.None))
@@ -581,13 +599,14 @@ public class MRCharacterMat : MonoBehaviour
 	public void OnAttackManeuverSelected(MRCombatManager.eAttackManeuverOption option)
 	{
 		if (MRGame.TheGame.CurrentView == MRGame.eViews.SelectAttack ||
-		    MRGame.TheGame.CurrentView == MRGame.eViews.SelectManeuver)
+		    MRGame.TheGame.CurrentView == MRGame.eViews.SelectManeuver ||
+		    MRGame.TheGame.CurrentView == MRGame.eViews.SelectChit)
 		{
 			if (option == MRCombatManager.eAttackManeuverOption.None)
 			{
 				if (MRGame.TheGame.CurrentView == MRGame.eViews.SelectAttack)
 					MRGame.TheGame.CombatManager.SetAttack((MRCharacter)mControllable, null, MRCombatManager.eAttackType.None);
-				else
+				else if (MRGame.TheGame.CurrentView == MRGame.eViews.SelectManeuver)
 					MRGame.TheGame.CombatManager.SetManeuver((MRCharacter)mControllable, null, MRCombatManager.eDefenseType.None);
 			}
 			MRMainUI.TheUI.HideAttackManeuverDialog();

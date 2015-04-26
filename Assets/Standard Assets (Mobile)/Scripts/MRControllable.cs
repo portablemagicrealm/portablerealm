@@ -114,9 +114,9 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 			MRILocation oldLocation = mLocation;
 			mLocation = value;
 			if (oldLocation != null)
-				oldLocation.Pieces.RemovePiece(this);
+				oldLocation.RemovePiece(this);
 			if (mLocation != null)
-				mLocation.Pieces.AddPieceToTop(this);
+				mLocation.AddPieceToTop(this);
 		}
 	}
 
@@ -345,6 +345,12 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 			if (value >= 0 && value < 32)
 			{
 				mCounter.layer = value;
+				// todo: figure out why we need both of these to get the counter displayed correctly
+				for (int i = 0; i < mCounter.transform.childCount; ++i)
+				{
+					Transform childTransform = mCounter.transform.GetChild(i);
+					childTransform.gameObject.layer = value;
+				}
 				foreach (Transform transform in mCounter.GetComponentsInChildren<Transform>())
 				{
 					transform.gameObject.layer = value;
@@ -377,7 +383,7 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 		}
 		
 		set{
-			if (mLocation != null)
+			if (mLocation != null && mLocation.Pieces == Stack)
 			{
 				Counter.transform.localScale = new Vector3(
 					1.0f / mLocation.Owner.transform.localScale.x,
@@ -724,7 +730,7 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 		if (root["location"] != null)
 		{
 			uint locationId = ((JSONNumber)root["location"]).UintValue;
-			MRILocation location = MRGame.TheGame.GetClearing(locationId);
+			MRILocation location = MRGame.TheGame.GetLocation(locationId);
 			if (location != null)
 			{
 				Location = location;

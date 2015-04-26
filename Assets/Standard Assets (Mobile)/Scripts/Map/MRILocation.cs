@@ -50,7 +50,24 @@ public interface MRILocation : MRISerializable
 
 	#region Methods
 
-	MRRoad RoadTo(MRClearing clearing);
+	/// <summary>
+	/// Returns the road connecting this location to another location, or null if the locations aren't connected.
+	/// </summary>
+	/// <returns>The road.</returns>
+	/// <param name="clearing">Clearing.</param>
+	MRRoad RoadTo(MRILocation target);
+
+	/// <summary>
+	/// Adds a piece to the top of the location.
+	/// </summary>
+	/// <param name="piece">the piece</param>
+	void AddPieceToTop(MRIGamePiece piece);
+
+	/// <summary>
+	/// Removes a piece from the location.
+	/// </summary>
+	/// <param name="piece">the piece to remove</param>
+	void RemovePiece(MRIGamePiece piece);
 
 	#endregion
 }

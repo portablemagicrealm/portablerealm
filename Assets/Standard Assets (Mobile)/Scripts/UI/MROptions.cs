@@ -133,6 +133,9 @@ public class MROptions : MonoBehaviour
 					mCharacterLeftArrow = obj;
 					mDisabledArrow = ((SpriteRenderer)(mCharacterLeftArrow.renderer)).sprite;
 					break;
+				case "Seed":
+					mRandomSeed = obj.GetComponent<TextMesh>();;
+					break;
 				case "name":
 					if (obj.transform.parent.name == "ownerName")
 						mCharacterName = obj.GetComponent<TextMesh>();
@@ -152,6 +155,9 @@ public class MROptions : MonoBehaviour
 			return;
 
 		MRGame.TheGame.InspectionArea.HeaderText = "";
+
+		if (mRandomSeed != null)
+			mRandomSeed.text = "Seed: " + MRRandom.seed;
 
 		switch (mState)
 		{
@@ -488,6 +494,7 @@ public class MROptions : MonoBehaviour
 	private GameObject mStartGameButton;
 	private GameObject mCharacterDisplay;
 	private GameObject[] mChitPositions = new GameObject[12];
+	private TextMesh mRandomSeed;
 	private TextMesh mCharacterName;
 	private Sprite mEnabledArrow;
 	private Sprite mDisabledArrow;

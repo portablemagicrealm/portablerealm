@@ -156,11 +156,13 @@ public class MRGame : MonoBehaviour, MRISerializable
 		Characters,
 		Monsters,
 		Treasure,
-		Options,
+		Main,
 		FatigueCharacter,	// not accessable through view tabs
 		Combat,				// not accessable through view tabs
 		SelectAttack,		// not accessable through view tabs
 		SelectManeuver,		// not accessable through view tabs
+		SelectChit,			// not accessable through view tabs
+		SelectClearing,		// not accessable through view tabs
 	}
 	public const int ViewTabCount = 5;
 
@@ -407,7 +409,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 		}
 	}
 
-	public MROptions Options
+	public MROptions Main
 	{
 		get{
 			return mOptions;
@@ -457,14 +459,13 @@ public class MRGame : MonoBehaviour, MRISerializable
 
 	void Awake()
 	{
-		int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-		UnityEngine.Random.seed = seed;
+		//MRRandom.seed = 14762575112703739700UL;
 	}
 
 	// Use this for initialization
 	void Start ()
 	{
-		Debug.Log("Random seed = " + UnityEngine.Random.seed);
+		Debug.Log("Random seed = " + MRRandom.seed);
 
 		msTheGame = this;
 
@@ -484,7 +485,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 		GameObject inspectionArea = (GameObject)Instantiate(inspectionAreaPrototype);
 		inspectionArea.transform.parent = transform;
 		mInspectionArea = inspectionArea.GetComponent<MRInspectionArea>();
-		SetView(eViews.Options);
+		SetView(eViews.Main);
 
 		// create the options screen
 		mOptions = (MROptions)Instantiate(optionsPrototype);
@@ -517,13 +518,11 @@ public class MRGame : MonoBehaviour, MRISerializable
 		mCharacterMat = (MRCharacterMat)Instantiate(characterMatPrototype);
 		mCharacterMat.transform.parent = transform;
 
-		//AddUpdateEvent(new MRCreateMapEvent());
 		//AddUpdateEvent(new MRCreateCharacterEvent("amazon"));
 		//AddUpdateEvent(new MRCreateCharacterEvent("white knight"));
 		//AddUpdateEvent(new MRCreateCharacterEvent("wizard"));
 		//AddUpdateEvent(new MRFatigueCharacterEvent());
 		AddUpdateEvent(new MRUpdateViewEvent());
-		//AddUpdateEvent(new MRInitGameTimeEvent());
 	}
 
 	// Update is called once per frame
@@ -656,6 +655,70 @@ public class MRGame : MonoBehaviour, MRISerializable
 	}
 
 	/// <summary>
+	/// Returns the clearing with a given name.
+	/// </summary>
+	/// <returns>The clearing.</returns>
+	/// <param name="name">Clearing name.</param>
+	public MRRoad GetRoad(string name)
+	{
+		return GetRoad(MRUtility.IdForName(name));
+	}
+	
+	/// <summary>
+	/// Returns the clearing with a given id.
+	/// </summary>
+	/// <returns>The clearing.</returns>
+	/// <param name="id">Clearing id.</param>
+	public MRRoad GetRoad(uint id)
+	{
+		MRRoad road = null;
+		mRoads.TryGetValue(id, out road);
+		return road;
+	}
+	
+	/// <summary>
+	/// Adds a clearing to the clearing map. If the map contains a clearing with the same name, the new clearing will be used.
+	/// </summary>
+	/// <param name="clearing">Clearing.</param>
+	public void AddRoad(MRRoad road)
+	{
+		uint id = road.Id;
+		if (!mRoads.ContainsKey(id))
+			mRoads.Add(id, road);
+		else
+		{
+			Debug.LogWarning("Duplicate road " + road.Name + " using new one");
+			mRoads[id] = road;
+		}
+	}
+	
+	public void RemoveRoad(MRRoad road)
+	{
+		MRRoad test;
+		if (mRoads.TryGetValue(road.Id, out test))
+		{
+			if (test == road)
+				mRoads.Remove(road.Id);
+		}
+	}
+
+	/// <summary>
+	/// Returns the location (clearing or road) with a given id.
+	/// </summary>
+	/// <returns>The location.</returns>
+	/// <param name="id">Location id.</param>
+	public MRILocation GetLocation(uint id)
+	{
+		MRClearing clearing = null;
+		if (mClearings.TryGetValue(id, out clearing))
+			return clearing;
+		MRRoad road = null;
+		if (mRoads.TryGetValue(id, out road))
+			return road;
+		return null;
+	}
+
+	/// <summary>
 	/// Sets the active controllable to the first controllable in the controllables list.
 	/// </summary>
 	public void ResetActiveControllable()
@@ -728,13 +791,18 @@ public class MRGame : MonoBehaviour, MRISerializable
 	/// Called by a clearing when it has been double-clicked. Passes the message back down to the game's children.
 	/// </summary>
 	/// <param name="clearing">The clearing selected.</param>
-	public void OnClearingSelectedGame(MRILocation clearing)
+	public void OnClearingSelectedGame(MRClearing clearing)
 	{
 		// send the message back down
 		if (!mClearingSelectedThisFrame)
 		{
 			mClearingSelectedThisFrame = true;
-			BroadcastMessage("OnClearingSelected", clearing, SendMessageOptions.DontRequireReceiver);
+			// clearing selection is handled by MRSelectClearingEvents, so pass the clearing to it
+			foreach (MRUpdateEvent evt in mUpdateEvents.Keys)
+			{
+				evt.OnClearingSelected(clearing);
+			}
+			//BroadcastMessage("OnClearingSelected", clearing, SendMessageOptions.DontRequireReceiver);
 		}
 	}
 
@@ -1008,6 +1076,17 @@ public class MRGame : MonoBehaviour, MRISerializable
 		msGameTime = (eTimeOfDay)((JSONNumber)root["time"]).IntValue;
 		msGameDay = ((JSONNumber)root["day"]).IntValue;
 
+		// load the random number generator
+		if (root["random"] != null)
+		{
+			JSONObject randomData = (JSONObject)root["random"];
+			if (!MRRandom.Load(randomData))
+			{
+				Debug.LogError("Load random number generator error");
+				return false;
+			}
+		}
+
 		// load the map
 		JSONObject mapData = (JSONObject)root["map"];
 		if (!mTheMap.Load(mapData))
@@ -1053,6 +1132,31 @@ public class MRGame : MonoBehaviour, MRISerializable
 			}
 		}
 
+		// load roads
+		if (root["roads"] != null)
+		{
+			JSONArray roads = (JSONArray)root["roads"];
+			for (int i = 0; i < roads.Count; ++i)
+			{
+				JSONObject roadData = (JSONObject)roads[i];
+				string roadName = ((JSONString)roadData["name"]).Value;
+				MRRoad road = GetRoad(roadName);
+				if (road != null)
+				{
+					road.Load(roadData);
+				}
+				else
+				{
+					Debug.LogError("Tried to load data for unknown road " + roadName);
+				}
+			}
+		}
+
+		if (root["active"] != null)
+			mActiveControllableIndex = ((JSONNumber)root["active"]).IntValue;
+		MRActivityList currentActivityList = ActiveControllable.ActivitiesForDay(MRGame.DayOfMonth);
+		MRGame.TheGame.ActivityList.ActivityList = currentActivityList;
+
 		Debug.Log("Load game end");
 		return true;
 	}
@@ -1065,6 +1169,12 @@ public class MRGame : MonoBehaviour, MRISerializable
 		root["time"] = new JSONNumber((int)msGameTime);
 		root["day"] = new JSONNumber(msGameDay);
 		root["vault"] = new JSONBoolean(MRSiteChit.VaultOpened);
+		root["active"] = new JSONNumber(mActiveControllableIndex);
+
+		// save the random number generator
+		JSONObject randomData = new JSONObject();
+		MRRandom.Save(randomData);
+		root["random"] = randomData;
 
 		// save the map
 		JSONObject mapData = new JSONObject();
@@ -1104,6 +1214,29 @@ public class MRGame : MonoBehaviour, MRISerializable
 		}
 		root["clearings"] = clearings;
 
+		// save roads that have something on them
+		int roadCount = 0;
+		foreach (MRRoad road in TheMap.Roads.Values)
+		{
+			if (road.Pieces.Pieces.Count > 0)
+				++roadCount;
+		}
+		if (roadCount > 0)
+		{
+			JSONArray roads = new JSONArray(roadCount);
+			int roadIndex = 0;
+			foreach (MRRoad road in TheMap.Roads.Values)
+			{
+				if (road.Pieces.Pieces.Count > 0)
+				{
+					JSONObject roadData = new JSONObject();
+					road.Save(roadData);
+					roads[roadIndex++] = roadData;
+				}
+			}
+			root["roads"] = roads;
+		}
+
 		Debug.Log("Save game end");
 	}
 
@@ -1125,6 +1258,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 	private MRActivityListWidget mActivityList;
 	private MRClock mClock;
 	private IDictionary<uint, MRClearing> mClearings = new Dictionary<uint, MRClearing>();
+	private IDictionary<uint, MRRoad> mRoads = new Dictionary<uint, MRRoad>();
 	private IDictionary<uint, MRIGamePiece> mGamePieces = new Dictionary<uint, MRIGamePiece>();
 	private MRCharacterManager mCharacterManager;
 	private MRCharacterMat mCharacterMat;

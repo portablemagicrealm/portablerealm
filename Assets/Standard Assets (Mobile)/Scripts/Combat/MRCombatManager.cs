@@ -320,6 +320,8 @@ public class MRCombatManager
 	/// </summary>
 	public void EndPhase()
 	{
+		Debug.Log("Combat EndPhase " + mCombatPhase);
+
 		// run combat phases that need to be executed by each character/denizen at a time
 		switch (mCombatPhase)
 		{
@@ -337,8 +339,21 @@ public class MRCombatManager
 					++mCurrentCombatantIndex;
 				}
 				break;
-			case eCombatPhase.SelectAttackAndManeuver:
 			case eCombatPhase.TakeAction:
+				// characters can do these
+				++mCurrentCombatantIndex;
+				while (mCurrentCombatantIndex < mCombatants.Count)
+				{
+					MRControllable combatant = CurrentCombatant;
+					if (combatant is MRCharacter)
+					{
+						ShowSelectCombatAction();
+						return;
+					}
+					++mCurrentCombatantIndex;
+				}
+				break;
+			case eCombatPhase.SelectAttackAndManeuver:
 				// characters can do these
 				++mCurrentCombatantIndex;
 				while (mCurrentCombatantIndex < mCombatants.Count)
@@ -550,7 +565,31 @@ public class MRCombatManager
 		mFriends.Clear();
 		mEnemies.Clear();
 	}
-	
+
+	/// <summary>
+	/// Removes a character from combat.
+	/// </summary>
+	/// <param name="characrter">The character.</param>
+	private void RemoveCharacterFromCombat(MRCharacter character)
+	{
+		character.CombatTarget = null;
+		character.Lurer = null;
+		character.Luring = null;
+		List<MRIControllable> attackers = new List<MRIControllable>(character.Attackers);
+		foreach (MRIControllable attacker in attackers)
+		{
+			attacker.CombatTarget = null;
+		}
+		if (character.CombatSheet != null)
+			mCombatSheets.Remove(character.CombatSheet);
+		character.CombatSheet = null;
+		mCombatants.Remove(character);
+		mFriends.Remove(character);
+		character.PositionAttentionChit(null, Vector3.zero);
+		if (mCombatSheets.Count == 0)
+			CombatPhase = eCombatPhase.CombatDone;
+	}
+
 	/// <summary>
 	/// Does initialization for the beginning of a round of combat.
 	/// </summary>
@@ -823,6 +862,157 @@ public class MRCombatManager
 					}
 				}
 			}
+		}
+	}
+
+	/// <summary>
+	/// Determines what combat action(s) the current charcter can take and shows the select action dialog.
+	/// If the character can't take any valid actions, advances to the next character.
+	/// </summary>
+	private void ShowSelectCombatAction()
+	{
+		bool canActivateWeapon = false;
+		bool canRunAway = false;
+		bool canCastSpell = false;
+
+		// test what actions the character can do
+		if (CurrentCombatant != null && CurrentCombatant is MRCharacter)
+		{
+			MRCharacter character = (MRCharacter)CurrentCombatant;
+
+			// get the fastest denizen on the sheet
+			int fastestTime = FastestOpponentTime(character);
+
+			// test against the character's fight chits
+			foreach (MRActionChit chit in character.FightChits)
+			{
+				if (chit.State == MRActionChit.eState.active && chit.CurrentTime < fastestTime)
+				{
+					if (character.ActiveWeapon == null || 
+					    ((MRFightChit)chit).CurrentStrength >= character.ActiveWeapon.BaseWeight)
+					{
+						canActivateWeapon = true;
+						break;
+					}
+				}
+			}
+
+			// test against the character's move chits
+			MRGame.eStrength heaviest = character.GetHeaviestWeight(false, false);
+			foreach (MRActionChit chit in character.MoveChits)
+			{
+				if (chit.State == MRActionChit.eState.active && 
+				    chit.CurrentTime < fastestTime &&
+				    ((MRMoveChit)chit).CurrentStrength >= heaviest)
+				{
+					// todo: test that the character can move to a valid clearing
+
+					canRunAway = true;
+					break;
+				}
+			}
+			// todo: test horse and items
+		}
+
+		if (canActivateWeapon || canRunAway || canCastSpell)
+		{
+			MRMainUI.TheUI.DisplayCombatActionDialog(canActivateWeapon, canRunAway, canCastSpell, OnCombatActionSelected);
+		}
+		else
+		{
+			EndPhase();
+		}
+	}
+
+	/// <summary>
+	/// Called when the current combatant tries to run away.
+	/// </summary>
+	private void RunAway()
+	{
+		MRCharacter character = (MRCharacter)CurrentCombatant;
+
+		mRunAwayChit = null;
+		int fastestTime = FastestOpponentTime(character);
+		MRGame.eStrength heaviest = character.GetHeaviestWeight(false, false);
+
+		// todo: test horse and items - if they can be used then no chit needs to be selected
+
+		// select what chit to use for running
+		MRGame.TheGame.AddUpdateEvent(new MRSelectChitEvent(character, MRActionChit.eType.move,
+		                                                    heaviest, MRSelectChitEvent.eCompare.GreaterThanEqualTo,
+		                                                    fastestTime, MRSelectChitEvent.eCompare.LessThan,
+		                                                    OnRunChitSeleted));
+	}
+
+	/// <summary>
+	/// Makes the current combatant leave combat and run away to a given road segment.
+	/// </summary>
+	/// <param name="road">Road.</param>
+	private void RunAway(MRRoad road)
+	{
+		MRCharacter character = (MRCharacter)CurrentCombatant;
+		if (mRunAwayChit != null && mRunAwayChit.BaseAsterisks > 1)
+		{
+			character.SetFatigueBalance(mRunAwayChit.BaseAsterisks - 1, MRActionChit.eType.move, MRGame.eStrength.Any);
+		}
+
+		// remove the character from combat and put them on the road segment
+		RemoveCharacterFromCombat(character);
+		character.Location = road;
+	}
+
+	/// <summary>
+	/// Called when a chit is selected to run away.
+	/// </summary>
+	/// <param name="chit">Chit.</param>
+	private void OnRunChitSeleted(MRActionChit chit)
+	{
+		// double check the chit is valid
+
+		MRCharacter character = (MRCharacter)CurrentCombatant;
+		int fastestTime = FastestOpponentTime(character);
+		MRGame.eStrength heaviest = character.GetHeaviestWeight(false, false);
+		if (chit != null && chit is MRMoveChit && ((MRMoveChit)chit).CurrentTime < fastestTime &&
+		    ((MRMoveChit)chit).CurrentStrength >= heaviest)
+		{
+			mRunAwayChit = chit;
+			MRRoad lastRoad = null;
+			MRClearing lastClearing = character.LastClearingEntered;
+			if (lastClearing != null)
+				lastRoad = mClearing.RoadTo(lastClearing);
+			if (lastRoad == null)
+			{
+				// need to select a clearing to move to
+				MRGame.TheGame.AddUpdateEvent(new MRSelectClearingEvent(mClearing, OnRunClearingSelected));
+			}
+			else
+			{
+				// todo: verify can move to road
+				RunAway(lastRoad);
+			}
+		}
+		else
+		{
+			// go back and ask for an encounter selection
+			--mCurrentCombatantIndex;
+			EndPhase();
+		}
+	}
+
+	/// <summary>
+	/// Called when a clearing is selected to run away to.
+	/// </summary>
+	/// <param name="clearing">Clearing.</param>
+	private void OnRunClearingSelected(MRClearing clearing)
+	{
+		MRRoad road = mClearing.RoadTo(clearing);
+		if (road != null)
+			RunAway(road);
+		else
+		{
+			// go back and ask for an encounter selection
+			--mCurrentCombatantIndex;
+			EndPhase();
 		}
 	}
 
@@ -1365,17 +1555,20 @@ public class MRCombatManager
 			{
 				if (combatSheet.CharacterData.attackChit != null)
 				{
-					combatSheet.CharacterData.attackChit.Stack.RemovePiece(combatSheet.CharacterData.attackChit);
+					if (combatSheet.CharacterData.attackChit.Stack != null)
+						combatSheet.CharacterData.attackChit.Stack.RemovePiece(combatSheet.CharacterData.attackChit);
 					combatSheet.CharacterData.attackChit = null;
 				}
 				if (combatSheet.CharacterData.maneuverChit != null)
 				{
-					combatSheet.CharacterData.maneuverChit.Stack.RemovePiece(combatSheet.CharacterData.maneuverChit);
+					if (combatSheet.CharacterData.maneuverChit.Stack != null)
+						combatSheet.CharacterData.maneuverChit.Stack.RemovePiece(combatSheet.CharacterData.maneuverChit);
 					combatSheet.CharacterData.maneuverChit = null;
 				}
 				if (combatSheet.CharacterData.weapon != null)
 				{
-					combatSheet.CharacterData.weapon.Stack.RemovePiece(combatSheet.CharacterData.weapon);
+					if (combatSheet.CharacterData.weapon.Stack != null)
+						combatSheet.CharacterData.weapon.Stack.RemovePiece(combatSheet.CharacterData.weapon);
 					combatSheet.CharacterData.weapon = null;
 				}
 				combatSheet.CharacterData.attackType = eAttackType.None;
@@ -1384,9 +1577,53 @@ public class MRCombatManager
 		}
 	}
 
+	private void OnCombatActionSelected(int buttonId)
+	{
+		switch (buttonId)
+		{
+			case (int)MRMainUI.eCombatActionButton.FlipWeapon:
+				EndPhase();
+				break;
+			case (int)MRMainUI.eCombatActionButton.RunAway:
+				RunAway();
+				break;
+			case (int)MRMainUI.eCombatActionButton.CastSpell:
+				EndPhase();
+				break;
+			default:
+				EndPhase();
+				break;
+		}
+	}
+
 	private void OnAttackMessageClicked(int butonId)
 	{
 		EndPhase();
+	}
+
+	/// <summary>
+	/// Returns the fastest opponent time for a character.
+	/// </summary>
+	/// <returns>The opponent time.</returns>
+	/// <param name="character">Character.</param>
+	private int FastestOpponentTime(MRCharacter character)
+	{
+		// get the fastest denizen on the sheet
+		// todo: also check any move chits from charging players
+		int fastestTime = int.MaxValue;
+		foreach (MRCombatSheetData.AttackerData attacker in character.CombatSheet.Attackers)
+		{
+			MRDenizen denizen = attacker.attacker;
+			if (denizen.CurrentMoveSpeed < fastestTime)
+				fastestTime = denizen.CurrentMoveSpeed;
+		}
+		foreach (MRCombatSheetData.DefenderData defender in character.CombatSheet.Defenders)
+		{
+			MRDenizen denizen = defender.defender;
+			if (denizen.CurrentMoveSpeed < fastestTime)
+				fastestTime = denizen.CurrentMoveSpeed;
+		}
+		return fastestTime;
 	}
 
 	/// <summary>
@@ -1493,6 +1730,7 @@ public class MRCombatManager
 	private int mCurrentSheetIndex;
 	private eAttackType mLastSelectedAttackType;
 	private eDefenseType mLastSelectedDefenseType;
+	private MRActionChit mRunAwayChit;
 	private List<MRCombatSheetData> mCombatSheets = new List<MRCombatSheetData>();
 	private List<MRControllable> mCombatants = new List<MRControllable>();
 	private List<MRControllable> mFriends = new List<MRControllable>();

@@ -298,7 +298,7 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 	/// <param name="piece">the piece to remove</param>
 	public void RemovePiece(MRIGamePiece piece)
 	{
-		SetPieceBasePos(piece);
+//		SetPieceBasePos(piece);
 		piece.OldScale = Vector3.one;
 		piece.LocalScale = Vector3.one;
 		mPieces.Remove(piece);
@@ -322,17 +322,16 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 	private void SetPieceBasePos(MRIGamePiece piece)
 	{
 		piece.Layer = mLayer;
-		piece.LocalScale = piece.OldScale;
 		piece.Parent = transform;
+		piece.LocalScale = piece.OldScale;
 		piece.Rotation = Quaternion.identity;
 	}
 
 	private void SetPieceInspectionPos(MRIGamePiece piece)
 	{
 		piece.Layer = LayerMask.NameToLayer("InspectionList");
-		piece.OldScale = piece.LocalScale;
-		Vector3 parentScale = piece.Parent.localScale;
-		float inspectionScale = 2.0f / parentScale.x;
+		piece.OldScale = new Vector3(piece.LocalScale.x, piece.LocalScale.y, 1f);
+		float inspectionScale = 2.0f / piece.Parent.localScale.x;
 		piece.LocalScale = new Vector3(inspectionScale, inspectionScale, 1f);
 	}
 
@@ -370,7 +369,9 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 			uint id = ((JSONNumber)pieces[i]).UintValue;
 			MRIGamePiece piece = MRGame.TheGame.GetGamePiece(id);
 			if (piece != null)
+			{
 				AddPieceToBottom(piece);
+			}
 			else
 			{
 				Debug.LogError("Game piece stack no piece for id " + id);

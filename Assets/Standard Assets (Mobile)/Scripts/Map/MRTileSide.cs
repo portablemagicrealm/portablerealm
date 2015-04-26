@@ -134,6 +134,7 @@ public class MRTileSide : MonoBehaviour
 		MRRoad[] roads = gameObject.GetComponentsInChildren<MRRoad>();
 		foreach (MRRoad road in roads)
 		{
+			road.MyTileSide = this;
 			road.clearingConnection0.AddRoad(road);
 			if (road.clearingConnection1 != null)
 				road.clearingConnection1.AddRoad(road);

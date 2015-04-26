@@ -113,7 +113,7 @@ public class MRCombatSheetData
 		MRCombatManager.eDefenseType pick = MRCombatManager.eDefenseType.None;
 		do
 		{
-			int rnd = UnityEngine.Random.Range(0, Enum.GetValues(typeof(MRCombatManager.eDefenseType)).Length);
+			int rnd = MRRandom.Range(0, Enum.GetValues(typeof(MRCombatManager.eDefenseType)).Length);
 			pick = (MRCombatManager.eDefenseType)Enum.GetValues(typeof(MRCombatManager.eDefenseType)).GetValue(rnd);
 		} while (pick == MRCombatManager.eDefenseType.None || slots[pick] != lowestCount);
 

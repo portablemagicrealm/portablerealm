@@ -55,6 +55,28 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		}
 	}
 
+	public MRSelectChitEvent SelectChitData
+	{
+		get{
+			return mSelectChitData;
+		}
+
+		set{
+			mSelectChitData = value;
+		}
+	}
+
+	public MRClearing LastClearingEntered
+	{
+		get{
+			return mLastClearingEntered;
+		}
+
+		set{
+			mLastClearingEntered = value;
+		}
+	}
+
 	public override MRILocation Location
 	{
 		get{
@@ -62,6 +84,9 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		}
 
 		set{
+			if (Location is MRClearing)
+				mLastClearingEntered = (MRClearing)Location;
+
 			base.Location = value;
 
 			// if we are riding a horse in a cave, deactivate the horse
@@ -674,6 +699,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	{
 		mPonyMove = false;
 		mKillCountForDay = 0;
+		mLastClearingEntered = null;
 		mNormalActivitiesAvailable = 2;
 		mDaylightActivitesAvailable = 2;
 
@@ -693,11 +719,26 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		}
 	}
 
-	// Does initialization associated with sunrise.
+	/// <summary>
+	/// Does initialization associated with sunrise. 
+	/// </summary>
 	public override void StartSunrise()
 	{
 		// if we are in a cave or any move takes us to a cave, disable daylight activities
+		bool underground = false;
 		if (Location is MRClearing && ((MRClearing)Location).type == MRClearing.eType.Cave)
+			underground = true;
+		else if (Location is MRRoad)
+		{
+			MRRoad road = (MRRoad)Location;
+			if ((road.clearingConnection0 != null && road.clearingConnection0.type == MRClearing.eType.Cave) &&
+			    (road.clearingConnection1 != null && road.clearingConnection1.type == MRClearing.eType.Cave))
+			{
+				underground = true;
+			}
+		}
+
+		if (underground)
 			mDaylightActivitesAvailable = 0;
 		else
 		{
@@ -782,6 +823,10 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		if (activity is MRRestActivity && HasCurse(MRGame.eCurses.IllHealth))
 			return false;
 
+		// if we are on a road, we can only move
+		if (Location is MRRoad && !(activity is MRMoveActivity))
+			return false;
+
 		if (mNormalActivitiesAvailable + mDaylightActivitesAvailable > 0 ||
 		    mExtraActivities[activity.Activity] > 0)
 		{
@@ -814,22 +859,22 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		}
 	}
 
-	public void OnClearingSelected(MRClearing clearing)
-	{
-		if (MRGame.TimeOfDay == MRGame.eTimeOfDay.Daylight)
-		{
-			// tell the current activity a clearing was selected
-			MRActivityList activities = ActivitiesForDay(MRGame.DayOfMonth);
-			foreach (MRActivity activity in activities.Activities)
-			{
-				if (activity.Active && !activity.Executed)
-				{
-					activity.OnClearingSelected(clearing);
-					break;
-				}
-			}
-		}
-	}
+	//public void OnClearingSelected(MRClearing clearing)
+	//{
+	//	if (MRGame.TimeOfDay == MRGame.eTimeOfDay.Daylight)
+	//	{
+	//		// tell the current activity a clearing was selected
+	//		MRActivityList activities = ActivitiesForDay(MRGame.DayOfMonth);
+	//		foreach (MRActivity activity in activities.Activities)
+	//		{
+	//			if (activity.Active && !activity.Executed)
+	//			{
+	//				activity.OnClearingSelected(clearing);
+	//				break;
+	//			}
+	//		}
+	//	}
+	//}
 
 	/// <summary>
 	/// Returns if the character can fatigue a given number of asterisks of any type of chit.
@@ -1761,6 +1806,13 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		int[] curses = new int[1];
 		curses[0] = ((JSONNumber)root["curses"]).IntValue;
 		mCurses = new BitArray(curses);
+		if (root["lastClearing"] != null)
+		{
+			uint id = ((JSONNumber)root["lastClearing"]).UintValue;
+			mLastClearingEntered = MRGame.TheGame.GetClearing(id);
+			if (mLastClearingEntered == null)
+				Debug.LogError("Character " + Name + " bad last clearing " + id);
+		}
 
 		return true;
 	}
@@ -1816,6 +1868,10 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		int[] curses = new int[1];
 		mCurses.CopyTo(curses, 0);
 		root["curses"] = new JSONNumber(curses[0]);
+		if (mLastClearingEntered != null)
+		{
+			root["lastClearing"] = new JSONNumber(mLastClearingEntered.Id);
+		}
 	}
 
 	#endregion
@@ -1842,10 +1898,12 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	protected int mHealBalance;
 	protected MRActionChit.eType mFatigueBalanceType;
 	protected MRGame.eStrength mFatigueBalanceStrength;
+	protected MRSelectChitEvent mSelectChitData;
 
 	protected float mFame;
 	protected float mNotoriety;
 	protected int mKillCountForDay;
+	protected MRClearing mLastClearingEntered;
 
 	protected IList<MRItem> mActiveItems = new List<MRItem>();
 	protected IList<MRItem> mInactiveItems = new List<MRItem>();

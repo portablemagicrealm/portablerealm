@@ -371,7 +371,7 @@ public class MRTreasureChart : MonoBehaviour
 		// pick a random armor from the ones found
 		if (armors.Count > 0)
 		{
-			int index = UnityEngine.Random.Range(0, armors.Count);
+			int index = MRRandom.Range(0, armors.Count);
 			return armors[index];
 		}
 

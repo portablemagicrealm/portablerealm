@@ -61,6 +61,16 @@ public class MRMainUI : MonoBehaviour
 
 	#region Constants
 
+	public enum eCombatActionButton
+	{
+		None,
+		FlipWeapon,
+		RunAway,
+		CastSpell,
+		ActivateItem,
+		AbandonItems
+	}
+
 	private const float TIMED_MESSAGE_BOX_DISPLAY_TIME = 2.0f;
 
 	#endregion
@@ -72,6 +82,7 @@ public class MRMainUI : MonoBehaviour
 	public GameObject TimedMessagePrototype;
 	public GameObject InstructionMessagePrototype;
 	public GameObject AttackManeuverDialogPrototype;
+	public GameObject CombatActionDialogPrototype;
 
 	public static MRMainUI TheUI
 	{
@@ -331,6 +342,58 @@ public class MRMainUI : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Displaies the combat action selection dialog.
+	/// </summary>
+	/// <param name="canActivateWeapon">Set to <c>true</c> to allow alert/unalert weapon.</param>
+	/// <param name="canRunAway">Set to <c>true</c> to allow running away.</param>
+	/// <param name="canCastSpell">Set to <c>true</c> to allow casting a spell.</param>
+	public void DisplayCombatActionDialog(bool canActivateWeapon, bool canRunAway, bool canCastSpell, OnButtonPressed callback)
+	{
+		if (mCombatActionDialog == null)
+		{
+			mCombatActionDialog = (GameObject)Instantiate(CombatActionDialogPrototype);
+			mCombatActionDialog.transform.SetParent(transform, false);
+			
+			// set button callbacks
+			Button[] buttons = mCombatActionDialog.GetComponentsInChildren<Button>();
+			foreach (Button button in buttons)
+			{
+				if (button.gameObject.name == "Weapon")
+				{
+					button.enabled = canActivateWeapon;
+					button.onClick.AddListener(OnCombatActionWeaponClicked);
+				}
+				else if (button.gameObject.name == "Run")
+				{
+					button.enabled = canRunAway;
+					button.onClick.AddListener(OnCombatActionRunClicked);
+				}
+				else if (button.gameObject.name == "Spell")
+				{
+					button.enabled = canCastSpell;
+					button.onClick.AddListener(OnCombatActionSpellClicked);
+				}
+				else if (button.gameObject.name == "None")
+					button.onClick.AddListener(OnCombatActionNoneClicked);
+			}
+
+			mOkCallback = callback;
+		}
+	}
+
+	/// <summary>
+	/// Hides the combat action selection dialog.
+	/// </summary>
+	private void HideCombatActionDialog()
+	{
+		if (mCombatActionDialog != null)
+		{
+			DestroyObject(mCombatActionDialog);
+			mCombatActionDialog = null;
+		}
+	}
+
+	/// <summary>
 	/// Called when the player clicks the "ok" button of the message dialog.
 	/// </summary>
 	private void OnOkClicked()
@@ -360,6 +423,34 @@ public class MRMainUI : MonoBehaviour
 		MRGame.TheGame.OnAttackManeuverSelectedGame(MRCombatManager.eAttackManeuverOption.Cancel);
 	}
 
+	private void OnCombatActionWeaponClicked()
+	{
+		HideCombatActionDialog();
+		if (mOkCallback != null)
+			mOkCallback((int)eCombatActionButton.FlipWeapon);
+	}
+
+	private void OnCombatActionRunClicked()
+	{
+		HideCombatActionDialog();
+		if (mOkCallback != null)
+			mOkCallback((int)eCombatActionButton.RunAway);
+	}
+
+	private void OnCombatActionSpellClicked()
+	{
+		HideCombatActionDialog();
+		if (mOkCallback != null)
+			mOkCallback((int)eCombatActionButton.CastSpell);
+	}
+
+	private void OnCombatActionNoneClicked()
+	{
+		HideCombatActionDialog();
+		if (mOkCallback != null)
+			mOkCallback((int)eCombatActionButton.None);
+	}
+
 	#endregion
 
 	#region Members
@@ -370,6 +461,7 @@ public class MRMainUI : MonoBehaviour
 	private GameObject mTimedMessageBox;
 	private GameObject mInstructionMessage;
 	private GameObject mAttackManeuverDialog;
+	private GameObject mCombatActionDialog;
 	private Button[] mDialogButtons;
 	private ButtonClickedAction[] mDialogCallbacks;
 	private OnButtonPressed mOkCallback;

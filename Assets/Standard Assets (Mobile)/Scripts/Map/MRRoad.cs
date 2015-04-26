@@ -27,8 +27,10 @@
 using UnityEngine;
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using AssemblyCSharp;
 
-public class MRRoad : MonoBehaviour 
+public class MRRoad : MonoBehaviour, MRILocation
 {
 	#region Constants
 
@@ -69,16 +71,74 @@ public class MRRoad : MonoBehaviour
 		}
 	}
 
+	// MRILocation properties
+
+	public GameObject Owner 
+	{ 
+		get {
+			return gameObject;
+		}
+	}
+	
+	public uint Id 
+	{ 
+		get {
+			return MRUtility.IdForName(Name);
+		}
+	}
+	
+	public ICollection<MRRoad> Roads 
+	{ 
+		get	{
+			return new List<MRRoad>{this};
+		}
+	}
+	
+	public MRTileSide MyTileSide 
+	{ 
+		get {
+			return mMyTileSide;
+		}
+		set {
+			mMyTileSide = value;
+		}
+	}
+	
+	public MRGamePieceStack Pieces 
+	{ 
+		get {
+			return mPieces;
+		}
+	}
+	
+	public MRGamePieceStack AbandonedItems 
+	{ 
+		get	{
+			return null;
+		}
+	}
+
 	#endregion
 
 	#region Methods
 
+	// Called when the script instance is being loaded
+	void Awake()
+	{
+		gameObject.SetActive(false);
+		enabled = false;
+
+		mPieces = gameObject.AddComponent<MRGamePieceStack>();
+		mPieces.Layer = LayerMask.NameToLayer("Map");
+		mPieces.transform.parent = transform;
+		mPieces.transform.position = transform.position;
+
+		MRGame.TheGame.AddRoad(this);
+	}
+
 	// Use this for initialization
 	void Start () 
 	{
-		renderer.enabled = false;
-		gameObject.SetActive(false);
-		enabled = false;
 		try
 		{
 			MRGame.TheGame.TheMap.Roads[Name] = this;
@@ -94,6 +154,7 @@ public class MRRoad : MonoBehaviour
 		try
 		{
 			// remove ourself from the road map
+			MRGame.TheGame.RemoveRoad(this);
 			MRRoad test;
 			if (MRGame.TheGame.TheMap.Roads.TryGetValue(Name, out test))
 			{
@@ -107,11 +168,82 @@ public class MRRoad : MonoBehaviour
 		}
 	}
 
-	// Update is called once per frame
-	void Update () 
+	/// <summary>
+	/// Returns the road connecting this location to another location, or null if the locations aren't connected.
+	/// </summary>
+	/// <returns>The road.</returns>
+	/// <param name="clearing">Clearing.</param>
+	public MRRoad RoadTo(MRILocation target)
 	{
-	
+		ICollection<MRRoad> targetRoads = target.Roads;
+		if (targetRoads.Contains(this))
+			return this;
+		return null;
 	}
+
+	/// <summary>
+	/// Adds a piece to the top of the location.
+	/// </summary>
+	/// <param name="piece">the piece</param>
+	public void AddPieceToTop(MRIGamePiece piece)
+	{
+		Pieces.AddPieceToTop(piece);
+		gameObject.SetActive(true);
+	}
+	
+	/// <summary>
+	/// Removes a piece from the location.
+	/// </summary>
+	/// <param name="piece">the piece to remove</param>
+	public void RemovePiece(MRIGamePiece piece)
+	{
+		Pieces.RemovePiece(piece);
+		if (Pieces.Pieces.Count == 0)
+			gameObject.SetActive(false);
+	}
+
+	public bool Load(JSONObject root)
+	{
+		if (root["pieces"] != null)
+		{
+			if (!mPieces.Load((JSONObject)root["pieces"]))
+				return false;
+
+			// make sure controllable locations are set
+			List<MRControllable> controllables = new List<MRControllable>();
+			foreach (MRIGamePiece piece in mPieces.Pieces)
+			{
+				if (piece is MRControllable)
+					controllables.Add((MRControllable)piece);
+			}
+			foreach (MRControllable controllable in controllables)
+			{
+				if (controllable.Location == null || controllable.Location.Id != Id)
+					controllable.Location = this;
+			}
+
+			gameObject.SetActive(true);
+		}
+		return true;
+	}
+	
+	public void Save(JSONObject root)
+	{
+		if (mPieces.Pieces.Count > 0)
+		{
+			root["name"] = new JSONString(Name);
+			JSONObject pieces = new JSONObject();
+			mPieces.Save(pieces);
+			root["pieces"] = pieces;
+		}
+	}
+
+	#endregion
+
+	#region Members
+
+	private MRTileSide mMyTileSide;
+	private MRGamePieceStack mPieces;
 
 	#endregion
 }

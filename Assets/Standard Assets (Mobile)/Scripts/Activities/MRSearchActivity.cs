@@ -133,26 +133,26 @@ public class MRSearchActivity : MRActivity
 		mLootTwitSelected = null;
 	}
 
-	public override void OnGUI()
-	{
-		if (!Active)
-			return;
-		
-		switch (mState)
-		{
-			case eState.SelectClearing:
-			{
-				GUILayout.BeginArea(new Rect(0, 0, Screen.width, 56));
-				GUILayout.BeginHorizontal();
-				GUILayout.FlexibleSpace();
-				GUILayout.Label("Select Clearing", "BigLabel", GUILayout.ExpandHeight(true));
-				GUILayout.FlexibleSpace();
-				GUILayout.EndHorizontal();
-				GUILayout.EndArea();
-				break;
-			}
-		}
-	}
+	//public override void OnGUI()
+	//{
+	//	if (!Active)
+	//		return;
+	//	
+	//	switch (mState)
+	//	{
+	//		case eState.SelectClearing:
+	//		{
+	//			GUILayout.BeginArea(new Rect(0, 0, Screen.width, 56));
+	//			GUILayout.BeginHorizontal();
+	//			GUILayout.FlexibleSpace();
+	//			GUILayout.Label("Select Clearing", "BigLabel", GUILayout.ExpandHeight(true));
+	//			GUILayout.FlexibleSpace();
+	//			GUILayout.EndHorizontal();
+	//			GUILayout.EndArea();
+	//			break;
+	//		}
+	//	}
+	//}
 
 	private void ShowSelectTable()
 	{
@@ -205,6 +205,7 @@ public class MRSearchActivity : MRActivity
 				if (ownerClearing.type == MRClearing.eType.Mountain)
 				{
 					mState = eState.SelectClearing;
+					MRGame.TheGame.AddUpdateEvent(new MRSelectClearingEvent(null, OnClearingSelected));
 				}
 				else
 				{
@@ -1002,27 +1003,33 @@ public class MRSearchActivity : MRActivity
 	}
 
 	// Called when the player selects a clearing
-	public override void OnClearingSelected(MRClearing clearing)
+	private void OnClearingSelected(MRClearing clearing)
 	{
 		if (mState == eState.SelectClearing)
 		{
 			// the clearing needs to be a non-cave clearing that is in or adjacent to the current hex
+			bool clearingValid = false;
 			if (clearing.type != MRClearing.eType.Cave)
 			{
 				MRTile currentTile = Owner.Location.MyTileSide.Tile;
 				MRTile clearingTile = clearing.MyTileSide.Tile;
-				bool clearingValid = (currentTile == clearingTile);
+				clearingValid = (currentTile == clearingTile);
 				for (int i = 0; i < 6 && !clearingValid; ++i)
 				{
 					if (currentTile.GetAdjacentTile(i) == clearingTile)
 						clearingValid = true;
 				}
-				if (clearingValid)
-				{
-					Debug.Log("Mountain Peer valid clearing selected");
-					mClearing = clearing;
-					mState = eState.Roll;
-				}
+			}
+			if (clearingValid)
+			{
+				Debug.Log("Mountain Peer valid clearing selected " + clearing.Name);
+				mClearing = clearing;
+				mState = eState.Roll;
+			}
+			else
+			{
+				// try again
+				MRGame.TheGame.AddUpdateEvent(new MRSelectClearingEvent(null, OnClearingSelected));
 			}
 		}
 		if (mState != eState.Roll)

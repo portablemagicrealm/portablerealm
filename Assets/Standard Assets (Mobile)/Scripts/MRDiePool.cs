@@ -118,7 +118,7 @@ public class MRDiePool
 		mDieRolls = new int[NumDice];
 		for (int i = 0; i < NumDice; ++i)
 		{
-			mDieRolls[i] = Random.Range(0, 6) + 1;
+			mDieRolls[i] = MRRandom.Range(0, 6) + 1;
 			if (mDieRolls[i] > mRoll)
 				mRoll = mDieRolls[i];
 		}

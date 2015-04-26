@@ -316,14 +316,14 @@ public class MRMap : MonoBehaviour, MRISerializable
 		do
 		{
 			--count;
-			fromSide = UnityEngine.Random.Range(0, 5);
+			fromSide = MRRandom.Range(0, 5);
 		} while (!newTile.Edges[fromSide] && count > 0);
 		if (count == 0)
 		{
 			Debug.LogError("no edges for tile " + tileId);
 			Application.Quit();
 		}
-		toSide = UnityEngine.Random.Range(0, 5);
+		toSide = MRRandom.Range(0, 5);
 		Debug.Log("attach tile " + eTileNames.borderland + " side " + toSide + " to tile " + tileId + " side " + fromSide);
 		borderland.SetAdjacentTile(newTile, fromSide, toSide, false);
 
@@ -453,9 +453,11 @@ public class MRMap : MonoBehaviour, MRISerializable
 		return true;
 	}
 
-	//
-	// Returns a list of a path from one clearing to another, or null if there is no path between them.
-	//
+	/// <summary>
+	/// Returns a list of a path from one clearing to another, or null if there is no path between them.
+	/// </summary>
+	/// <param name="from">From.</param>
+	/// <param name="to">To.</param>
 	public static IList<MRClearing> Path(MRClearing from, MRClearing to)
 	{
 		if (from == null || to == null)
@@ -525,9 +527,12 @@ public class MRMap : MonoBehaviour, MRISerializable
 		return null;
 	}
 
-	//
-	// A map path is created in reverse. This recursive function creates a list of clearings with the actual path.
-	//
+	/// <summary>
+	/// A map path is created in reverse. This recursive function creates a list of clearings with the actual path.
+	/// </summary>
+	/// <returns>The path.</returns>
+	/// <param name="cameFrom">Came from.</param>
+	/// <param name="currentNode">Current node.</param>
 	private static IList<MRClearing> UnrollPath(IDictionary<MRClearing, MRClearing> cameFrom, MRClearing currentNode)
 	{
 		IList<MRClearing> path;
@@ -545,9 +550,9 @@ public class MRMap : MonoBehaviour, MRISerializable
 		return path;
 	}
 
-	//
-	// Create the map chits. They will be assigned to tiles when the map is created.
-	//
+	/// <summary>
+	/// Create the map chits. They will be assigned to tiles when the map is created.
+	/// </summary>
 	private void CreateMapChits()
 	{
 		foreach (MRMapChit.eMapChitType chitType in Enum.GetValues(typeof(MRMapChit.eMapChitType)))
@@ -749,7 +754,7 @@ public class MRMap : MonoBehaviour, MRISerializable
 						MRDwelling dwelling = MRDwelling.Create();
 						dwelling.Parent = clearing.gameObject.transform;
 						dwelling.Type = chit.Substitute;
-						clearing.Pieces.AddPieceToTop(dwelling);
+						clearing.Pieces.AddPieceToBottom(dwelling);
 					}
 					mDwellings[chit.Substitute] = clearing;
 				}
@@ -777,9 +782,10 @@ public class MRMap : MonoBehaviour, MRISerializable
 		return clearing;
 	}
 
-	//
-	// Called when a tile is selected. Toggles the camera to zoom into the selected tile.
-	//
+	/// <summary>
+	/// Called when a tile is selected. Toggles the camera to zoom into the selected tile.
+	/// </summary>
+	/// <param name="tile">Tile.</param>
 	public void OnTileSelected(MRTile tile)
 	{
 		if (Math.Abs(mMapCamera.orthographicSize - MRGame.MAP_CAMERA_FAR_SIZE) < 0.1f)

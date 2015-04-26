@@ -88,6 +88,8 @@ public class MRClearingSelector : MonoBehaviour
 
 		// get the cleaning name component
 		mTextWidget = gameObject.GetComponentsInChildren<TextMesh>()[0];
+
+		mRequestClearing = false;
 	}
 	
 	// Update is called once per frame
@@ -99,6 +101,12 @@ public class MRClearingSelector : MonoBehaviour
 			return;
 		}
 		mCamera.enabled = true;
+
+		if (Activity.Editing && mClearing == null && !mRequestClearing)
+		{
+			mRequestClearing = true;
+			MRGame.TheGame.AddUpdateEvent(new MRSelectClearingEvent(null, OnClearingSelected));
+		}
 
 		if (mActivity != null && mActivity.Activity.Activity == MRGame.eActivity.Move)
 		{
@@ -128,7 +136,7 @@ public class MRClearingSelector : MonoBehaviour
 
 	public void OnClearingSelected(MRClearing clearing)
 	{
-		if (mActivity.Editing)
+		if (mActivity.Editing && mClearing == null)
 		{
 			mClearing = clearing;
 			((MRMoveActivity)mActivity.Activity).Clearing = clearing;
@@ -146,6 +154,7 @@ public class MRClearingSelector : MonoBehaviour
 	private Camera mCamera;
 	private bool mVisible;
 	private TextMesh mTextWidget;
+	private bool mRequestClearing;
 
 	#endregion
 }

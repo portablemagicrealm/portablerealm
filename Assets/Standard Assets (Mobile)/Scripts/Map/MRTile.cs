@@ -508,9 +508,10 @@ public class MRTile : MonoBehaviour, MRISerializable
 						testClearing = FrontSide.GetClearing(2);
 				}
 				// replace the chit with its substitute
-				MRDwelling dwelling = testClearing.gameObject.AddComponent<MRDwelling>();
+				MRDwelling dwelling = MRDwelling.Create();
+				dwelling.Parent = testClearing.gameObject.transform;
 				dwelling.Type = ((MRWarningChit)chit).Substitute;
-				testClearing.Pieces.AddPieceAt(dwelling, 0);
+				testClearing.Pieces.AddPieceToBottom(dwelling);
 				mMapChits.Remove((MRMapChit)chit);
 				DestroyObject(chit);
 			}

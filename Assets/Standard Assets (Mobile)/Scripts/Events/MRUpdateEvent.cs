@@ -39,6 +39,8 @@ public abstract class MRUpdateEvent : IComparable
 		RollForCurseEvent,
 		UpdateViewEvent,
 		FatigueCharacterEvent,
+		SelectChitEvent,
+		SelectClearingEvent,
 		CombatEvent,
 		MonsterRollEvent,
 		EndPhaseEvent,
@@ -70,6 +72,10 @@ public abstract class MRUpdateEvent : IComparable
 			return (int)Priority - (int)(((MRUpdateEvent)obj).Priority);
 		}
 		throw new ArgumentException();
+	}
+
+	public virtual void OnClearingSelected(MRClearing clearing)
+	{
 	}
 
 	#endregion

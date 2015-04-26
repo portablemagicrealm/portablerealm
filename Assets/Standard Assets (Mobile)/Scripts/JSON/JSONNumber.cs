@@ -49,7 +49,9 @@ namespace AssemblyCSharp
 		{
 			Integer,
 			UnsignedInteger,
-			Float
+			Float,
+			Long,
+			UnsignedLong,
 		}
 
 		#endregion
@@ -74,6 +76,10 @@ namespace AssemblyCSharp
 						return mIntValue;
 					case eNumericType.UnsignedInteger:
 						return (int)mUintValue;
+					case eNumericType.Long:
+						return (int)mLongValue;
+					case eNumericType.UnsignedLong:
+						return (int)mULongValue;
 					default:
 						Debug.LogError("Invalid JSON numeric type");
 						break;
@@ -98,6 +104,10 @@ namespace AssemblyCSharp
 						return (uint)mIntValue;
 					case eNumericType.UnsignedInteger:
 						return mUintValue;
+					case eNumericType.Long:
+						return (uint)mLongValue;
+					case eNumericType.UnsignedLong:
+						return (uint)mULongValue;
 					default:
 						Debug.LogError("Invalid JSON numeric type");
 						break;
@@ -108,6 +118,62 @@ namespace AssemblyCSharp
 			set{
 				mType = eNumericType.UnsignedInteger;
 				mUintValue = value;
+			}
+		}
+
+		public long LongValue
+		{
+			get{
+				switch (Type)
+				{
+					case eNumericType.Float:
+						return (long)mFloatValue;
+					case eNumericType.Integer:
+						return mIntValue;
+					case eNumericType.UnsignedInteger:
+						return (long)mUintValue;
+					case eNumericType.Long:
+						return mLongValue;
+					case eNumericType.UnsignedLong:
+						return (long)mULongValue;
+					default:
+						Debug.LogError("Invalid JSON numeric type");
+						break;
+				}
+				return 0;
+			}
+			
+			set{
+				mType = eNumericType.Long;
+				mLongValue = value;
+			}
+		}
+
+		public ulong ULongValue
+		{
+			get{
+				switch (Type)
+				{
+					case eNumericType.Float:
+						return (ulong)mFloatValue;
+					case eNumericType.Integer:
+						return (ulong)mIntValue;
+					case eNumericType.UnsignedInteger:
+						return mUintValue;
+					case eNumericType.Long:
+						return (ulong)mLongValue;
+					case eNumericType.UnsignedLong:
+						return mULongValue;
+					default:
+						Debug.LogError("Invalid JSON numeric type");
+						break;
+				}
+				return 0;
+			}
+			
+			set{
+				mType = eNumericType.UnsignedLong;
+				mULongValue = value;
 			}
 		}
 
@@ -122,6 +188,10 @@ namespace AssemblyCSharp
 						return (float)mIntValue;
 					case eNumericType.UnsignedInteger:
 						return (float)mUintValue;
+					case eNumericType.Long:
+						return (float)mLongValue;
+					case eNumericType.UnsignedLong:
+						return (float)mULongValue;
 					default:
 						Debug.LogError("Invalid JSON numeric type");
 						break;
@@ -144,6 +214,8 @@ namespace AssemblyCSharp
 			mType = eNumericType.Integer;
 			mIntValue = 0;
 			mUintValue = 0;
+			mLongValue = 0;
+			mULongValue = 0;
 			mFloatValue = 0;
 		}
 
@@ -155,6 +227,16 @@ namespace AssemblyCSharp
 		public JSONNumber (uint value)
 		{
 			UintValue = value;
+		}
+
+		public JSONNumber (long value)
+		{
+			LongValue = value;
+		}
+		
+		public JSONNumber (ulong value)
+		{
+			ULongValue = value;
 		}
 
 		public JSONNumber (float value)
@@ -175,7 +257,7 @@ namespace AssemblyCSharp
 			// NOTE: not allowing spaces in a number
 			mType = eNumericType.Integer;
 			bool isNegative = false;
-			long ivalue = 0;
+			ulong ivalue = 0;
 			float fvalue = 0;
 
 			if (data[0] == '-')
@@ -186,7 +268,7 @@ namespace AssemblyCSharp
 
 			while (Char.IsDigit(data[0]))
 			{
-				ivalue = ivalue * 10 + (data[0] - '0');
+				ivalue = ivalue * 10 + (ulong)(data[0] - '0');
 				data.Remove(0, 1);
 			}
 
@@ -235,14 +317,35 @@ namespace AssemblyCSharp
 			}
 			if (mType != eNumericType.Float && multiplier >= 1)
 			{
-				ivalue *= (long)multiplier;
-				if (ivalue > int.MaxValue)
+				ivalue *= (ulong)multiplier;
+				if (!isNegative)
 				{
-					mType = eNumericType.UnsignedInteger;
-					mUintValue = (uint)ivalue;
+					if (ivalue > uint.MaxValue)
+					{
+						mType = eNumericType.UnsignedLong;
+						mULongValue = ivalue;
+					}
+					else
+					{
+						mType = eNumericType.UnsignedInteger;
+						mUintValue = (uint)ivalue;
+					}
 				}
 				else
-					mIntValue = (int)ivalue;
+				{
+					if (ivalue > int.MaxValue)
+					{
+						mType = eNumericType.Long;
+						mLongValue = (long)ivalue;
+						mLongValue = -mLongValue;
+					}
+					else
+					{
+						mType = eNumericType.Integer;
+						mIntValue = (int)ivalue;
+						mIntValue = -mIntValue;
+					}
+				}
 			}
 			else
 			{
@@ -252,12 +355,10 @@ namespace AssemblyCSharp
 					mFloatValue = (float)ivalue;
 				}
 				mFloatValue *= multiplier;
+				if (isNegative)
+					mFloatValue = -mFloatValue;
 			}
-			if (isNegative)
-			{
-				mIntValue = -mIntValue;
-				mFloatValue = -mFloatValue;
-			}
+
 		}
 
 		public void Encode(StringBuilder data)
@@ -273,6 +374,12 @@ namespace AssemblyCSharp
 				case eNumericType.UnsignedInteger:
 					data.Append(mUintValue);
 					break;
+				case eNumericType.Long:
+					data.Append(mLongValue);
+					break;
+				case eNumericType.UnsignedLong:
+					data.Append(mULongValue);
+					break;
 			}
 		}
 
@@ -283,6 +390,8 @@ namespace AssemblyCSharp
 		private eNumericType mType;
 		private int mIntValue;
 		private uint mUintValue;
+		private long mLongValue;
+		private ulong mULongValue;
 		private float mFloatValue;
 
 		#endregion

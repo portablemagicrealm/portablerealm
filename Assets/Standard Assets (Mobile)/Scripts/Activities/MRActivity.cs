@@ -136,9 +136,9 @@ public abstract class MRActivity : MRISerializable
 	}
 
 	// Called when the player selects a clearing, derived classes can override as needed
-	public virtual void OnClearingSelected(MRClearing clearing)
-	{
-	}
+	//public virtual void OnClearingSelected(MRClearing clearing)
+	//{
+	//}
 
 	public void Update()
 	{
