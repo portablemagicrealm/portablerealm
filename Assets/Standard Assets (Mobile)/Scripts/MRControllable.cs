@@ -668,8 +668,10 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 				if (cornerPosition.x == 0)
 				{
 					Bounds bounds = mCounter.GetComponentInChildren<SpriteRenderer>().bounds;
-					cornerPosition.x = bounds.extents.x;
-					cornerPosition.y = bounds.extents.y;
+					Vector3 scale1 = mCounter.transform.localScale;
+					Vector3 scale2 = mCounter.transform.lossyScale;
+					cornerPosition.x = bounds.extents.x / scale1.x;
+					cornerPosition.y = bounds.extents.y / scale1.y;
 				}
 				if (sprite.gameObject.transform.localPosition.z < cornerPosition.z)
 					cornerPosition.z = sprite.gameObject.transform.localPosition.z;

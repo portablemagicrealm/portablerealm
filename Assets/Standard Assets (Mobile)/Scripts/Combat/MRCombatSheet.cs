@@ -212,14 +212,17 @@ public class MRCombatSheet : MonoBehaviour
 					break;
 				case "ChargeAndThrust":
 					mDefenderDefense.Add(collider.gameObject.name, MRCombatManager.eDefenseType.Charge);
+					stack.StackScale = 2f;
 					mDefenderPositions.Add(MRCombatManager.eDefenseType.Charge, stack);
 					break;
 				case "DodgeAndSwing":
 					mDefenderDefense.Add(collider.gameObject.name, MRCombatManager.eDefenseType.Dodge);
+					stack.StackScale = 2f;
 					mDefenderPositions.Add(MRCombatManager.eDefenseType.Dodge, stack);
 					break;
 				case "DuckAndSmash":
 					mDefenderDefense.Add(collider.gameObject.name, MRCombatManager.eDefenseType.Duck);
+					stack.StackScale = 2f;
 					mDefenderPositions.Add(MRCombatManager.eDefenseType.Duck, stack);
 					break;
 				case "nextSheet":
@@ -294,6 +297,9 @@ public class MRCombatSheet : MonoBehaviour
 		// update the end combat button
 		mEndCombatEnabled.enabled = mCombat.AllowEndCombat;
 
+		// remove current pieces from the sheet
+		ClearSheet();
+
 		// update piece positions on the combat sheet
 		if (mCombatData.SheetOwner is MRCharacter)
 		{
@@ -343,6 +349,10 @@ public class MRCombatSheet : MonoBehaviour
 					mManeuverPositions[mCombatData.CharacterData.maneuverType].AddPieceToTop(mCombatData.CharacterData.maneuverChit);
 				}
 			}
+		}
+		else
+		{
+			mOwnerName.text = "Sheet- " + MRUtility.DisplayName(mCombatData.SheetOwner.Name);
 		}
 		foreach (MRCombatSheetData.DefenderData data in mCombatData.Defenders)
 		{
@@ -425,6 +435,25 @@ public class MRCombatSheet : MonoBehaviour
 				}
 			}
 		}
+		else if (MRGame.IsSingleTapped)
+		{
+			Vector3 worldTouch = mCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane));
+			RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero);
+			foreach (RaycastHit2D hit in hits)
+			{
+				if (mCombat.CombatSheets.Count > 1)
+				{
+					if (hit.collider.gameObject.name == "nextSheet")
+					{
+						++MRGame.TheGame.CombatManager.CurrentCombatantSheetIndex;
+					}
+					else if (hit.collider.gameObject.name == "prevSheet")
+					{
+						--MRGame.TheGame.CombatManager.CurrentCombatantSheetIndex;
+					}
+				}
+			}
+		}
 	}
 
 	/// <summary>
@@ -484,6 +513,31 @@ public class MRCombatSheet : MonoBehaviour
 				combatManger.Clearing.Pieces.AddPieceToBottom(piece);
 			}
 		}
+	}
+
+	private void ClearSheet()
+	{
+		mBreastplatePosition.Clear();
+		mHelmetPosition.Clear();
+		mArmorPosition.Clear();
+		mShieldPositions[MRCombatManager.eAttackType.Smash].Clear();
+		mShieldPositions[MRCombatManager.eAttackType.Swing].Clear();
+		mShieldPositions[MRCombatManager.eAttackType.Thrust].Clear();
+		mWeaponPositions[MRCombatManager.eAttackType.Smash].Clear();
+		mWeaponPositions[MRCombatManager.eAttackType.Swing].Clear();
+		mWeaponPositions[MRCombatManager.eAttackType.Thrust].Clear();
+		mAttackPositions[MRCombatManager.eAttackType.Smash].Clear();
+		mAttackPositions[MRCombatManager.eAttackType.Swing].Clear();
+		mAttackPositions[MRCombatManager.eAttackType.Thrust].Clear();
+		mManeuverPositions[MRCombatManager.eDefenseType.Charge].Clear();
+		mManeuverPositions[MRCombatManager.eDefenseType.Dodge].Clear();
+		mManeuverPositions[MRCombatManager.eDefenseType.Duck].Clear();
+		mDefenderPositions[MRCombatManager.eDefenseType.Charge].Clear();
+		mDefenderPositions[MRCombatManager.eDefenseType.Dodge].Clear();
+		mDefenderPositions[MRCombatManager.eDefenseType.Duck].Clear();
+		mManeuverPositions[MRCombatManager.eDefenseType.Charge].Clear();
+		mManeuverPositions[MRCombatManager.eDefenseType.Dodge].Clear();
+		mManeuverPositions[MRCombatManager.eDefenseType.Duck].Clear();
 	}
 
 	#endregion

@@ -1720,6 +1720,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 			else
 			{
 				mAttentionChit.transform.parent = null;
+				mAttentionChit.transform.localScale = Vector3.one;
 				mAttentionChit.layer = LayerMask.NameToLayer("Dummy");
 			}
 			foreach (SpriteRenderer sprite in mAttentionChit.GetComponentsInChildren<SpriteRenderer>())

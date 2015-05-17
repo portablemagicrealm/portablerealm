@@ -467,6 +467,7 @@ public class MRMonsterChart : MonoBehaviour
 		if (denizen.Stack != null)
 			denizen.Stack.RemovePiece(denizen);
 		denizen.Layer = LayerMask.NameToLayer("Dummy");
+		denizen.Location = null;
 	}
 
 	/// <summary>

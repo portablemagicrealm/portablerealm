@@ -263,6 +263,23 @@ public class MRCombatManager
 		}
 	}
 
+	public int CurrentCombatantSheetIndex
+	{
+		get
+		{
+			return mCurrentSheetIndex;
+		}
+
+		set
+		{
+			if (value < 0)
+				value = mCombatSheets.Count - 1;
+			else if (value >= mCombatSheets.Count)
+				value = 0;
+			mCurrentSheetIndex = value;
+		}
+	}
+
 	public MRCombatSheetData CurrentCombatantSheet
 	{
 		get
@@ -289,6 +306,8 @@ public class MRCombatManager
 		mCombatPhase = eCombatPhase.CombatDone;
 		mLastSelectedAttackType = eAttackType.Thrust;
 		mLastSelectedDefenseType = eDefenseType.Charge;
+		mCombatStack = MRGame.TheGame.NewGamePieceStack();
+		mCombatStack.Inspecting = true;
 	}
 
 	/// <summary>
@@ -389,6 +408,7 @@ public class MRCombatManager
 						combatant.CombatSheet.CharacterData.pendingWounds = 0;
 						if (fatigueCount > 0 || woundCount > 0)
 						{
+							mRoundsWithNothing = -1;
 							if (fatigueCount > 0)
 								((MRCharacter)combatant).SetFatigueBalance(fatigueCount, fatigueType, MRGame.eStrength.Any);
 							if (woundCount > 0)
@@ -407,8 +427,8 @@ public class MRCombatManager
 				}
 				break;
 			case eCombatPhase.Disengage:
-				// todo : end combat if nothing happened for 2 rounds
-				mCombatPhase = eCombatPhase.PreStartRound;
+				if (++mRoundsWithNothing < 2)
+					mCombatPhase = eCombatPhase.PreStartRound;
 				break;
 			default:
 				break;
@@ -441,6 +461,7 @@ public class MRCombatManager
 			case eCombatPhase.ActivateSpells:
 				break;
 			case eCombatPhase.SelectAttackAndManeuver:
+				AssignUnassignedTargets();
 				EndPhase();
 				break;
 			case eCombatPhase.RandomizeAttacks:
@@ -468,14 +489,17 @@ public class MRCombatManager
 	private void StartCombat()
 	{
 		mRound = 1;
+		mRoundsWithNothing = 0;
 		mAllowEndCombat = true;
 		MRGame.TheGame.CombatSheet.Combat = this;
 		mCombatPhase = eCombatPhase.StartRound;
 		mCurrentCombatantIndex = 0;
+		List<MRIGamePiece> toRemove = new List<MRIGamePiece>();
 		foreach (MRIGamePiece piece in mClearing.Pieces.Pieces)
 		{
 			if (piece is MRControllable)
 			{
+				toRemove.Add(piece);
 				mCombatants.Add((MRControllable)piece);
 			}
 			if (piece is MRCharacter)
@@ -528,6 +552,10 @@ public class MRCombatManager
 				mEnemies.Add((MRDenizen)piece);
 			}
 		}
+		foreach (MRIGamePiece piece in toRemove)
+		{
+			mCombatStack.AddPieceToBottom(piece);
+		}
 		StartRound();
 	}
 
@@ -557,7 +585,7 @@ public class MRCombatManager
 				{
 					((MRCharacter)combatant).PositionAttentionChit(null, Vector3.zero);
 				}
-				mClearing.Pieces.AddPieceToBottom(combatant);
+				mClearing.AddPieceToBottom(combatant);
 			}
 		}
 		mCombatants.Clear();
@@ -605,6 +633,7 @@ public class MRCombatManager
 					continue;
 				if (combatant.IsRedSideMonster)
 				{
+					mRoundsWithNothing = -1;
 					continue;
 				}
 			}
@@ -621,6 +650,11 @@ public class MRCombatManager
 		{
 			if (!(mCombatSheets[i].SheetOwner is MRCharacter))
 			{
+				foreach (MRControllable combatant in mCombatants)
+				{
+					if (combatant is MRDenizen && combatant.CombatSheet == mCombatSheets[i])
+						mCombatStack.AddPieceToBottom(combatant);
+				}
 				mCombatSheets[i].RemoveCombatants();
 				mCombatSheets.RemoveAt(i);
 			}
@@ -632,6 +666,7 @@ public class MRCombatManager
 					MRIControllable defender = mCombatSheets[i].Defenders[j].defender;
 					if (defender.CombatTarget == null)
 					{
+						mCombatStack.AddPieceToBottom(defender);
 						mCombatSheets[i].RemoveCombatant(defender);
 					}
 				}
@@ -823,6 +858,7 @@ public class MRCombatManager
 		if (attacker != null && attacker is MRDenizen)
 		{
 			sheet.AddAttacker((MRDenizen)attacker, eAttackType.Thrust);
+			mCombatStack.RemovePiece(attacker);
 		}
 		if (defender != null && defender is MRDenizen)
 		{
@@ -833,6 +869,7 @@ public class MRCombatManager
 			}
 			else
 				sheet.AddDefender((MRDenizen)defender);
+			mCombatStack.RemovePiece(defender);
 		}
 	}
 
@@ -860,6 +897,24 @@ public class MRCombatManager
 						MRIControllable target = denizen.CombatSheet.Attackers[0].attacker;
 						denizen.CombatSheet.AddDefenderTarget((MRDenizen)target, eDefenseType.Charge);
 					}
+				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Puts unassigned denizens that are being attacked on their own combat sheet.
+	/// </summary>
+	private void AssignUnassignedTargets()
+	{
+		foreach (MRIControllable combatant in mCombatants)
+		{
+			if (combatant is MRDenizen)
+			{
+				MRDenizen denizen = (MRDenizen)combatant;
+				if (denizen.CombatSheet == null && denizen.Attackers.Count > 0)
+				{
+					CreateCombatSheet(denizen, null, denizen);
 				}
 			}
 		}
@@ -1300,6 +1355,7 @@ public class MRCombatManager
 				if (damage >= characterArmor.BaseWeight)
 				{
 					// damage the armor
+					mRoundsWithNothing = -1;
 					if (characterArmor.State == MRArmor.eState.Undamaged && damage == characterArmor.BaseWeight)
 						characterArmor.State = MRArmor.eState.Damaged;
 					else if (characterArmor.State == MRArmor.eState.Damaged || damage > characterArmor.BaseWeight)
@@ -1307,21 +1363,31 @@ public class MRCombatManager
 				}
 				if (damage >= MRGame.eStrength.Medium)
 				{
+					mRoundsWithNothing = -1;
 					++target.CombatSheet.CharacterData.pendingWounds;
 				}
 			}
 			else
 			{
 				if (damage >= target.BaseWeight)
+				{
+					mRoundsWithNothing = -1;
 					targetDead = true;
+				}
 				else if (damage > MRGame.eStrength.Negligable)
+				{
+					mRoundsWithNothing = -1;
 					++target.CombatSheet.CharacterData.pendingWounds;
+				}
 			}
 		}
 		else
 		{
 			if (damage >= target.BaseWeight)
+			{
+				mRoundsWithNothing = -1;
 				targetDead = true;
+			}
 		}
 		if (targetDead)
 			target.Killers.Add(combatant);
@@ -1400,6 +1466,7 @@ public class MRCombatManager
 		{
 			MRDiePool missileRoll = attacker.DiePool(MRGame.eRollTypes.Missile);
 			missileRoll.RollDiceNow();
+			MRMainUI.TheUI.DisplayDieRollResult(missileRoll);
 			int roll = missileRoll.Roll;
 			bonusDamage = MissileTable[roll];
 			
@@ -1523,6 +1590,9 @@ public class MRCombatManager
 			mFriends.Remove(combatant);
 			if (combatant is MRDenizen)
 			{
+				combatant.Lurer = null;
+				combatant.Luring = null;
+				((MRDenizen)combatant).Side = MRDenizen.eSide.Light;
 				mEnemies.Remove((MRDenizen)combatant);
 				MRGame.TheGame.MonsterChart.AddDeadDenizen((MRDenizen)combatant);
 			}
@@ -1557,12 +1627,14 @@ public class MRCombatManager
 				{
 					if (combatSheet.CharacterData.attackChit.Stack != null)
 						combatSheet.CharacterData.attackChit.Stack.RemovePiece(combatSheet.CharacterData.attackChit);
+					combatSheet.CharacterData.attackChit.UsedThisRound = false;
 					combatSheet.CharacterData.attackChit = null;
 				}
 				if (combatSheet.CharacterData.maneuverChit != null)
 				{
 					if (combatSheet.CharacterData.maneuverChit.Stack != null)
 						combatSheet.CharacterData.maneuverChit.Stack.RemovePiece(combatSheet.CharacterData.maneuverChit);
+					combatSheet.CharacterData.maneuverChit.UsedThisRound = false;
 					combatSheet.CharacterData.maneuverChit = null;
 				}
 				if (combatSheet.CharacterData.weapon != null)
@@ -1723,9 +1795,11 @@ public class MRCombatManager
 	#region Members
 
 	private int mRound;
+	private int mRoundsWithNothing;
 	private bool mAllowEndCombat;
 	private eCombatPhase mCombatPhase;
 	private MRClearing mClearing;
+	private MRGamePieceStack mCombatStack;
 	private int mCurrentCombatantIndex;
 	private int mCurrentSheetIndex;
 	private eAttackType mLastSelectedAttackType;

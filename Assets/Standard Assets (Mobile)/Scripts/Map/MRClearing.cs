@@ -177,7 +177,16 @@ public class MRClearing : MonoBehaviour, MRILocation
 	{
 		Pieces.AddPieceToTop(piece);
 	}
-	
+
+	/// <summary>
+	/// Adds a piece to the bottom of the location.
+	/// </summary>
+	/// <param name="piece">the piece</param>
+	public void AddPieceToBottom(MRIGamePiece piece)
+	{
+		Pieces.AddPieceToBottom(piece);
+	}
+
 	/// <summary>
 	/// Removes a piece from the location.
 	/// </summary>

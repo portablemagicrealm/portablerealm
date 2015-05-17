@@ -90,6 +90,17 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 		}
 	}
 
+	public float StackScale
+	{
+		get{
+			return mStackScale;
+		}
+
+		set{
+			mStackScale = value;
+		}
+	}
+
 	#endregion
 
 	#region Methods
@@ -100,6 +111,7 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 	void Awake()
 	{
 		mInspecting = false;
+		mStackScale = 1.0f;
 	}
 
 	/// <summary>
@@ -181,7 +193,7 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 					    worldTouch.y - piece.Position.y <= bounds.max.y * piece.LocalScale.y)
 					{
 						Debug.Log ("Select piece " + piece.Name);
-						SendMessageUpwards("OnGamePieceSelectedGame", piece, SendMessageOptions.DontRequireReceiver);
+						MRGame.TheGame.OnGamePieceSelectedGame(piece);
 						break;
 					}
 				}
@@ -298,12 +310,15 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 	/// <param name="piece">the piece to remove</param>
 	public void RemovePiece(MRIGamePiece piece)
 	{
-//		SetPieceBasePos(piece);
-		piece.OldScale = Vector3.one;
-		piece.LocalScale = Vector3.one;
-		mPieces.Remove(piece);
-		piece.Layer = LayerMask.NameToLayer("Dummy");
-		piece.Stack = null;
+		if (mPieces.Contains(piece))
+		{
+//			SetPieceBasePos(piece);
+			piece.OldScale = Vector3.one;
+			piece.LocalScale = Vector3.one;
+			mPieces.Remove(piece);
+			piece.Layer = LayerMask.NameToLayer("Dummy");
+			piece.Stack = null;
+		}
 	}
 
 	/// <summary>
@@ -311,19 +326,25 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 	/// </summary>
 	public void Clear()
 	{
-		foreach (MRIGamePiece piece in mPieces)
+		while (mPieces.Count > 0)
 		{
-			SetPieceBasePos(piece);
-			piece.Stack = null;
+			MRIGamePiece piece = mPieces[0];
+			RemovePiece(piece);
 		}
-		mPieces.Clear();
+
+		//foreach (MRIGamePiece piece in mPieces)
+		//{
+		//	SetPieceBasePos(piece);
+		//	piece.Stack = null;
+		//}
+		//mPieces.Clear();
 	}
 
 	private void SetPieceBasePos(MRIGamePiece piece)
 	{
 		piece.Layer = mLayer;
 		piece.Parent = transform;
-		piece.LocalScale = piece.OldScale;
+		piece.LocalScale = new Vector3(piece.OldScale.x * mStackScale, piece.OldScale.y * mStackScale, 1f);
 		piece.Rotation = Quaternion.identity;
 	}
 
@@ -348,7 +369,7 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 		{
 			MRIGamePiece piece = mPieces[i];
 			Bounds bounds = piece.Bounds;
-			piece.Position = new Vector3(0, mInspectionOffset + pieceTopPos - bounds.extents.y * piece.LossyScale.y, 0.05f);
+			piece.Position = new Vector3(0, mInspectionOffset + pieceTopPos - bounds.extents.y * piece.LossyScale.y, 2f);
 			pieceTopPos -= bounds.size.y * piece.LocalScale.y + spacing;
 		}
 
@@ -406,6 +427,7 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 	private int mLayer;
 	private bool mInspecting;
 	private float mInspectionOffset;
+	private float mStackScale;
 	private Vector2 mLastTouchPos;
 
 	#endregion

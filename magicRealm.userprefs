@@ -1,14 +1,13 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatManager.cs">
     <Files>
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\MRGame.cs" Line="1164" Column="46" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatManager.cs" Line="959" Column="71" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatSheet.cs" Line="298" Column="18" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\MRGame.cs" Line="1" Column="1" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatManager.cs" Line="664" Column="29" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatSheet.cs" Line="513" Column="1" />
       <File FileName="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatSheetData.cs" Line="1" Column="1" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Map\MRClearing.cs" Line="1" Column="1" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRCharacter.cs" Line="722" Column="1" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\MRControllable.cs" Line="231" Column="49" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRCharacter.cs" Line="625" Column="17" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Denizens\MRMonsterChart.cs" Line="470" Column="27" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -16,16 +15,15 @@
           <Node name="Assembly-CSharp" expanded="True">
             <Node name="Standard Assets (Mobile)" expanded="True">
               <Node name="Scripts" expanded="True">
-                <Node name="Activities" expanded="True" />
                 <Node name="Characters" expanded="True">
                   <Node name="Classes" expanded="True" />
                 </Node>
                 <Node name="Combat" expanded="True">
                   <Node name="MRCombatManager.cs" selected="True" />
                 </Node>
+                <Node name="Denizens" expanded="True" />
                 <Node name="Events" expanded="True" />
                 <Node name="Map" expanded="True" />
-                <Node name="UI" expanded="True" />
               </Node>
             </Node>
           </Node>
