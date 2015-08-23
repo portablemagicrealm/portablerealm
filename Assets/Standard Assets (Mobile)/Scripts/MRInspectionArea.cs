@@ -59,7 +59,7 @@ public class MRInspectionArea : MonoBehaviour
 		}
 	}
 
-	public string HeaderText
+	private string HeaderText
 	{
 		get{
 			return mHeaderText.text;
@@ -156,6 +156,42 @@ public class MRInspectionArea : MonoBehaviour
 				}
 				break;
 			}
+		}
+
+		// display the inspection area text
+		HeaderText = "";
+		switch (MRGame.TheGame.CurrentView)
+		{
+			case MRGame.eViews.Map:
+				if (MRGame.TheGame.InspectionStack != null)
+				{
+					HeaderText = MRGame.TheGame.InspectionStack.Name;
+				}
+				else if (MRGame.TheGame.ActiveControllable != null)
+				{
+					HeaderText = MRGame.TheGame.ActiveControllable.Name;
+				}
+				break;
+			case MRGame.eViews.Characters:
+				break;
+			case MRGame.eViews.Monsters:
+				break;
+			case MRGame.eViews.Treasure:
+				break;
+			case MRGame.eViews.Main:
+				break;
+			case MRGame.eViews.FatigueCharacter:
+				break;
+			case MRGame.eViews.Combat:
+				break;
+			case MRGame.eViews.SelectAttack:
+				break;
+			case MRGame.eViews.SelectManeuver:
+				break;
+			case MRGame.eViews.SelectChit:
+				break;
+			case MRGame.eViews.SelectClearing:
+				break;
 		}
 	}
 

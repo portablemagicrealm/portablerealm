@@ -128,7 +128,7 @@ public class MRRoad : MonoBehaviour, MRILocation
 		gameObject.SetActive(false);
 		enabled = false;
 
-		mPieces = gameObject.AddComponent<MRGamePieceStack>();
+		mPieces = MRGame.TheGame.NewGamePieceStack();
 		mPieces.Layer = LayerMask.NameToLayer("Map");
 		mPieces.transform.parent = transform;
 		mPieces.transform.position = transform.position;
@@ -198,7 +198,7 @@ public class MRRoad : MonoBehaviour, MRILocation
 	public void RemovePiece(MRIGamePiece piece)
 	{
 		Pieces.RemovePiece(piece);
-		if (Pieces.Pieces.Count == 0)
+		if (Pieces.Count == 0)
 			gameObject.SetActive(false);
 	}
 
@@ -229,7 +229,7 @@ public class MRRoad : MonoBehaviour, MRILocation
 	
 	public void Save(JSONObject root)
 	{
-		if (mPieces.Pieces.Count > 0)
+		if (mPieces.Count > 0)
 		{
 			root["name"] = new JSONString(Name);
 			JSONObject pieces = new JSONObject();

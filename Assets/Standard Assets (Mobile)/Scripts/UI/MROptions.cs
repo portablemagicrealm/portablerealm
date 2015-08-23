@@ -66,6 +66,10 @@ public class MROptions : MonoBehaviour
 			{
 				MRGame.TheGame.InspectStack(mSelectedCharactersStack);
 			}
+			else if (MRGame.TheGame.InspectionStack == mSelectedCharactersStack)
+			{
+				MRGame.TheGame.InspectStack(null);
+			}
 		}
 	}
 
@@ -153,8 +157,6 @@ public class MROptions : MonoBehaviour
 	{
 		if (!Visible)
 			return;
-
-		MRGame.TheGame.InspectionArea.HeaderText = "";
 
 		if (mRandomSeed != null)
 			mRandomSeed.text = "Seed: " + MRRandom.seed;

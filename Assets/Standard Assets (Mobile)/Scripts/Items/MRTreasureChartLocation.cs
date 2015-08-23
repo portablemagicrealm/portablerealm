@@ -90,7 +90,7 @@ public class MRTreasureChartLocation : MonoBehaviour
 			return;
 
 		// see if we are being selected for inspection
-		if (MRGame.IsTouchHeld && !mInspectionToggle && mTreasures.Pieces.Count > 0)
+		if (MRGame.IsTouchHeld && !mInspectionToggle && mTreasures.Count > 0)
 		{
 			Vector3 worldTouch = mCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane));
 			RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero);

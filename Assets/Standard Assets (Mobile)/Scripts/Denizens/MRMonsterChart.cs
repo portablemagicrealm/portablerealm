@@ -439,7 +439,7 @@ public class MRMonsterChart : MonoBehaviour
 					// get the denizens from the first occupied box in the summon data
 					foreach (MRMonsterChartLocation box in data.Boxes)
 					{
-						if (box.Occupants.Pieces.Count > 0)
+						if (box.Occupants.Count > 0)
 						{
 							foreach (MRIGamePiece piece in box.Occupants.Pieces)
 							{

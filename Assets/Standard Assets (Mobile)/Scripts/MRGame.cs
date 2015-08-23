@@ -268,6 +268,13 @@ public class MRGame : MonoBehaviour, MRISerializable
 		}
 	}
 
+	public static float DpiScale
+	{
+		get{
+			return mDpiScale;
+		}
+	}
+
 	public static bool JustTouched
 	{
 		get{
@@ -446,6 +453,13 @@ public class MRGame : MonoBehaviour, MRISerializable
 		}
 	}
 
+	public MRGamePieceStack InspectionStack
+	{
+		get{
+			return mInspectionStack;
+		}
+	}
+
 	public ICollection<uint> Clearings
 	{
 		get {
@@ -469,11 +483,23 @@ public class MRGame : MonoBehaviour, MRISerializable
 
 		msTheGame = this;
 
+		#if UNITY_IPHONE
+		Handheld.SetActivityIndicatorStyle(iOSActivityIndicatorStyle.Gray);
+		#elif UNITY_ANDROID
+		Handheld.SetActivityIndicatorStyle(AndroidActivityIndicatorStyle.Small);
+		#endif
+
 		msGameTime = eTimeOfDay.Birdsong;
 		msGameDay = 1;
 		msShowingUI = false;
 		mActiveControllableIndex = 0;
 		mInCombat = false;
+
+		Debug.Log("Screen.dpi = " + Screen.dpi);
+		if (Screen.dpi < 200)
+			mDpiScale = 1.0f;
+		else
+			mDpiScale = 2.0f;
 
 		// static class initialization
 		MRSiteChit.Init();
@@ -559,6 +585,16 @@ public class MRGame : MonoBehaviour, MRISerializable
 		foreach (MRIControllable controllable in mControllables)
 		{
 			controllable.Update();
+		}
+
+		// show/hide the activity list
+		if (mActivityList != null)
+		{
+			mActivityList.Visible = false;
+			if (CurrentView == eViews.Map && mInspectionStack == null)
+				mActivityList.Visible = true;
+			else
+				mActivityList.Visible = false;
 		}
 	}
 
@@ -897,19 +933,6 @@ public class MRGame : MonoBehaviour, MRISerializable
 		mInspectionStack = stack;
 		if (mInspectionStack != null)
 			mInspectionStack.Inspecting = true;
-
-		// show/hide the activity list
-		if (mActivityList != null)
-		{
-			if (mInspectionStack != null)
-			{
-				mActivityList.Visible = false;
-			}
-			else if (CurrentView == eViews.Map && (msGameTime == eTimeOfDay.Birdsong || msGameTime == eTimeOfDay.Daylight))
-			{
-				mActivityList.Visible = true;
-			}
-		}
 	}
 
 	/// <summary>
@@ -961,8 +984,13 @@ public class MRGame : MonoBehaviour, MRISerializable
 			// see if the user pressed the "back" button
 			if (Input.GetKey(KeyCode.Escape))
 			{
-				// todo: save game?
-				Application.Quit();
+				if (mInspectionStack != null)
+					InspectStack(null);
+				else
+				{
+					// todo: save game?
+					Application.Quit();
+				}
 				return;
 			}
 
@@ -1072,6 +1100,8 @@ public class MRGame : MonoBehaviour, MRISerializable
 	{
 		Debug.Log("Load game start");
 
+		Handheld.StartActivityIndicator();
+
 		// load global data
 		msGameTime = (eTimeOfDay)((JSONNumber)root["time"]).IntValue;
 		msGameDay = ((JSONNumber)root["day"]).IntValue;
@@ -1082,6 +1112,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 			JSONObject randomData = (JSONObject)root["random"];
 			if (!MRRandom.Load(randomData))
 			{
+				Handheld.StopActivityIndicator();
 				Debug.LogError("Load random number generator error");
 				return false;
 			}
@@ -1091,6 +1122,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 		JSONObject mapData = (JSONObject)root["map"];
 		if (!mTheMap.Load(mapData))
 		{
+			Handheld.StopActivityIndicator();
 			Debug.LogError("Load game map error");
 			return false;
 		}
@@ -1106,11 +1138,13 @@ public class MRGame : MonoBehaviour, MRISerializable
 			MRCharacter character = CharacterManager.CreateCharacter(characterName.Value);
 			if (character == null)
 			{
+				Handheld.StopActivityIndicator();
 				Debug.LogError("Load game character create error");
 				return false;
 			}
 			if (!character.Load(characterData))
 			{
+				Handheld.StopActivityIndicator();
 				Debug.LogError("Load game character error");
 				return false;
 			}
@@ -1157,6 +1191,10 @@ public class MRGame : MonoBehaviour, MRISerializable
 		MRActivityList currentActivityList = ActiveControllable.ActivitiesForDay(MRGame.DayOfMonth);
 		MRGame.TheGame.ActivityList.ActivityList = currentActivityList;
 
+		if (root["monsterRoll"] != null)
+			mMonsterChart.MonsterRoll = ((JSONNumber)root["monsterRoll"]).IntValue;
+
+		Handheld.StopActivityIndicator();
 		Debug.Log("Load game end");
 		return true;
 	}
@@ -1164,12 +1202,14 @@ public class MRGame : MonoBehaviour, MRISerializable
 	public void Save(JSONObject root)
 	{
 		Debug.Log("Save game start");
+		Handheld.StartActivityIndicator();
 
 		// save global data
 		root["time"] = new JSONNumber((int)msGameTime);
 		root["day"] = new JSONNumber(msGameDay);
 		root["vault"] = new JSONBoolean(MRSiteChit.VaultOpened);
 		root["active"] = new JSONNumber(mActiveControllableIndex);
+		root["monsterRoll"] = new JSONNumber(mMonsterChart.MonsterRoll);
 
 		// save the random number generator
 		JSONObject randomData = new JSONObject();
@@ -1218,7 +1258,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 		int roadCount = 0;
 		foreach (MRRoad road in TheMap.Roads.Values)
 		{
-			if (road.Pieces.Pieces.Count > 0)
+			if (road.Pieces.Count > 0)
 				++roadCount;
 		}
 		if (roadCount > 0)
@@ -1227,7 +1267,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 			int roadIndex = 0;
 			foreach (MRRoad road in TheMap.Roads.Values)
 			{
-				if (road.Pieces.Pieces.Count > 0)
+				if (road.Pieces.Count > 0)
 				{
 					JSONObject roadData = new JSONObject();
 					road.Save(roadData);
@@ -1237,6 +1277,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 			root["roads"] = roads;
 		}
 
+		Handheld.StopActivityIndicator();
 		Debug.Log("Save game end");
 	}
 
@@ -1289,6 +1330,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 	private static bool msDoubleTapped;
 	private static bool msTouchHeld;
 	private static bool msShowingUI;
+	private static float mDpiScale;
 
 	private static eTimeOfDay msGameTime;
 	private static int msGameDay;

@@ -34,6 +34,7 @@ public class MRTradeActivity : MRActivity
 
 	protected override void InternalUpdate()
 	{
+		Executed = true;
 	}
 }
 

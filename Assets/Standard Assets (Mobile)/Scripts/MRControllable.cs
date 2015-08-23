@@ -84,18 +84,6 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 	/// <value>The defense type.</value>
 	public abstract MRCombatManager.eDefenseType DefenseType { get; }
 
-	public uint Id
-	{
-		get{
-			return mId;
-		}
-
-		protected set{
-			mId = value;
-			MRGame.TheGame.AddGamePiece(this);
-		}
-	}
-
 	public GameObject Counter
 	{
 		get{
@@ -318,20 +306,15 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 	/**********************/
 	// MRIGamePiece properties
 
-	public virtual string Name 
-	{ 
-		get{
-			return mName;
-		}
-	}
-
-	public Bounds Bounds
+	public uint Id
 	{
 		get{
-			if (mCounter != null)
-				return mCounter.GetComponentInChildren<SpriteRenderer>().sprite.bounds;
-			else
-				return new Bounds();
+			return mId;
+		}
+		
+		protected set{
+			mId = value;
+			MRGame.TheGame.AddGamePiece(this);
 		}
 	}
 
@@ -383,14 +366,14 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 		}
 		
 		set{
-			if (mLocation != null && mLocation.Pieces == Stack)
-			{
-				Counter.transform.localScale = new Vector3(
-					1.0f / mLocation.Owner.transform.localScale.x,
-					1.0f / mLocation.Owner.transform.localScale.y,
-					1.0f);
-			}
-			else
+			//if (mLocation != null && mLocation.Pieces == Stack && !Stack.Inspecting)
+			//{
+			//	mCounter.transform.localScale = new Vector3(
+			//		1.0f / mLocation.Owner.transform.localScale.x,
+			//		1.0f / mLocation.Owner.transform.localScale.y,
+			//		1.0f);
+			//}
+			//else
 			{
 				mCounter.transform.localScale = value;
 			}
@@ -427,6 +410,19 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 		}
 	}
 
+	public Bounds Bounds
+	{
+		get{
+			if (mCounter != null)
+			{
+				SpriteRenderer renderer = mCounter.GetComponentInChildren<SpriteRenderer>();
+				if (renderer)
+					return renderer.sprite.bounds;
+			}
+			return new Bounds();
+		}
+	}
+
 	public virtual Vector3 OldScale 
 	{ 
 		get	{
@@ -438,6 +434,13 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 		}
 	}
 
+	public virtual string Name 
+	{ 
+		get{
+			return mName;
+		}
+	}
+
 	public virtual MRGamePieceStack Stack 
 	{ 
 		get{
@@ -446,6 +449,17 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 
 		set{
 			mStack = value;
+		}
+	}
+
+	public virtual bool Visible
+	{
+		get{
+			return mCounter.activeSelf;
+		}
+
+		set{
+			mCounter.SetActive(value);
 		}
 	}
 

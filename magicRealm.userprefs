@@ -1,13 +1,10 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatManager.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Standard Assets (Mobile)\Scripts\MRGame.cs">
     <Files>
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\MRGame.cs" Line="1" Column="1" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatManager.cs" Line="664" Column="29" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatSheet.cs" Line="513" Column="1" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatSheetData.cs" Line="1" Column="1" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRCharacter.cs" Line="625" Column="17" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Denizens\MRMonsterChart.cs" Line="470" Column="27" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\MRGame.cs" Line="486" Column="19" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\UI\MRMainUI.cs" Line="303" Column="49" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Events\MRCreateMapEvent.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -15,15 +12,11 @@
           <Node name="Assembly-CSharp" expanded="True">
             <Node name="Standard Assets (Mobile)" expanded="True">
               <Node name="Scripts" expanded="True">
-                <Node name="Characters" expanded="True">
-                  <Node name="Classes" expanded="True" />
-                </Node>
-                <Node name="Combat" expanded="True">
-                  <Node name="MRCombatManager.cs" selected="True" />
-                </Node>
-                <Node name="Denizens" expanded="True" />
+                <Node name="Activities" expanded="True" />
+                <Node name="Combat" expanded="True" />
                 <Node name="Events" expanded="True" />
-                <Node name="Map" expanded="True" />
+                <Node name="UI" expanded="True" />
+                <Node name="MRGame.cs" selected="True" />
               </Node>
             </Node>
           </Node>
@@ -34,8 +27,7 @@
       </Pad>
       <Pad Id="MonoDevelop.Debugger.WatchPad">
         <State>
-          <Value>piece.LocalScale</Value>
-          <Value>piece.LossyScale</Value>
+          <Value>piece.Counter.transform.localScale</Value>
         </State>
       </Pad>
     </Pads>
@@ -43,6 +35,7 @@
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
       <Catchpoint exceptionName="System.Collections.Generic.KeyNotFoundException" />
+      <Breakpoint file="D:\Projects\magicRealm\Assets\Standard Assets (Mobile)\Scripts\UI\MRMainUI.cs" line="199" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />

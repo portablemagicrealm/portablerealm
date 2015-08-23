@@ -58,6 +58,29 @@ public class MRDwelling : MRChit
 		}
 	}
 
+	public override Transform Parent
+	{
+		get{
+			return base.Parent;
+		}
+
+		set {
+			base.Parent = value;
+			transform.localScale = Vector3.one;
+		}
+	}
+
+//	public override Vector3 LocalScale
+//	{
+//		get{
+//			return base.LocalScale;
+//		}
+//		
+//		set{
+//			base.LocalScale = value;
+//		}
+//	}
+
 	#endregion
 
 	#region Methods

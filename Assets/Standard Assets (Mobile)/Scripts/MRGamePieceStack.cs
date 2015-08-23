@@ -35,10 +35,28 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 {
 	#region Properties
 
+	public string Name
+	{
+		get{
+			return mName;
+		}
+
+		set{
+			mName = value;
+		}
+	}
+
 	public IList<MRIGamePiece> Pieces
 	{
 		get{
 			return mPieces;
+		}
+	}
+
+	public int Count
+	{
+		get{
+			return mPieces.Count;
 		}
 	}
 
@@ -98,6 +116,29 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 
 		set{
 			mStackScale = value;
+			if (!mInspecting)
+			{
+				for (int i = 0; i < mPieces.Count; ++i)
+				{
+					MRIGamePiece piece = mPieces[i];
+					piece.LocalScale = new Vector3(piece.OldScale.x * mStackScale, piece.OldScale.y * mStackScale, 1f);
+				}
+			}
+		}
+	}
+
+	public bool Visible
+	{
+		get{
+			return mVisible;
+		}
+
+		set{
+			mVisible = value;
+			foreach (MRIGamePiece piece in mPieces)
+			{
+				piece.Visible = mVisible;
+			}
 		}
 	}
 
@@ -351,13 +392,16 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 	private void SetPieceInspectionPos(MRIGamePiece piece)
 	{
 		piece.Layer = LayerMask.NameToLayer("InspectionList");
-		piece.OldScale = new Vector3(piece.LocalScale.x, piece.LocalScale.y, 1f);
+		piece.OldScale = new Vector3(piece.LocalScale.x / mStackScale, piece.LocalScale.y / mStackScale, 1f);
 		float inspectionScale = 2.0f / piece.Parent.localScale.x;
 		piece.LocalScale = new Vector3(inspectionScale, inspectionScale, 1f);
 	}
 
 	private void SetInspectionPositions()
 	{
+		if (mPieces.Count == 0)
+			return;
+
 		if (mInspectionOffset < 0)
 			mInspectionOffset = 0;
 		
@@ -370,7 +414,7 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 			MRIGamePiece piece = mPieces[i];
 			Bounds bounds = piece.Bounds;
 			piece.Position = new Vector3(0, mInspectionOffset + pieceTopPos - bounds.extents.y * piece.LossyScale.y, 2f);
-			pieceTopPos -= bounds.size.y * piece.LocalScale.y + spacing;
+			pieceTopPos -= bounds.size.y * piece.LossyScale.y + spacing;
 		}
 
 		// if we're scrolling, make sure the bottom piece isn't too high
@@ -429,6 +473,8 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 	private float mInspectionOffset;
 	private float mStackScale;
 	private Vector2 mLastTouchPos;
+	private string mName = "";
+	private bool mVisible = true;
 
 	#endregion
 }

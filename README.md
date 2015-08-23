@@ -19,3 +19,5 @@ How to use the map screen:
 * During the daylight phase, the action list is shown again, but you can't edit it. Instead, double-tap the highlighted action to execute it. After all your actions have been done, you can double-tap on the clock to advance to the next phase (or character).
 
 * Also on the map screen: you can double-tap on a non-clearing area of the map to zoom in to a single tile or zoom back out. Using pinch-zoom will be implemented in the future.
+
+* If you press and hold on a clearing, the contents of the clearing will be shown on the left. Press and hold on the clearing to restore the items. This can also be used in combat to show and target monsters in a defense box.

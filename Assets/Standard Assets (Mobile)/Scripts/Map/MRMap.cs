@@ -170,16 +170,6 @@ public class MRMap : MonoBehaviour, MRISerializable
 		if (!Visible)
 			return;
 
-		// update the header
-		if ((MRGame.TimeOfDay == MRGame.eTimeOfDay.Birdsong || MRGame.TimeOfDay == MRGame.eTimeOfDay.Daylight) && MRGame.TheGame.ActiveControllable != null)
-		{
-			MRGame.TheGame.InspectionArea.HeaderText = MRGame.TheGame.ActiveControllable.Name;
-		}
-		else
-		{
-			MRGame.TheGame.InspectionArea.HeaderText = "";
-		}
-
 		// test user interaction
 		if (MRGame.IsTouching)
 		{

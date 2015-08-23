@@ -307,6 +307,7 @@ public class MRCombatManager
 		mLastSelectedAttackType = eAttackType.Thrust;
 		mLastSelectedDefenseType = eDefenseType.Charge;
 		mCombatStack = MRGame.TheGame.NewGamePieceStack();
+		mCombatStack.gameObject.name = "CombatStack";
 		mCombatStack.Inspecting = true;
 	}
 
@@ -322,6 +323,15 @@ public class MRCombatManager
 		if (mCurrentSheetIndex >= 0 && mCurrentSheetIndex < mCombatSheets.Count)
 		{
 			MRGame.TheGame.CombatSheet.CombatData = mCombatSheets[mCurrentSheetIndex];
+		}
+
+		if (MRGame.TheGame.InspectionStack != null && MRGame.TheGame.InspectionStack != mCombatStack)
+		{
+			mCombatStack.Visible = false;
+		}
+		else
+		{
+			mCombatStack.Visible = true;
 		}
 
 		if (mCombatPhase == eCombatPhase.FatigueChits && mCurrentCombatantIndex >= 0)
@@ -564,7 +574,7 @@ public class MRCombatManager
 	/// </summary>
 	private void EndCombat()
 	{
-		MRGame.TheGame.CombatSheet.HideCombatStack();
+//		MRGame.TheGame.CombatSheet.HideCombatStack();
 		MRGame.TheGame.CombatSheet.Combat = null;
 		MRGame.TheGame.CombatSheet.CombatData = null;
 		mCurrentSheetIndex = 0;

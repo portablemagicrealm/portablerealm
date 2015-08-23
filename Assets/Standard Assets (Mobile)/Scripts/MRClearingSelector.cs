@@ -114,8 +114,8 @@ public class MRClearingSelector : MonoBehaviour
 			Rect myPos = new Rect();
 			myPos.x = parentPos.x + parentPos.width;
 			myPos.y = parentPos.y;
-			myPos.width = mPixelSize / Screen.width;
-			myPos.height = mPixelSize / Screen.height;
+			myPos.width = (mPixelSize / Screen.width) * MRGame.DpiScale;
+			myPos.height = (mPixelSize / Screen.height) * MRGame.DpiScale;
 			mCamera.rect = myPos;
 
 			gameObject.transform.position = mActivity.gameObject.transform.position;

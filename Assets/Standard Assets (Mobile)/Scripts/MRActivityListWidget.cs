@@ -313,9 +313,9 @@ public class MRActivityListWidget : MonoBehaviour
 
 				Rect newPos = new Rect();
 				newPos.x = MRGame.TheGame.InspectionArea.InspectionBoundsPixels.xMin / Screen.width;
-				newPos.y = (MRGame.TheGame.InspectionArea.InspectionBoundsPixels.yMax / Screen.height) - ((activitySize * (currentActivityIndex + 1))+ (mBorderPixelSize - activitySize) + mCurrentWidgetOffset) / Screen.height;
-				newPos.width = mBorderPixelSize / Screen.width;
-				newPos.height = mBorderPixelSize / Screen.height;
+				newPos.y = (MRGame.TheGame.InspectionArea.InspectionBoundsPixels.yMax / Screen.height) - (((activitySize * (currentActivityIndex + 1))+ (mBorderPixelSize - activitySize) + mCurrentWidgetOffset) / Screen.height) * MRGame.DpiScale;
+				newPos.width = (mBorderPixelSize / Screen.width) * MRGame.DpiScale;
+				newPos.height = (mBorderPixelSize / Screen.height) * MRGame.DpiScale;
 				mCamera.rect = newPos;
 			}
 			else
@@ -325,9 +325,9 @@ public class MRActivityListWidget : MonoBehaviour
 				// adjust the camera for the list position
 				Rect newPos = new Rect();
 				newPos.x = MRGame.TheGame.InspectionArea.InspectionBoundsPixels.xMin / Screen.width;
-				newPos.y = (MRGame.TheGame.InspectionArea.InspectionBoundsPixels.yMax / Screen.height) - ((activitySize * (currentActivityIndex + 1)) + (mBorderPixelSize - activitySize)) / Screen.height;
-				newPos.width = mBorderPixelSize / Screen.width;
-				newPos.height = mBorderPixelSize / Screen.height;
+				newPos.y = (MRGame.TheGame.InspectionArea.InspectionBoundsPixels.yMax / Screen.height) - (((activitySize * (currentActivityIndex + 1)) + (mBorderPixelSize - activitySize)) / Screen.height) * MRGame.DpiScale;
+				newPos.width = (mBorderPixelSize / Screen.width) * MRGame.DpiScale;
+				newPos.height = (mBorderPixelSize / Screen.height) * MRGame.DpiScale;
 				mCamera.rect = newPos;
 			}
 			mCamera.enabled = true;

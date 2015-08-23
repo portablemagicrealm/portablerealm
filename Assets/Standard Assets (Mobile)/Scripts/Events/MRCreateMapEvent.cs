@@ -52,8 +52,10 @@ public class MRCreateMapEvent : MRUpdateEvent
 	public override bool Update ()
 	{
 		// create the map
+		Handheld.StartActivityIndicator();
 		MRGame.TheGame.TheMap.CreateMap();
 		MRGame.TheGame.RemoveUpdateEvent(this);
+		Handheld.StopActivityIndicator();
 		return false;
 	}
 

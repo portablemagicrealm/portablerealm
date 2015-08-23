@@ -53,7 +53,6 @@ public class MRUpdateViewEvent : MRUpdateEvent
 			case MRGame.eViews.Map:
 			case MRGame.eViews.SelectClearing:
 				MRGame.TheGame.TheMap.Visible = true;
-				MRGame.TheGame.ActivityList.Visible = true;
 				MRGame.TheGame.MonsterChart.Visible = false;
 				MRGame.TheGame.TreasureChart.Visible = false;
 				MRGame.TheGame.CharacterMat.Visible = false;
@@ -63,7 +62,6 @@ public class MRUpdateViewEvent : MRUpdateEvent
 			case MRGame.eViews.Characters:
 				MRGame.TheGame.CharacterMat.Visible = true;
 				MRGame.TheGame.TheMap.Visible = false;
-				MRGame.TheGame.ActivityList.Visible = false;
 				MRGame.TheGame.MonsterChart.Visible = false;
 				MRGame.TheGame.TreasureChart.Visible = false;
 				MRGame.TheGame.CharacterMat.Controllable = MRGame.TheGame.ActiveControllable;
@@ -74,7 +72,6 @@ public class MRUpdateViewEvent : MRUpdateEvent
 				MRGame.TheGame.MonsterChart.Visible = true;
 				MRGame.TheGame.TreasureChart.Visible = false;
 				MRGame.TheGame.TheMap.Visible = false;
-				MRGame.TheGame.ActivityList.Visible = false;
 				MRGame.TheGame.CharacterMat.Visible = false;
 				MRGame.TheGame.CombatSheet.Visible = false;
 				MRGame.TheGame.Main.Visible = false;
@@ -83,7 +80,6 @@ public class MRUpdateViewEvent : MRUpdateEvent
 				MRGame.TheGame.TreasureChart.Visible = true;
 				MRGame.TheGame.MonsterChart.Visible = false;
 				MRGame.TheGame.TheMap.Visible = false;
-				MRGame.TheGame.ActivityList.Visible = false;
 				MRGame.TheGame.CharacterMat.Visible = false;
 				MRGame.TheGame.CombatSheet.Visible = false;
 				MRGame.TheGame.Main.Visible = false;
@@ -93,7 +89,6 @@ public class MRUpdateViewEvent : MRUpdateEvent
 				MRGame.TheGame.TreasureChart.Visible = false;
 				MRGame.TheGame.MonsterChart.Visible = false;
 				MRGame.TheGame.TheMap.Visible = false;
-				MRGame.TheGame.ActivityList.Visible = false;
 				MRGame.TheGame.CharacterMat.Visible = false;
 				MRGame.TheGame.CombatSheet.Visible = false;
 				break;
@@ -103,7 +98,6 @@ public class MRUpdateViewEvent : MRUpdateEvent
 			case MRGame.eViews.SelectChit:
 				MRGame.TheGame.CharacterMat.Visible = true;
 				MRGame.TheGame.TheMap.Visible = false;
-				MRGame.TheGame.ActivityList.Visible = false;
 				MRGame.TheGame.MonsterChart.Visible = false;
 				MRGame.TheGame.TreasureChart.Visible = false;
 				MRGame.TheGame.CombatSheet.Visible = false;
@@ -114,7 +108,6 @@ public class MRUpdateViewEvent : MRUpdateEvent
 				MRGame.TheGame.TreasureChart.Visible = false;
 				MRGame.TheGame.MonsterChart.Visible = false;
 				MRGame.TheGame.TheMap.Visible = false;
-				MRGame.TheGame.ActivityList.Visible = false;
 				MRGame.TheGame.CharacterMat.Visible = false;
 				MRGame.TheGame.Main.Visible = false;
 				break;

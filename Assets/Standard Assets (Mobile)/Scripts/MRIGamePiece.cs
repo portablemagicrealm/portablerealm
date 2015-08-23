@@ -39,6 +39,7 @@ public interface MRIGamePiece
 	Vector3 OldScale { get; set; }
 	string Name { get; }
 	MRGamePieceStack Stack { get; set; }
+	bool Visible { get; set; }
 
 	void Update();
 }

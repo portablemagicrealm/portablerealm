@@ -254,22 +254,6 @@ public class MRCombatSheet : MonoBehaviour
 	{
 		MRCombatManager combatManger = MRGame.TheGame.CombatManager;
 
-		// show/hide the combat stack list
-		if (mCombatStack == null)
-		{
-			mCombatStack = MRGame.TheGame.NewGamePieceStack();
-			mCombatStack.gameObject.name = "CombatStack";
-			mCombatStack.transform.parent = MRGame.TheGame.transform;
-			mCombatStack.Inspecting = true;
-		}
-		if (combatManger.Clearing != null)
-		{
-			if (MRGame.TheGame.CurrentView == MRGame.eViews.Combat)
-				ShowCombatStack();
-			else
-				HideCombatStack();
-		}
-
 		if (!Visible)
 			return;
 
@@ -454,6 +438,32 @@ public class MRCombatSheet : MonoBehaviour
 				}
 			}
 		}
+		else if (MRGame.IsTouchHeld && !mInspectionToggle)
+		{
+			Vector3 worldTouch = mCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane));
+			RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero);
+			foreach (RaycastHit2D hit in hits)
+			{
+				MRCombatManager.eDefenseType defenseType;
+				if (mDefenderDefense.TryGetValue(hit.collider.gameObject.name, out defenseType))
+				{
+					mInspectionToggle = true;
+					MRGamePieceStack defenseStack = mDefenderPositions[defenseType];
+					if (!defenseStack.Inspecting)
+					{
+						MRGame.TheGame.InspectStack(defenseStack);
+					}
+					else
+					{
+						MRGame.TheGame.InspectStack(null);
+					}
+				}
+			}
+		}
+		else if (!MRGame.IsTouchHeld && mInspectionToggle)
+		{
+			mInspectionToggle = false;
+		}
 	}
 
 	/// <summary>
@@ -466,52 +476,6 @@ public class MRCombatSheet : MonoBehaviour
 		if (Visible && piece is MRIControllable)
 		{
 			MRGame.TheGame.CombatManager.OnControllableSelected(mCombatData.SheetOwner, (MRIControllable)piece);
-		}
-	}
-
-	
-	/// <summary>
-	/// Moves the combatants in the clearing to the combat stack.
-	/// </summary>
-	public void ShowCombatStack()
-	{
-		MRCombatManager combatManger = MRGame.TheGame.CombatManager;
-		if (combatManger.Clearing != null && mCombatStack != null)
-		{
-			// so we don't modify the source list while moving pieces, we need to store them in a temporary list first
-			IList<MRControllable> moveList = new List<MRControllable>();
-			foreach (MRIGamePiece piece in combatManger.Clearing.Pieces.Pieces)
-			{
-				if (piece is MRControllable)
-				{
-					moveList.Add((MRControllable)piece);
-				}
-			}
-			foreach (MRControllable piece in moveList)
-			{
-				mCombatStack.AddPieceToBottom(piece);
-			}
-		}
-	}
-	
-	/// <summary>
-	/// Moves the combatants in the combat stack to the clearing.
-	/// </summary>
-	public void HideCombatStack()
-	{
-		MRCombatManager combatManger = MRGame.TheGame.CombatManager;
-		if (combatManger.Clearing != null && mCombatStack != null)
-		{
-			// so we don't modify the source list while moving pieces, we need to store them in a temporary list first
-			IList<MRControllable> moveList = new List<MRControllable>();
-			foreach (MRIGamePiece piece in mCombatStack.Pieces)
-			{
-				moveList.Add((MRControllable)piece);
-			}
-			foreach (MRControllable piece in moveList)
-			{
-				combatManger.Clearing.Pieces.AddPieceToBottom(piece);
-			}
 		}
 	}
 
@@ -565,8 +529,7 @@ public class MRCombatSheet : MonoBehaviour
 	private GameObject mSheetLeftArrow;
 	private GameObject mSheetRightArrow;
 	private SpriteRenderer mEndCombatEnabled;
-
-	private MRGamePieceStack mCombatStack;
+	private bool mInspectionToggle = false;
 
 	private MRCombatManager mCombat;
 	private MRCombatSheetData mCombatData;

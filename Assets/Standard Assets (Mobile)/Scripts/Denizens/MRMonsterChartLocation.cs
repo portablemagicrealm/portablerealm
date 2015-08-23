@@ -104,7 +104,7 @@ public class MRMonsterChartLocation : MonoBehaviour
 		}
 
 		// see if we are being selected for inspection
-		if (MRGame.IsTouchHeld && !mInspectionToggle && mOccupants.Pieces.Count > 0)
+		if (MRGame.IsTouchHeld && !mInspectionToggle && mOccupants.Count > 0)
 		{
 			Vector3 worldTouch = mCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane));
 			RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero);

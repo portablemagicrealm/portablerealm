@@ -34,6 +34,7 @@ public class MRHireActivity : MRActivity
 
 	protected override void InternalUpdate()
 	{
+		Executed = true;
 	}
 }
 

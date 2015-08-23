@@ -119,10 +119,13 @@ public class MRClearing : MonoBehaviour, MRILocation
 		mPieces.Layer = LayerMask.NameToLayer("Map");
 		mPieces.transform.parent = transform;
 		mPieces.transform.position = transform.position;
+		mPieces.StackScale = 1.0f / transform.localScale.x;
+		mPieces.Name = Name.Substring(1);
 
 		mAbandonedItems.Layer = LayerMask.NameToLayer("Map");
 		mAbandonedItems.transform.parent = transform;
 		mAbandonedItems.transform.position = transform.position;
+		mPieces.Name = Name.Substring(1);
 
 		mMapCamera = MRGame.TheGame.TheMap.MapCamera;
 	}
@@ -139,14 +142,34 @@ public class MRClearing : MonoBehaviour, MRILocation
 		if (MRGame.TheGame.CurrentView != MRGame.eViews.Map && MRGame.TheGame.CurrentView != MRGame.eViews.SelectClearing)
 			return;
 
-		if (mMyTileSide.Tile.Front == mMyTileSide.type && MRGame.IsDoubleTapped)
+		if (mMyTileSide.Tile.Front == mMyTileSide.type)
 		{
-			Vector3 worldTouch = mMapCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mMapCamera.nearClipPlane));
-			RaycastHit2D hit = Physics2D.Raycast(worldTouch, Vector2.zero);
-			if (hit.collider == collider2D)
+			if (MRGame.IsDoubleTapped)
 			{
-				Debug.Log("Clearing selected: " + Name);
-				SendMessageUpwards("OnClearingSelectedGame", this, SendMessageOptions.DontRequireReceiver);
+				Vector3 worldTouch = mMapCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mMapCamera.nearClipPlane));
+				RaycastHit2D hit = Physics2D.Raycast(worldTouch, Vector2.zero);
+				if (hit.collider == collider2D)
+				{
+					Debug.Log("Clearing selected: " + Name);
+					SendMessageUpwards("OnClearingSelectedGame", this, SendMessageOptions.DontRequireReceiver);
+				}
+			}
+			else if (MRGame.IsTouchHeld && mPieces.Count > 0 && !mInspectionToggle)
+			{
+				Vector3 worldTouch = mMapCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mMapCamera.nearClipPlane));
+				RaycastHit2D hit = Physics2D.Raycast(worldTouch, Vector2.zero);
+				if (hit.collider == collider2D)
+				{
+					mInspectionToggle = true;
+					if (!mPieces.Inspecting)
+						MRGame.TheGame.InspectStack(mPieces);
+					else
+						MRGame.TheGame.InspectStack(null);
+				}
+			}
+			else if (!MRGame.IsTouchHeld && mInspectionToggle)
+			{
+				mInspectionToggle = false;
 			}
 		}
 	}
@@ -245,6 +268,7 @@ public class MRClearing : MonoBehaviour, MRILocation
 	private Camera mMapCamera;
 	private MRGamePieceStack mPieces;
 	private MRGamePieceStack mAbandonedItems;
+	private bool mInspectionToggle = false;
 
 	#endregion
 }

@@ -178,7 +178,7 @@ public class MRSearchActivity : MRActivity
 			}
 		}
 		// if there are abandoned items in the clearing, they can be looted
-		if (Owner.Location.AbandonedItems.Pieces.Count > 0)
+		if (Owner.Location.AbandonedItems.Count > 0)
 		{
 			buttons.Add("Loot Abandoned Items");
 		}
@@ -266,7 +266,7 @@ public class MRSearchActivity : MRActivity
 			}
 		}
 		buttonOffset += i;
-		if (Owner.Location.AbandonedItems.Pieces.Count > 0 && button == buttonOffset)
+		if (Owner.Location.AbandonedItems.Count > 0 && button == buttonOffset)
 		{
 			mState = eState.Roll;
 			mClearing = ownerClearing;
@@ -424,9 +424,9 @@ public class MRSearchActivity : MRActivity
 		{
 			// put the skeleton's treasues on its source stack
 			MRGamePieceStack subTreasues = MRGame.TheGame.TreasureChart.GetTwitTreasures(mPieceLooted.Id);
-			while (subTreasues.Pieces.Count > 0)
+			while (subTreasues.Count > 0)
 			{
-				mPieceLooted.Stack.AddPieceToTop(subTreasues.Pieces[subTreasues.Pieces.Count - 1]);
+				mPieceLooted.Stack.AddPieceToTop(subTreasues.Pieces[subTreasues.Count - 1]);
 			}
 			// remove the skeleton from the game
 			mPieceLooted.Stack.RemovePiece(mPieceLooted);
@@ -437,9 +437,9 @@ public class MRSearchActivity : MRActivity
 		{
 			// give the sub-treasures to the owner
 			MRGamePieceStack subTreasues = MRGame.TheGame.TreasureChart.GetTwitTreasures(mPieceLooted.Id);
-			while (subTreasues.Pieces.Count > 0)
+			while (subTreasues.Count > 0)
 			{
-				Owner.AddItem((MRItem)subTreasues.Pieces[subTreasues.Pieces.Count - 1]);
+				Owner.AddItem((MRItem)subTreasues.Pieces[subTreasues.Count - 1]);
 			}
 			Owner.BaseGold += 20;
 			// remove the remains from the game
@@ -565,7 +565,7 @@ public class MRSearchActivity : MRActivity
 				//roll = 3;
 				Debug.Log("Search Loot Table roll = " + roll);
 
-				if (roll <= mLootStackSelected.Pieces.Count)
+				if (roll <= mLootStackSelected.Count)
 				{
 					mPieceLooted = (MRItem)(mLootStackSelected.Pieces[roll - 1]);
 					if (mPieceLooted.BaseWeight != MRGame.eStrength.Immobile)

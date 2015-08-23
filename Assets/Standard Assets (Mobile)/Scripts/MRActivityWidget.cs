@@ -327,10 +327,10 @@ public class MRActivityWidget : MonoBehaviour
 		float aspect = Screen.width / Screen.height;
 		Rect newPos = new Rect();
 		float parentOffset = (mParentSize - mPixelSize) / 2.0f;
-		newPos.x = (parentOffset + MRGame.TheGame.InspectionArea.InspectionBoundsPixels.xMin) / Screen.width;
-		newPos.y = (MRGame.TheGame.InspectionArea.InspectionBoundsPixels.yMax / Screen.height) - ((mPixelSize * (mListPosition + 1)) + parentOffset) / Screen.height;
-		newPos.width = mPixelSize / Screen.width;
-		newPos.height = mPixelSize / Screen.height;
+		newPos.x = (parentOffset * MRGame.DpiScale + MRGame.TheGame.InspectionArea.InspectionBoundsPixels.xMin) / Screen.width;
+		newPos.y = (MRGame.TheGame.InspectionArea.InspectionBoundsPixels.yMax / Screen.height) - (((mPixelSize * (mListPosition + 1)) + parentOffset) / Screen.height) * MRGame.DpiScale;
+		newPos.width = (mPixelSize / Screen.width) * MRGame.DpiScale;
+		newPos.height = (mPixelSize / Screen.height) * MRGame.DpiScale;
 		mCamera.rect = newPos;
 
 		// if we're not enabled, don't show the activity strip

@@ -34,6 +34,7 @@ public class MRFollowActivity : MRActivity
 
 	protected override void InternalUpdate()
 	{
+		Executed = true;
 	}
 }
 

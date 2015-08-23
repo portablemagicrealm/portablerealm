@@ -43,19 +43,6 @@ public class MRChit : MonoBehaviour, MRIGamePiece, MRISerializable
 
 	#region Properties
 
-	public uint Id
-	{
-		get
-		{
-			return mId;
-		}
-
-		protected set{
-			mId = value;
-			MRGame.TheGame.AddGamePiece(this);
-		}
-	}
-
 	public eSide SideUp
 	{
 		get{
@@ -64,6 +51,22 @@ public class MRChit : MonoBehaviour, MRIGamePiece, MRISerializable
 
 		set{
 			mSideUp = value;
+		}
+	}
+
+	/**********************/
+	// MRIGamePiece properties
+
+	public uint Id
+	{
+		get
+		{
+			return mId;
+		}
+		
+		protected set{
+			mId = value;
+			MRGame.TheGame.AddGamePiece(this);
 		}
 	}
 
@@ -120,21 +123,25 @@ public class MRChit : MonoBehaviour, MRIGamePiece, MRISerializable
 		}
 	}
 
-	public Transform Parent
+	public virtual Transform Parent
 	{
-		set {
-			gameObject.transform.parent = value;
-		}
-
 		get{
 			return gameObject.transform.parent;
+		}
+
+		set {
+			gameObject.transform.parent = value;
 		}
 	}
 
 	public Bounds Bounds
 	{
 		get{
-			return mBounds;
+			//return mBounds;
+			if (mCounter != null)
+				return mCounter.GetComponentInChildren<SpriteRenderer>().sprite.bounds;
+			else
+				return new Bounds();
 		}
 	}
 
@@ -167,6 +174,17 @@ public class MRChit : MonoBehaviour, MRIGamePiece, MRISerializable
 		}
 		set{
 			mStack = value;
+		}
+	}
+
+	public virtual bool Visible
+	{
+		get{
+			return mCounter.activeSelf;
+		}
+		
+		set{
+			mCounter.SetActive(value);
 		}
 	}
 

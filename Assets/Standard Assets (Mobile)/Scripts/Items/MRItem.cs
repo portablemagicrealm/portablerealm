@@ -44,25 +44,6 @@ public class MRItem : MRIGamePiece, MRISerializable
 		}
 	}
 
-	public uint Id
-	{
-		get{
-			return mId;
-		}
-
-		protected set{
-			mId = value;
-			MRGame.TheGame.AddGamePiece(this);
-		}
-	}
-
-	public string Name
-	{
-		get{
-			return mName;
-		}
-	}
-
 	public int Index
 	{
 		get{
@@ -106,6 +87,28 @@ public class MRItem : MRIGamePiece, MRISerializable
 
 		set{
 			mOwner = value;
+		}
+	}
+
+	public MRGamePieceStack StartStack 
+	{ 
+		get{
+			return mStartStack;
+		}
+	}
+
+	/**********************/
+	// MRIGamePiece properties
+
+	public uint Id
+	{
+		get{
+			return mId;
+		}
+		
+		protected set{
+			mId = value;
+			MRGame.TheGame.AddGamePiece(this);
 		}
 	}
 
@@ -202,10 +205,10 @@ public class MRItem : MRIGamePiece, MRISerializable
 		}
 	}
 
-	public MRGamePieceStack StartStack 
-	{ 
+	public string Name
+	{
 		get{
-			return mStartStack;
+			return mName;
 		}
 	}
 
@@ -218,6 +221,17 @@ public class MRItem : MRIGamePiece, MRISerializable
 			if (mStartStack == null)
 				mStartStack = value;
 			mStack = value;
+		}
+	}
+
+	public virtual bool Visible
+	{
+		get{
+			return mCounter.activeSelf;
+		}
+		
+		set{
+			mCounter.SetActive(value);
 		}
 	}
 

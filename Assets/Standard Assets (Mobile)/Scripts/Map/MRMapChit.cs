@@ -177,6 +177,18 @@ public class MRMapChit : MRChit
 		}
 	}
 
+	public override Transform Parent
+	{
+		get{
+			return base.Parent;
+		}
+		
+		set {
+			base.Parent = value;
+			transform.localScale = Vector3.one;
+		}
+	}
+
 	#endregion
 
 	#region Methods
@@ -235,7 +247,7 @@ public class MRMapChit : MRChit
 		{
 			if (text.gameObject.name == "FrontText")
 			{
-				if (MRGame.TheGame.TheMap.MapZoomed)
+				if (MRGame.TheGame.TheMap.MapZoomed || (Stack != null && Stack.Inspecting))
 				{
 					text.fontSize = SMALL_FONT_SIZE;
 					text.text = mLongName;
