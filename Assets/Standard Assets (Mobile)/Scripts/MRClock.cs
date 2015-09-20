@@ -95,7 +95,7 @@ public class MRClock : MonoBehaviour
 		transform.Translate(cameraPosMap.x - colliderPosWorld.x, cameraPosMap.y - colliderPosWorld.y, 0);
 		colliderPosWorld = transform.TransformPoint(new Vector3(collider.center.x - collider.size.x / 2.0f, collider.center.y - collider.size.y / 2.0f, 0));
 
-		if (MRGame.IsDoubleTapped)
+		if (MRGame.IsDoubleTapped && MRGame.TheGame.GameState == MRGame.eGameState.Active)
 		{
 			Vector3 worldTouch = mapCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane));
 			RaycastHit2D hit = Physics2D.Raycast(worldTouch, Vector2.zero);

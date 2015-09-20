@@ -509,57 +509,60 @@ public class MRCombatManager
 		{
 			if (piece is MRControllable)
 			{
-				toRemove.Add(piece);
-				mCombatants.Add((MRControllable)piece);
-			}
-			if (piece is MRCharacter)
-			{
-				mFriends.Add((MRControllable)piece);
-				// need a combat sheet per character (minimum)
-				MRCharacter character = (MRCharacter)piece;
-				MRCombatSheetData sheetData = new MRCombatSheetData();
-				sheetData.SheetOwner = character;
-				sheetData.CharacterData = new MRCombatSheetData.MRCharacterCombatData();
-				character.CombatSheet = sheetData;
-				foreach (MRIGamePiece item in character.ActiveItems)
+				MRControllable controllable = (MRControllable)piece;
+				if (controllable.IsDead)
+					continue;
+				toRemove.Add(controllable);
+				mCombatants.Add(controllable);
+				if (controllable is MRCharacter)
 				{
-					if (item is MRWeapon)
+					mFriends.Add(controllable);
+					// need a combat sheet per character (minimum)
+					MRCharacter character = (MRCharacter)controllable;
+					MRCombatSheetData sheetData = new MRCombatSheetData();
+					sheetData.SheetOwner = character;
+					sheetData.CharacterData = new MRCombatSheetData.MRCharacterCombatData();
+					character.CombatSheet = sheetData;
+					foreach (MRIGamePiece item in character.ActiveItems)
 					{
-						sheetData.CharacterData.weapon = (MRWeapon)item;
-					}
-					else if (item is MRArmor)
-					{
-						MRArmor armor = (MRArmor)item;
-						switch (armor.Type)
+						if (item is MRWeapon)
 						{
-							case MRArmor.eType.Breastplate:
-								sheetData.CharacterData.breastplate = armor;
-								break;
-							case MRArmor.eType.Full:
-								sheetData.CharacterData.fullArmor = armor;
-								break;
-							case MRArmor.eType.Helmet:
-								sheetData.CharacterData.helmet = armor;
-								break;
-							case MRArmor.eType.Shield:
-								sheetData.CharacterData.shield = armor;
-								sheetData.CharacterData.shieldType = eAttackType.Thrust;
-								break;
-							default:
-								break;
+							sheetData.CharacterData.weapon = (MRWeapon)item;
+						}
+						else if (item is MRArmor)
+						{
+							MRArmor armor = (MRArmor)item;
+							switch (armor.Type)
+							{
+								case MRArmor.eType.Breastplate:
+									sheetData.CharacterData.breastplate = armor;
+									break;
+								case MRArmor.eType.Full:
+									sheetData.CharacterData.fullArmor = armor;
+									break;
+								case MRArmor.eType.Helmet:
+									sheetData.CharacterData.helmet = armor;
+									break;
+								case MRArmor.eType.Shield:
+									sheetData.CharacterData.shield = armor;
+									sheetData.CharacterData.shieldType = eAttackType.Thrust;
+									break;
+								default:
+									break;
+							}
+						}
+						else if (item is MRHorse)
+						{
 						}
 					}
-					else if (item is MRHorse)
-					{
-					}
+					mCombatSheets.Add(sheetData);
 				}
-				mCombatSheets.Add(sheetData);
-			}
-			else if (piece is MRDenizen)
-			{
-				// if the denizen is hostile, put it in the enemies list
-				// todo: determine if denizen is hostile
-				mEnemies.Add((MRDenizen)piece);
+				else if (controllable is MRDenizen)
+				{
+					// if the denizen is hostile, put it in the enemies list
+					// todo: determine if denizen is hostile
+					mEnemies.Add((MRDenizen)controllable);
+				}
 			}
 		}
 		foreach (MRIGamePiece piece in toRemove)
@@ -1537,10 +1540,6 @@ public class MRCombatManager
 						killer.AwardSpoils(combatant, 1.0f / combatant.KillerCount);
 					}
 				}
-				else
-				{
-					Debug.LogError("Killed combatant has 0 killer count");
-				}
 				combatant.Killers.Clear();
 				toRemove.Add(combatant);
 			}
@@ -1598,13 +1597,21 @@ public class MRCombatManager
 		{
 			mCombatants.Remove(combatant);
 			mFriends.Remove(combatant);
+			combatant.Lurer = null;
+			combatant.Luring = null;
 			if (combatant is MRDenizen)
 			{
-				combatant.Lurer = null;
-				combatant.Luring = null;
-				((MRDenizen)combatant).Side = MRDenizen.eSide.Light;
-				mEnemies.Remove((MRDenizen)combatant);
-				MRGame.TheGame.MonsterChart.AddDeadDenizen((MRDenizen)combatant);
+				MRDenizen denizen = (MRDenizen)combatant;
+				denizen.Side = MRDenizen.eSide.Light;
+				mEnemies.Remove(denizen);
+				MRGame.TheGame.MonsterChart.AddDeadDenizen(denizen);
+			}
+			else
+			{
+				MRCharacter character = (MRCharacter)combatant;
+				MRGame.TheGame.RemoveCharacter(character);
+				character.PositionAttentionChit(null, Vector3.zero);
+				mClearing.AddPieceToBottom(character);
 			}
 
 			if (combatant.CombatSheet != null)
@@ -1628,6 +1635,9 @@ public class MRCombatManager
 
 	private void Disengage()
 	{
+		// double check for character deaths due to wounds
+		ApplyDamageEffects();
+
 		// clean up character mats
 		foreach (MRCombatSheetData combatSheet in mCombatSheets)
 		{

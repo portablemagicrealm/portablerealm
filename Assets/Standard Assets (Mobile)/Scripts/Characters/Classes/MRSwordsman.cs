@@ -51,6 +51,13 @@ public class MRSwordsman : MRCharacter
 		}
 	}
 
+	public override int StartingGoldValue 
+	{ 
+		get {
+			return 16;
+		}
+	}
+
 	#endregion
 
 	#region Methods

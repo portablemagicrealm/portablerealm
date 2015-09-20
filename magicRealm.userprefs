@@ -1,10 +1,13 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Standard Assets (Mobile)\Scripts\MRGame.cs">
     <Files>
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\MRGame.cs" Line="486" Column="19" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\UI\MRMainUI.cs" Line="303" Column="49" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Events\MRCreateMapEvent.cs" Line="1" Column="1" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\MRGame.cs" Line="855" Column="24" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRCharacter.cs" Line="1" Column="1" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Characters\MRCharacterItemsDisplay.cs" Line="1" Column="1" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Characters\MRCharacterMat.cs" Line="1" Column="1" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\UI\MRMainUI.cs" Line="1" Column="1" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Map\MRMap.cs" Line="134" Column="62" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -12,9 +15,11 @@
           <Node name="Assembly-CSharp" expanded="True">
             <Node name="Standard Assets (Mobile)" expanded="True">
               <Node name="Scripts" expanded="True">
-                <Node name="Activities" expanded="True" />
+                <Node name="Characters" expanded="True">
+                  <Node name="Classes" expanded="True" />
+                </Node>
                 <Node name="Combat" expanded="True" />
-                <Node name="Events" expanded="True" />
+                <Node name="Map" expanded="True" />
                 <Node name="UI" expanded="True" />
                 <Node name="MRGame.cs" selected="True" />
               </Node>
@@ -35,7 +40,6 @@
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
       <Catchpoint exceptionName="System.Collections.Generic.KeyNotFoundException" />
-      <Breakpoint file="D:\Projects\magicRealm\Assets\Standard Assets (Mobile)\Scripts\UI\MRMainUI.cs" line="199" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />

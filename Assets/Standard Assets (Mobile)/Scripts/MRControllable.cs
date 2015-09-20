@@ -271,10 +271,10 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 	}
 
 	/// <summary>
-	/// Gets or sets a value indicating whether the comtrollable is dead.
+	/// Returns if the controllable is dead.
 	/// </summary>
 	/// <value><c>true</c> if the controllable is dead; otherwise, <c>false</c>.</value>
-	public bool IsDead 
+	public virtual bool IsDead 
 	{ 
 		get {
 			return KillerCount > 0;

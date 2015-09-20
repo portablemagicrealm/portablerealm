@@ -51,6 +51,13 @@ public class MRAmazon : MRCharacter
 		}
 	}
 
+	public override int StartingGoldValue 
+	{ 
+		get {
+			return 35;
+		}
+	}
+
 	#endregion
 
 	#region Methods

@@ -51,6 +51,13 @@ public class MRBlackKnight : MRCharacter
 		}
 	}
 
+	public override int StartingGoldValue 
+	{ 
+		get {
+			return 40;
+		}
+	}
+
 	#endregion
 
 	#region Methods

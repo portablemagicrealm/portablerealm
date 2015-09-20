@@ -83,6 +83,7 @@ public class MRMainUI : MonoBehaviour
 	public GameObject InstructionMessagePrototype;
 	public GameObject AttackManeuverDialogPrototype;
 	public GameObject CombatActionDialogPrototype;
+	public GameObject VictoryPointsSelectionDialogPrototype;
 
 	public static MRMainUI TheUI
 	{
@@ -366,7 +367,7 @@ public class MRMainUI : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Displaies the combat action selection dialog.
+	/// Displays the combat action selection dialog.
 	/// </summary>
 	/// <param name="canActivateWeapon">Set to <c>true</c> to allow alert/unalert weapon.</param>
 	/// <param name="canRunAway">Set to <c>true</c> to allow running away.</param>
@@ -388,17 +389,17 @@ public class MRMainUI : MonoBehaviour
 			{
 				if (button.gameObject.name == "Weapon")
 				{
-					button.enabled = canActivateWeapon;
+					button.interactable = canActivateWeapon;
 					button.onClick.AddListener(OnCombatActionWeaponClicked);
 				}
 				else if (button.gameObject.name == "Run")
 				{
-					button.enabled = canRunAway;
+					button.interactable = canRunAway;
 					button.onClick.AddListener(OnCombatActionRunClicked);
 				}
 				else if (button.gameObject.name == "Spell")
 				{
-					button.enabled = canCastSpell;
+					button.interactable = canCastSpell;
 					button.onClick.AddListener(OnCombatActionSpellClicked);
 				}
 				else if (button.gameObject.name == "None")
@@ -406,6 +407,32 @@ public class MRMainUI : MonoBehaviour
 			}
 
 			mOkCallback = callback;
+		}
+	}
+
+	public void DisplayVictoryPointsSelectionDialog(MRCharacter character)
+	{
+		if (mVictoryPointsSelectionDialog == null)
+		{
+			mVictoryPointsSelectionDialog = (GameObject)Instantiate(VictoryPointsSelectionDialogPrototype);
+			Vector3 scale = mVictoryPointsSelectionDialog.transform.localScale;
+			scale.x *= MRGame.DpiScale;
+			scale.y *= MRGame.DpiScale;
+			mVictoryPointsSelectionDialog.transform.localScale = scale;
+			mVictoryPointsSelectionDialog.transform.SetParent(transform, false);
+
+			MonoBehaviour[] scripts = mVictoryPointsSelectionDialog.GetComponents<MonoBehaviour>();
+			for (int i = 0; i < scripts.Length; ++i)
+			{
+				if (scripts[i] is MRVictoryPointSelectionDialog)
+				{
+					MRVictoryPointSelectionDialog dialogScript = (MRVictoryPointSelectionDialog)scripts[i];
+					dialogScript.Character = character;
+					dialogScript.Callback = OnVictoryPointsSelected;
+					MRGame.ShowingUI = true;
+					break;
+				}
+			}
 		}
 	}
 
@@ -479,6 +506,14 @@ public class MRMainUI : MonoBehaviour
 			mOkCallback((int)eCombatActionButton.None);
 	}
 
+	private void OnVictoryPointsSelected(int buttonId)
+	{
+		MRGame.ShowingUI = false;
+		
+		Destroy (mVictoryPointsSelectionDialog);
+		mVictoryPointsSelectionDialog = null;
+	}
+
 	#endregion
 
 	#region Members
@@ -490,6 +525,7 @@ public class MRMainUI : MonoBehaviour
 	private GameObject mInstructionMessage;
 	private GameObject mAttackManeuverDialog;
 	private GameObject mCombatActionDialog;
+	private GameObject mVictoryPointsSelectionDialog;
 	private Button[] mDialogButtons;
 	private ButtonClickedAction[] mDialogCallbacks;
 	private OnButtonPressed mOkCallback;

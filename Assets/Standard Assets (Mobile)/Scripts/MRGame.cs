@@ -34,6 +34,13 @@ public class MRGame : MonoBehaviour, MRISerializable
 {
 	#region Constants
 
+	public enum eGameState
+	{
+		NoGame,
+		Active,
+		GameOver
+	}
+
 	public enum eActivity
 	{
 		// note the order here needs to match the order in the activity list image
@@ -200,7 +207,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 	public MRCharacterMat characterMatPrototype;
 	public MRActivityListWidget activityListPrototype;
 	public MRCombatSheet combatSheetPrototype;
-	public MROptions optionsPrototype;
+	public MRMain mainPrototype;
 	public GameObject characterCounterPrototype;
 	public GameObject mediumMonsterCounterPrototype;
 	public GameObject heavyMonsterCounterPrototype;
@@ -329,6 +336,13 @@ public class MRGame : MonoBehaviour, MRISerializable
 		}
 	}
 
+	public static RaycastHit2D[] TouchedObjects
+	{
+		get{
+			return msTouchedObjects;
+		}
+	}
+
 	public static bool ShowingUI
 	{
 		get{
@@ -336,6 +350,13 @@ public class MRGame : MonoBehaviour, MRISerializable
 		}
 		set{
 			msShowingUI = value;
+		}
+	}
+
+	public eGameState GameState
+	{
+		get{
+			return mGameState;
 		}
 	}
 
@@ -416,7 +437,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 		}
 	}
 
-	public MROptions Main
+	public MRMain Main
 	{
 		get{
 			return mOptions;
@@ -473,7 +494,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 
 	void Awake()
 	{
-		//MRRandom.seed = 14762575112703739700UL;
+		//MRRandom.seed = 731420681776UL;
 	}
 
 	// Use this for initialization
@@ -494,6 +515,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 		msShowingUI = false;
 		mActiveControllableIndex = 0;
 		mInCombat = false;
+		mGameState = eGameState.NoGame;
 
 		Debug.Log("Screen.dpi = " + Screen.dpi);
 		if (Screen.dpi < 200)
@@ -514,7 +536,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 		SetView(eViews.Main);
 
 		// create the options screen
-		mOptions = (MROptions)Instantiate(optionsPrototype);
+		mOptions = (MRMain)Instantiate(mainPrototype);
 		mOptions.transform.parent = transform;
 
 		// create all the game objects
@@ -544,10 +566,6 @@ public class MRGame : MonoBehaviour, MRISerializable
 		mCharacterMat = (MRCharacterMat)Instantiate(characterMatPrototype);
 		mCharacterMat.transform.parent = transform;
 
-		//AddUpdateEvent(new MRCreateCharacterEvent("amazon"));
-		//AddUpdateEvent(new MRCreateCharacterEvent("white knight"));
-		//AddUpdateEvent(new MRCreateCharacterEvent("wizard"));
-		//AddUpdateEvent(new MRFatigueCharacterEvent());
 		AddUpdateEvent(new MRUpdateViewEvent());
 	}
 
@@ -591,11 +609,19 @@ public class MRGame : MonoBehaviour, MRISerializable
 		if (mActivityList != null)
 		{
 			mActivityList.Visible = false;
-			if (CurrentView == eViews.Map && mInspectionStack == null)
+			if (CurrentView == eViews.Map && mInspectionStack == null && mControllables.Count > 0)
 				mActivityList.Visible = true;
 			else
 				mActivityList.Visible = false;
 		}
+	}
+
+	public void StartGame()
+	{
+		mGameState = eGameState.Active;
+		SetView(MRGame.eViews.Map);
+		AddUpdateEvent(new MRFatigueCharacterEvent());
+		AddUpdateEvent(new MRInitGameTimeEvent());
 	}
 
 	public void AddUpdateEvent(MRUpdateEvent evt)
@@ -611,6 +637,13 @@ public class MRGame : MonoBehaviour, MRISerializable
 	public void AddCharacter(MRCharacter character)
 	{
 		mControllables.Add(character);
+	}
+
+	public void RemoveCharacter(MRCharacter character)
+	{
+		mControllables.Remove(character);
+		if (mControllables.Count == 0)
+			mGameState = eGameState.GameOver;
 	}
 
 	//
@@ -770,6 +803,9 @@ public class MRGame : MonoBehaviour, MRISerializable
 		mControllables.Shuffle();
 	}
 
+	/// <summary>
+	/// Changes the game time to the next day phase.
+	/// </summary>
 	public void NextGameTime()
 	{
 		if (Controlables.Count == 0)
@@ -816,7 +852,17 @@ public class MRGame : MonoBehaviour, MRISerializable
 		if (TimeOfDay == eTimeOfDay.Midnight)
 		{
 			++DayOfMonth;
-			TimeOfDay = eTimeOfDay.Birdsong;
+			if (DayOfMonth <= 28)
+				TimeOfDay = eTimeOfDay.Birdsong;
+			else
+			{
+				// for now we only allow 4-week games
+				--DayOfMonth;
+				mGameState = eGameState.GameOver;
+				// force a map refresh to show the game over message
+				TheMap.Visible = true;
+				return;
+			}
 		}
 		else
 			++TimeOfDay;
@@ -977,6 +1023,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 		msDoubleTapped = false;
 		msSingleTapped = false;
 		msTouchHeld = false;
+		msTouchedObjects = null;
 		
 		if (Application.platform == RuntimePlatform.Android ||
 		    Application.platform == RuntimePlatform.IPhonePlayer)
@@ -1089,11 +1136,19 @@ public class MRGame : MonoBehaviour, MRISerializable
 			}
 
 			// see if we're moving our touch
-			if (msLastTouchPos.x == msTouchPos.x && msLastTouchPos.y == msTouchPos.y)
-				return;
-			msTouchMove.x = Input.GetAxis("Mouse X");
-			msTouchMove.y = Input.GetAxis("Mouse Y");
+			if (msLastTouchPos.x != msTouchPos.x || msLastTouchPos.y != msTouchPos.y)
+			{
+				msTouchMove.x = Input.GetAxis("Mouse X");
+				msTouchMove.y = Input.GetAxis("Mouse Y");
+			}
 		}
+
+//		if (IsSingleTapped || IsDoubleTapped)
+//		{
+//			Vector3 screenPos = new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, 0);
+//			Vector3 worldTouch = Camera.main.ScreenToWorldPoint(screenPos);
+//			msTouchedObjects = Physics2D.RaycastAll(worldTouch, Vector2.zero);
+//		}
 	}
 
 	public bool Load(JSONObject root)
@@ -1289,6 +1344,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 	private List<MRUpdateEvent> mEventsToAdd = new List<MRUpdateEvent>();
 	private List<MRUpdateEvent> mEventsToRemove = new List<MRUpdateEvent>();
 
+	private eGameState mGameState;
 	private bool mInCombat;
 	private Stack<eViews> mViews = new Stack<eViews>();
 
@@ -1308,7 +1364,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 	private MRTreasureChart mTreasureChart;
 	private MRMonsterChart mMonsterChart;
 	private MRCombatSheet mCombatSheet;
-	private MROptions mOptions;
+	private MRMain mOptions;
 	private MRGamePieceStack mInspectionStack;
 	private MRCombatManager mCombatManager;
 
@@ -1321,6 +1377,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 	private static Vector2 msTouchPos;
 	private static Vector2 msLastTouchPos;
 	private static Vector2 msTouchMove;
+	private static RaycastHit2D[] msTouchedObjects;
 	private static float msLastTouchTime;
 	private static float msLastReleaseTime;
 	private static bool msIsTouching;

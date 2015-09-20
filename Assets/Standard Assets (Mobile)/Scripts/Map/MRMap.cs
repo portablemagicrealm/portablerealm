@@ -131,6 +131,13 @@ public class MRMap : MonoBehaviour, MRISerializable
 		set{
 			mMapCamera.enabled = value;
 			MRGame.TheGame.Clock.Visible = value;
+			if (MRGame.TheGame.GameState == MRGame.eGameState.GameOver)
+			{
+				if (value)
+					MRMainUI.TheUI.DisplayInstructionMessage("Game Over");
+				else
+					MRMainUI.TheUI.DisplayInstructionMessage(null);
+			}
 		}
 	}
 

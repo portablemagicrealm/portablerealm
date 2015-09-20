@@ -51,6 +51,13 @@ public class MRDwarf : MRCharacter
 		}
 	}
 
+	public override int StartingGoldValue 
+	{ 
+		get {
+			return 23;
+		}
+	}
+
 	/// <summary>
 	/// Returns the number of asterisks healed during a rest.
 	/// </summary>

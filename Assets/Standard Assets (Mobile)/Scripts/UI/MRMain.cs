@@ -1,5 +1,5 @@
 //
-// MROptions.cs
+// MRMain.cs
 //
 // Author:
 //       Steve Jakab <>
@@ -31,7 +31,7 @@ using System.IO;
 using System.Text;
 using AssemblyCSharp;
 
-public class MROptions : MonoBehaviour
+public class MRMain : MonoBehaviour
 {
 	#region Constants
 
@@ -409,6 +409,11 @@ public class MROptions : MonoBehaviour
 					return;
 				}
 			}
+			else if (!character.Score.VictoryPointsValid)
+			{
+				MRMainUI.TheUI.DisplayVictoryPointsSelectionDialog(character);
+				return;
+			}
 		}
 
 		// all starting locations should be assigned, add characters to map
@@ -424,10 +429,8 @@ public class MROptions : MonoBehaviour
 		mSelectedCharacters.Clear();
 
 		// start the game proper 
-		MRGame.TheGame.SetView(MRGame.eViews.Map);
-		MRGame.TheGame.AddUpdateEvent(new MRFatigueCharacterEvent());
-		MRGame.TheGame.AddUpdateEvent(new MRInitGameTimeEvent());
 		mState = OptionsState.GameStarted;
+		MRGame.TheGame.StartGame();
 	}
 
 	private void LoadGame()
@@ -453,10 +456,8 @@ public class MROptions : MonoBehaviour
 		}
 
 		// start the game proper 
-		MRGame.TheGame.SetView(MRGame.eViews.Map);
-		MRGame.TheGame.AddUpdateEvent(new MRFatigueCharacterEvent());
-		MRGame.TheGame.AddUpdateEvent(new MRInitGameTimeEvent());
 		mState = OptionsState.GameStarted;
+		MRGame.TheGame.StartGame();
 	}
 
 	private void SaveGame()

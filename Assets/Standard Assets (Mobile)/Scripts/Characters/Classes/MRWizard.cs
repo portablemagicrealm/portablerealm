@@ -51,6 +51,13 @@ public class MRWizard : MRCharacter
 		}
 	}
 
+	public override int StartingGoldValue 
+	{ 
+		get {
+			return 11;
+		}
+	}
+
 	#endregion
 
 	#region Methods

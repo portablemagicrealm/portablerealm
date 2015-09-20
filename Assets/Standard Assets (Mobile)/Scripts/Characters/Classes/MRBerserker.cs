@@ -51,6 +51,13 @@ public class MRBerserker : MRCharacter
 		}
 	}
 
+	public override int StartingGoldValue 
+	{ 
+		get {
+			return 23;
+		}
+	}
+
 	#endregion
 
 	#region Methods

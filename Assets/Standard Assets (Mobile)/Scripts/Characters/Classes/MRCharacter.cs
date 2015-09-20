@@ -36,6 +36,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 
 	public abstract MRGame.eCharacters Character { get; }
 	public abstract string IconName { get; }
+	public abstract int StartingGoldValue { get; }
 
 	public string[] StartingLocations
 	{
@@ -310,6 +311,17 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		}
 	}
 
+	/// <summary>
+	/// Returns if the controllable is dead.
+	/// </summary>
+	/// <value><c>true</c> if the controllable is dead; otherwise, <c>false</c>.</value>
+	public override bool IsDead 
+	{ 
+		get {
+			return base.IsDead || mIsDead;
+		}
+	}
+
 	public IList<MRActionChit> Chits
 	{
 		get{
@@ -380,6 +392,15 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		}
 	}
 
+	public IList<MRItem> Items
+	{
+		get{
+			List<MRItem> items = new List<MRItem>(mActiveItems);
+			items.InsertRange(items.Count, mInactiveItems);
+			return items;
+		}
+	}
+
 	public IList<MRItem> ActiveItems
 	{
 		get{
@@ -424,6 +445,13 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	{
 		get{
 			return mDiscoveredTreasues;
+		}
+	}
+
+	public MRCharacterScore Score
+	{
+		get{
+			return mScore;
 		}
 	}
 
@@ -505,8 +533,11 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	protected MRCharacter(JSONObject jsonData, int index) :
 		base(jsonData, index)
 	{
+		mIsDead = false;
+		mGold = 10;
 		mMoveType = MRGame.eMoveType.Walk;
 		mDiscoveredSites = new BitArray(Enum.GetValues(typeof(MRMapChit.eSiteChitType)).Length);
+		mScore = new MRCharacterScore(this);
 		// temp - discover all sites
 		//foreach (MRMapChit.eSiteChitType site in Enum.GetValues(typeof(MRMapChit.eSiteChitType)))
 		//{
@@ -1018,11 +1049,10 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 				chit.State = MRActionChit.eState.wounded;
 				--mWoundBalance;
 			}
-			return;
 		}
 
 		// fatigued chits can be wounded if no active chits are available
-		if (mFatiguedChits.Count > 0)
+		else if (mFatiguedChits.Count > 0)
 		{
 			if (mFatiguedChits.Contains(chit))
 			{
@@ -1031,7 +1061,14 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 				chit.State = MRActionChit.eState.wounded;
 				--mWoundBalance;
 			}
-			return;
+		}
+		// check for character death
+		if (mActiveChits.Count == 0 && mFatiguedChits.Count == 0)
+		{
+			mWoundBalance = 0;
+			mFatigueBalance = 0;
+			mHealBalance = 0;
+			mIsDead = true;
 		}
 	}
 
@@ -1756,6 +1793,8 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		mStartedDayRiding = ((JSONBoolean)root["riding"]).Value;
 		mNormalActivitiesAvailable = ((JSONNumber)root["normalactivities"]).IntValue;
 		mDaylightActivitesAvailable = ((JSONNumber)root["dayactivities"]).IntValue;
+		if (root["dead"] != null)
+			mIsDead = ((JSONBoolean)root["dead"]).Value;
 
 		mActiveChits.Clear();
 		mFatiguedChits.Clear();
@@ -1814,6 +1853,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 			if (mLastClearingEntered == null)
 				Debug.LogError("Character " + Name + " bad last clearing " + id);
 		}
+		mScore.Load(root);
 
 		return true;
 	}
@@ -1826,6 +1866,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		root["fame"] = new JSONNumber(mFame);
 		root["notoriety"] = new JSONNumber(mNotoriety);
 		root["kills"] = new JSONNumber(mKillCountForDay);
+		root["dead"] = new JSONBoolean(mIsDead);
 		root["pony"] = new JSONBoolean(mPonyMove);
 		root["riding"] = new JSONBoolean(mStartedDayRiding);
 		root["normalactivities"] = new JSONNumber(mNormalActivitiesAvailable);
@@ -1873,6 +1914,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		{
 			root["lastClearing"] = new JSONNumber(mLastClearingEntered.Id);
 		}
+		mScore.Save(root);
 	}
 
 	#endregion
@@ -1894,6 +1936,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	protected IList<MRActionChit> mFatiguedChits = new List<MRActionChit>(12);
 	protected IList<MRActionChit> mWoundedChits = new List<MRActionChit>(12);
 
+	protected bool mIsDead;
 	protected int mFatigueBalance;
 	protected int mWoundBalance;
 	protected int mHealBalance;
@@ -1903,6 +1946,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 
 	protected float mFame;
 	protected float mNotoriety;
+	protected MRCharacterScore mScore;
 	protected int mKillCountForDay;
 	protected MRClearing mLastClearingEntered;
 

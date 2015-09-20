@@ -50,7 +50,14 @@ public class MRWhiteKnight : MRCharacter
 			return "Textures/white_knight";
 		}
 	}
-	
+
+	public override int StartingGoldValue 
+	{ 
+		get {
+			return 37;
+		}
+	}
+
 	#endregion
 	
 	#region Methods
