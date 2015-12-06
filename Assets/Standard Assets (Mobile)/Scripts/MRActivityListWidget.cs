@@ -28,7 +28,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class MRActivityListWidget : MonoBehaviour
+public class MRActivityListWidget : MonoBehaviour, MRITouchable
 {
 	#region Properties
 
@@ -67,6 +67,13 @@ public class MRActivityListWidget : MonoBehaviour
 			{
 				widget.Visible = value;
 			}
+		}
+	}
+
+	public float BorderPixelSize
+	{
+		get{
+			return mBorderPixelSize;
 		}
 	}
 
@@ -337,6 +344,25 @@ public class MRActivityListWidget : MonoBehaviour
 			// turn off the camera
 			mCamera.enabled = false;
 		}
+	}
+
+	public bool OnSingleTapped(GameObject touchedObject)
+	{
+		return true;
+	}
+	
+	public bool OnDoubleTapped(GameObject touchedObject)
+	{
+		if (MRGame.TimeOfDay == MRGame.eTimeOfDay.Daylight && mCurrentActivity != null)
+		{
+			mCurrentActivity.OnDoubleTapped(touchedObject);
+		}
+		return true;
+	}
+	
+	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	#endregion

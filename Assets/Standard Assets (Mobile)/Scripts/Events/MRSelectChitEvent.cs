@@ -28,14 +28,8 @@ using System.Collections;
 
 public class MRSelectChitEvent : MRUpdateEvent
 {
-	#region Callback class for dialog buttons
-
-	public delegate void OnChitSelected(MRActionChit chit);
-
-	#endregion
-
 	#region Constants
-
+	
 	public enum eCompare
 	{
 		LessThan,
@@ -43,6 +37,126 @@ public class MRSelectChitEvent : MRUpdateEvent
 		EqualTo,
 		GreaterThanEqualTo,
 		GreaterThan
+	}
+	
+	#endregion
+
+	#region Callback class for dialog buttons
+
+	public delegate void OnChitSelected(MRActionChit chit);
+
+	#endregion
+
+	#region Filter class for chit selection
+
+	public class MRSelectChitFilter
+	{
+		#region Properties
+
+		public MRActionChit.eAction Action
+		{
+			get{
+				return mAction;
+			}
+		}
+		
+		public MRGame.eStrength Strength
+		{
+			get{
+				return mStrength;
+			}
+		}
+		
+		public eCompare StrengthDirection
+		{
+			get{
+				return mStrengthDirection;
+			}
+		}
+		
+		public int Speed
+		{
+			get{
+				return mSpeed;
+			}
+		}
+		
+		public eCompare SpeedDirection
+		{
+			get{
+				return mSpeedDirection;
+			}
+		}
+
+		#endregion
+
+		#region Methods
+
+		public MRSelectChitFilter(MRActionChit.eAction action) : this(action, MRGame.eStrength.Any, eCompare.EqualTo,
+		                                                              0, eCompare.GreaterThanEqualTo)
+		{
+		}
+
+		public MRSelectChitFilter(MRActionChit.eAction action, 
+		                          MRGame.eStrength strength, eCompare strengthDirection,
+		                          int speed, eCompare speedDirection)
+		{
+			mAction = action;
+			mStrength = strength;
+			mStrengthDirection = strengthDirection;
+			mSpeed = speed;
+			mSpeedDirection = speedDirection;
+		}
+
+		/// <summary>
+		/// Returns if a given chit can be selected.
+		/// </summary>
+		/// <returns><c>true</c> if the chit is valid; otherwise, <c>false</c>.</returns>
+		/// <param name="chit">Chit.</param>
+		public bool IsValidSelectChit(MRChit chit)
+		{
+			bool isValid = false;
+			
+			MRActionChit action = chit as MRActionChit;
+			if (action != null)
+			{
+				// verify the type
+				if (action.CanBeUsedFor(mAction))
+				{
+					// verify the speed
+					if (SpeedDirection.compare(action.CurrentTime, Speed))
+					{
+						// verify the strength
+						MRGame.eStrength strength = MRGame.eStrength.Any;
+						if (action is MRFightChit)
+							strength = ((MRFightChit)action).CurrentStrength;
+						else if (action is MRMoveChit)
+							strength = ((MRMoveChit)action).CurrentStrength;
+						if (strength != MRGame.eStrength.Any)
+						{
+							if (StrengthDirection.compare(strength, Strength))
+							{
+								isValid = true;
+							}
+						}
+					}
+				}
+			}
+			
+			return isValid;
+		}
+
+		#endregion
+
+		#region Members
+
+		private MRActionChit.eAction mAction;
+		private MRGame.eStrength mStrength;
+		private eCompare mStrengthDirection;
+		private int mSpeed;
+		private eCompare mSpeedDirection;
+
+		#endregion
 	}
 
 	#endregion
@@ -56,38 +170,45 @@ public class MRSelectChitEvent : MRUpdateEvent
 		}
 	}
 
-	public MRActionChit.eType ChitType
+	public MRSelectChitFilter Filter
 	{
 		get{
-			return mChitType;
+			return mFilter;
+		}
+	}
+
+	public MRActionChit.eAction Action
+	{
+		get{
+			return mFilter.Action;
 		}
 	}
 
 	public MRGame.eStrength Strength
 	{
 		get{
-			return mStrength;
+			return mFilter.Strength;
 		}
 	}
 
 	public eCompare StrengthDirection
 	{
 		get{
-			return mStrengthDirection;
+			return mFilter.StrengthDirection;
 		}
 	}
 
 	public int Speed
 	{
 		get{
-			return mSpeed;
+			return mFilter.Speed;
 		}
 	}
 
 	public eCompare SpeedDirection
 	{
 		get{
-			return mSpeedDirection;
+			return mFilter.SpeedDirection;
 		}
 	}
 
@@ -98,10 +219,8 @@ public class MRSelectChitEvent : MRUpdateEvent
 		}
 
 		set{
-			if (value != null)
+			if (value != null && mFilter.IsValidSelectChit(value))
 			{
-				// test chit against desired result
-
 				mChit = value;
 				MRMainUI.TheUI.HideAttackManeuverDialog();
 				MRMainUI.TheUI.DisplayInstructionMessage(null);
@@ -114,16 +233,12 @@ public class MRSelectChitEvent : MRUpdateEvent
 
 	#region Methods
 
-	public MRSelectChitEvent(MRCharacter character, MRActionChit.eType type, MRGame.eStrength strength,
+	public MRSelectChitEvent(MRCharacter character, MRActionChit.eAction action, MRGame.eStrength strength,
 	                         eCompare strengthDirection, int speed, eCompare speedDirection,
 	                         OnChitSelected callback)
 	{
+		mFilter = new MRSelectChitFilter(action, strength, strengthDirection, speed, speedDirection);
 		mCharacter = character;
-		mChitType = type;
-		mStrength = strength;
-		mStrengthDirection = strengthDirection;
-		mSpeed = speed;
-		mSpeedDirection = speedDirection;
 		mCallback = callback;
 		mInitialized = false;
 	}
@@ -143,7 +258,7 @@ public class MRSelectChitEvent : MRUpdateEvent
 			return false;
 		}
 
-		// check if we are done fatiguing a character
+		// check if we are done
 		if (mInitialized)
 		{
 			if (MRGame.TheGame.CurrentView != MRGame.eViews.SelectChit)
@@ -153,26 +268,6 @@ public class MRSelectChitEvent : MRUpdateEvent
 					mCallback(mChit);
 				return false;
 			}
-/*
-			if (mCharacter.FatigueBalance != 0)
-			{
-				MRMainUI.TheUI.DisplayInstructionMessage("Fatigue Asterisks (" + mCharacter.FatigueBalance + ")");
-			}
-			else if (mCharacter.WoundBalance > 0)
-			{
-				MRMainUI.TheUI.DisplayInstructionMessage("Wound Chit");
-			}
-			else if (mCharacter.HealBalance > 0)
-			{
-				MRMainUI.TheUI.DisplayInstructionMessage("Heal Chit");
-			}
-			if (mCharacter.FatigueBalance == 0 && mCharacter.WoundBalance == 0 && mCharacter.HealBalance == 0)
-			{
-				MRMainUI.TheUI.DisplayInstructionMessage(null);
-				mCharacter = null;
-				MRGame.TheGame.PopView();
-			}
-*/
 			return false;
 		}
 		return true;
@@ -183,12 +278,8 @@ public class MRSelectChitEvent : MRUpdateEvent
 	#region Members
 
 	private bool mInitialized;
+	private MRSelectChitFilter mFilter;
 	private MRCharacter mCharacter;
-	private MRActionChit.eType mChitType;
-	private MRGame.eStrength mStrength;
-	private eCompare mStrengthDirection;
-	private int mSpeed;
-	private eCompare mSpeedDirection;
 	private MRActionChit mChit;
 	private OnChitSelected mCallback;
 

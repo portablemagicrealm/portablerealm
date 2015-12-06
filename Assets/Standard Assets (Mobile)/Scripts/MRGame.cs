@@ -170,6 +170,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 		SelectManeuver,		// not accessable through view tabs
 		SelectChit,			// not accessable through view tabs
 		SelectClearing,		// not accessable through view tabs
+		Alert,				// not accessable through view tabs
 	}
 	public const int ViewTabCount = 5;
 
@@ -189,6 +190,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 	public static Color pink = new Color(228f / 255f, 177f / 255f, 195f / 255f);
 	public static Color lightGreen = new Color(206f / 255f, 210f / 255f, 114f / 255f);
 	public static Color darkGreen = new Color(146f / 255f, 193f / 255f, 4f / 255f);
+	public static Color white = new Color(255f / 255f, 255f / 255f, 255f / 255f);
 
 	public const float MAP_CAMERA_FAR_SIZE = 5.0f;
 	public const float MAP_CAMERA_NEAR_SIZE = 2.2f;
@@ -268,13 +270,6 @@ public class MRGame : MonoBehaviour, MRISerializable
 		}
 	}
 
-	public static Vector2 TouchMove
-	{
-		get{
-			return msTouchMove;
-		}
-	}
-
 	public static float DpiScale
 	{
 		get{
@@ -287,15 +282,6 @@ public class MRGame : MonoBehaviour, MRISerializable
 		get{
 			if (!msShowingUI)
 				return msJustTouched;
-			return false;
-		}
-	}
-
-	public static bool JustReleased
-	{
-		get{
-			if (!msShowingUI)
-				return msJustReleased;
 			return false;
 		}
 	}
@@ -504,6 +490,12 @@ public class MRGame : MonoBehaviour, MRISerializable
 
 		msTheGame = this;
 
+		Screen.autorotateToLandscapeLeft = true;
+		Screen.autorotateToLandscapeRight = true;
+		Screen.autorotateToPortrait = false;
+		Screen.autorotateToPortraitUpsideDown = false;
+		Screen.orientation = ScreenOrientation.AutoRotation;
+
 		#if UNITY_IPHONE
 		Handheld.SetActivityIndicatorStyle(iOSActivityIndicatorStyle.Gray);
 		#elif UNITY_ANDROID
@@ -516,12 +508,8 @@ public class MRGame : MonoBehaviour, MRISerializable
 		mActiveControllableIndex = 0;
 		mInCombat = false;
 		mGameState = eGameState.NoGame;
-
-		Debug.Log("Screen.dpi = " + Screen.dpi);
-		if (Screen.dpi < 200)
-			mDpiScale = 1.0f;
-		else
-			mDpiScale = 2.0f;
+		// dpi scale will get set in the 1st update loop
+		mDpiScale = 0;
 
 		// static class initialization
 		MRSiteChit.Init();
@@ -572,6 +560,23 @@ public class MRGame : MonoBehaviour, MRISerializable
 	// Update is called once per frame
 	void Update ()
 	{
+		if (mDpiScale == 0)
+		{
+			Rect inspectionArea = InspectionArea.InspectionBoundsPixels;
+			Debug.Log("DPI setup, inspection width = " + inspectionArea.width);
+			float activitySize = ActivityList.BorderPixelSize;
+			Debug.Log("DPI setup, activity size = " + activitySize);
+			if (activitySize > 0)
+			{
+				float ratio = inspectionArea.width / activitySize;
+				// divide by 2 because we need room for the activity and the clearing selection
+				mDpiScale = (float)Math.Floor(ratio / 2.0);
+			}
+			if (mDpiScale <= 0)
+				mDpiScale = 1.0f;
+			Debug.Log("Set dpi scale to " + mDpiScale);
+		}
+
 		mClearingSelectedThisFrame = false;
 		mTileSelectedThisFrame = false;
 
@@ -632,6 +637,16 @@ public class MRGame : MonoBehaviour, MRISerializable
 	public void RemoveUpdateEvent(MRUpdateEvent evt)
 	{
 		mEventsToRemove.Add(evt);
+	}
+
+	public MRUpdateEvent GetUpdateEvent(System.Type eventClass)
+	{
+		foreach (MRUpdateEvent evt in mUpdateEvents.Keys)
+		{
+			if (evt.GetType() == eventClass)
+				return evt;
+		}
+		return null;
 	}
 
 	public void AddCharacter(MRCharacter character)
@@ -1018,13 +1033,12 @@ public class MRGame : MonoBehaviour, MRISerializable
 	//
 	private void TestForTouch()
 	{
-		msJustReleased = false;
+		if (ShowingUI)
+			return;
+
 		msJustTouched = false;
-		msDoubleTapped = false;
-		msSingleTapped = false;
-		msTouchHeld = false;
 		msTouchedObjects = null;
-		
+
 		if (Application.platform == RuntimePlatform.Android ||
 		    Application.platform == RuntimePlatform.IPhonePlayer)
 		{
@@ -1041,114 +1055,217 @@ public class MRGame : MonoBehaviour, MRISerializable
 				return;
 			}
 
-			if (Input.touchCount > 0 &&
-			    Input.GetTouch(0).phase != TouchPhase.Ended &&
-			    Input.GetTouch(0).phase != TouchPhase.Canceled)
+			if (Input.touchCount > 0)
 			{
-				if (msIsTouching)
+				msTouchDuration += Time.deltaTime;
+				msTouch = Input.GetTouch(0);
+				switch (msTouch.phase)
 				{
-					msLastTouchPos = msTouchPos;
-				}
-				else
-				{
-					msLastTouchPos = Input.GetTouch(0).position;
-					msJustTouched = true;
-				}
-				msIsTouching = true;
-				msTouchPos = Input.GetTouch(0).position;
-				msTouchMove = Input.GetTouch(0).deltaPosition;
-				if (msJustTouched)
-				{
-					// see if we double-clicked
-					if (Time.time - msLastTouchTime <= DOUBLE_CLICK_TIME)
-					{
-						msDoubleTapped = true;
-					}
-					msLastTouchTime = Time.time;
-				}
-				else if (msIsTouching)
-				{
-					// see if the touch is being held
-					if (Time.time - msLastTouchTime >= TOUCH_HELD_TIME)
-					{
-						msTouchHeld = true;
-					}
+					case TouchPhase.Began:
+						msIsTouching = true;
+						msJustTouched = true;
+						msStartTouchPos = msTouch.position;
+						msTouchPos = msStartTouchPos;
+						msLastTouchPos = msStartTouchPos;
+						break;
+					case TouchPhase.Stationary:
+						if (msTouchDuration >= TOUCH_HELD_TIME)
+						{
+							if (!msTouchHeld)
+							{
+								msTouchHeld = true;
+								OnTouched();
+							}
+						}
+						break;
+					case TouchPhase.Moved:
+						msIsTouching = true;
+						msLastTouchPos = msTouchPos;
+						msTouchPos = msTouch.position;
+						break;
+					case TouchPhase.Ended:
+						if (msTouchDuration < 0.2f) //making sure it only check the touch once && it was a short touch/tap and not a dragging.
+						{
+							if (msTapCoroutine == null)
+								msTapCoroutine = StartCoroutine(TestSingleOrDoubleTap());
+						}
+						break;
+					default:
+						break;
 				}
 			}
-			else if (Input.touchCount == 0)
+			else
 			{
-				if (msIsTouching)
-				{
-					msJustReleased = true;
-					msLastReleaseTime = Time.time;
-				}
-				else
-				{
-					if (Time.time - msLastReleaseTime > DOUBLE_CLICK_TIME)
-					{
-						msSingleTapped = true;
-						msLastReleaseTime = float.MaxValue;
-					}
-				}
+				msTouchDuration = 0;
+				msSingleTapped = false;
+				msDoubleTapped = false;
 				msIsTouching = false;
+				msJustTouched = false;
+				msTouchHeld = false;
 			}
 		}
 		else
 		{
+			bool justReleased = false;
+			msDoubleTapped = false;
+			msSingleTapped = false;
+
 			if (msIsTouching)
 				msLastTouchPos = msTouchPos;
 			else
 				msLastTouchPos = Input.mousePosition;
 			msJustTouched = Input.GetMouseButtonDown(0);
-			msJustReleased = Input.GetMouseButtonUp(0);
+			justReleased = Input.GetMouseButtonUp(0);
 			msIsTouching = Input.GetMouseButton(0);
 			msTouchPos = Input.mousePosition;
 
 			if (msJustTouched)
 			{
-				// see if we double-clicked
-				if (Time.time - msLastTouchTime <= DOUBLE_CLICK_TIME)
-				{
-					msDoubleTapped = true;
-					msLastReleaseTime = float.MaxValue;
-				}
+				msStartTouchPos = Input.mousePosition;
+				msTouchDuration = 0;
 				msLastTouchTime = Time.time;
 			}
 			else if (msIsTouching)
 			{
+				msTouchDuration += Time.deltaTime;
 				// see if the touch is being held
 				if (Time.time - msLastTouchTime >= TOUCH_HELD_TIME)
 				{
-					msTouchHeld = true;
+					if (!msTouchHeld && 
+					    Math.Abs(msLastTouchPos.x - msTouchPos.x) < 0.1f &&
+					    Math.Abs(msLastTouchPos.y - msTouchPos.y) < 0.1f)
+					{
+					    msTouchHeld = true;
+						OnTouched();
+					}
 				}
 			}
-			else if (msJustReleased)
+			else if (justReleased)
 			{
-				msLastReleaseTime = Time.time;
-			}
-			else if (!msIsTouching)
-			{
-				if (Time.time - msLastReleaseTime > DOUBLE_CLICK_TIME)
+				if (msTouchDuration > 0 && msTouchDuration < 0.2f) //making sure it only check the touch once && it was a short touch/tap and not a dragging.
 				{
-					msSingleTapped = true;
-					msLastReleaseTime = float.MaxValue;
+					++msClickCount;
+					if (msTapCoroutine == null)
+						msTapCoroutine = StartCoroutine(TestSingleOrDoubleClick());
 				}
-			}
-
-			// see if we're moving our touch
-			if (msLastTouchPos.x != msTouchPos.x || msLastTouchPos.y != msTouchPos.y)
-			{
-				msTouchMove.x = Input.GetAxis("Mouse X");
-				msTouchMove.y = Input.GetAxis("Mouse Y");
+				msLastReleaseTime = Time.time;
+				msTouchHeld = false;
 			}
 		}
+	}
 
-//		if (IsSingleTapped || IsDoubleTapped)
-//		{
-//			Vector3 screenPos = new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, 0);
-//			Vector3 worldTouch = Camera.main.ScreenToWorldPoint(screenPos);
-//			msTouchedObjects = Physics2D.RaycastAll(worldTouch, Vector2.zero);
-//		}
+	private IEnumerator TestSingleOrDoubleTap()
+	{
+		yield return new WaitForSeconds(0.3f);
+		msLastTouchPos = msTouch.position;
+		if (msTouch.tapCount == 1)
+		{
+			msSingleTapped = true;
+		}
+		else if (msTouch.tapCount == 2)
+		{
+			// this coroutine has been called twice. We should stop the next one here otherwise we get two double tap
+			msDoubleTapped = true;
+		}
+
+		StopCoroutine(msTapCoroutine);
+		msTapCoroutine = null;
+		if (msSingleTapped || msDoubleTapped)
+		{
+			OnTouched();
+		}
+	}
+
+	private IEnumerator TestSingleOrDoubleClick()
+	{
+		yield return new WaitForSeconds(0.3f);
+		Debug.Log("TestSingleOrDoubleTap, msClickCount="+msClickCount);
+//		msLastTouchPos = msTouch.position;
+		if (msClickCount == 1)
+		{
+			msSingleTapped = true;
+		}
+		else if (msClickCount > 1)
+		{
+			// this coroutine has been called twice. We should stop the next one here otherwise we get two double tap
+			msDoubleTapped = true;
+		}
+		StopCoroutine(msTapCoroutine);
+		msTapCoroutine = null;
+		msClickCount = 0;
+		msTouchDuration = 0;
+		if (msSingleTapped || msDoubleTapped)
+		{
+			OnTouched();
+		}
+	}
+
+	// class to hold data for OnTouched()
+	private class TouchedData : IComparable<TouchedData>
+	{
+		public TouchedData(MRITouchable _touched, GameObject _hitObject)
+		{
+			touched = _touched;
+			hitObject = _hitObject;
+		}
+		public MRITouchable touched;
+		public GameObject hitObject;
+
+		public int CompareTo(TouchedData other)
+		{
+			float myZ = hitObject.transform.position.z;
+			float otherZ = other.hitObject.transform.position.z;
+			return (myZ < otherZ) ? -1 : 1;
+		}
+	}
+
+	private void OnTouched()
+	{
+		if (msSingleTapped || msDoubleTapped || msTouchHeld)
+		{
+			// find the object touched
+			List<TouchedData> touched = new List<TouchedData>();
+			Camera[] cameras = Camera.allCameras;
+			for (int i = 0; i < cameras.Length; ++i)
+			{
+				Camera camera = cameras[i];
+				Vector3 worldTouch = camera.ScreenToWorldPoint(new Vector3(msStartTouchPos.x, msStartTouchPos.y, camera.nearClipPlane));
+				RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero, Mathf.Infinity, camera.cullingMask);
+				for (int j = 0; j < hits.Length; ++j)
+				{
+					if (hits[j].collider != null) 
+					{
+						GameObject hitObject = hits[j].transform.gameObject;
+						MonoBehaviour[] touchables = hitObject.GetComponentsInParent<MonoBehaviour>(false);
+						for (int k = 0; k < touchables.Length; ++k)
+						{
+							MonoBehaviour touchable = touchables[k];
+							if (touchable != null && touchable is MRITouchable)
+							{
+								touched.Add(new TouchedData((MRITouchable)touchable, hitObject));
+								// break out of 2 inner loops
+								k = touchables.Length;
+								//j = hits.Length;
+							}
+						}
+					}
+				}
+			}
+			if (touched.Count > 0)
+			{
+				touched.Sort ();
+				bool handled = false;
+				for (int i = 0; i < touched.Count && !handled; ++i)
+				{
+					if (msSingleTapped)
+						handled = touched[i].touched.OnSingleTapped(touched[i].hitObject);
+					else if (msDoubleTapped)
+						handled = touched[i].touched.OnDoubleTapped(touched[i].hitObject);
+					else if (msTouchHeld)
+						handled = touched[i].touched.OnTouchHeld(touched[i].hitObject);
+				}
+			}
+		}
 	}
 
 	public bool Load(JSONObject root)
@@ -1374,15 +1491,18 @@ public class MRGame : MonoBehaviour, MRISerializable
 	private bool mTileSelectedThisFrame;
 
 	private static MRGame msTheGame;
+	private static Touch msTouch;
+	private static Coroutine msTapCoroutine;
+	private static Vector2 msStartTouchPos;
 	private static Vector2 msTouchPos;
 	private static Vector2 msLastTouchPos;
-	private static Vector2 msTouchMove;
 	private static RaycastHit2D[] msTouchedObjects;
 	private static float msLastTouchTime;
 	private static float msLastReleaseTime;
+	private static float msTouchDuration;
+	private static int msClickCount;
 	private static bool msIsTouching;
 	private static bool msJustTouched;
-	private static bool msJustReleased;
 	private static bool msSingleTapped;
 	private static bool msDoubleTapped;
 	private static bool msTouchHeld;

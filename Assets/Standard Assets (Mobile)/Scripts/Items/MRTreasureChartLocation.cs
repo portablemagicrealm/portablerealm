@@ -26,7 +26,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class MRTreasureChartLocation : MonoBehaviour
+public class MRTreasureChartLocation : MonoBehaviour, MRITouchable
 {
 	#region Properties
 
@@ -68,7 +68,7 @@ public class MRTreasureChartLocation : MonoBehaviour
 		{
 			Debug.LogError("No camera found for treasue stack " + stackName);
 		}
-		mInspectionToggle = false;
+
 		mLocationMarker = gameObject.GetComponentInChildren<SpriteRenderer>().gameObject;
 		mCollider = mLocationMarker.gameObject.GetComponent<Collider2D>();
 		TextMesh text = gameObject.GetComponentInChildren<TextMesh>();
@@ -88,30 +88,30 @@ public class MRTreasureChartLocation : MonoBehaviour
 	{
 		if (MRGame.TheGame.CurrentView != view || mTreasures == null)
 			return;
+	}
 
-		// see if we are being selected for inspection
-		if (MRGame.IsTouchHeld && !mInspectionToggle && mTreasures.Count > 0)
+	public bool OnSingleTapped(GameObject touchedObject)
+	{
+		return true;
+	}
+	
+	public bool OnDoubleTapped(GameObject touchedObject)
+	{
+		mTreasures.OnDoubleTapped(touchedObject);
+		return true;
+	}
+	
+	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		if (mTreasures.Count > 0)
 		{
-			Vector3 worldTouch = mCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane));
-			RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero);
-			foreach (RaycastHit2D hit in hits)
-			{
-				if (hit.collider == mCollider)
-				{
-					Debug.Log("Treasures inspected: " + mName);
-					mInspectionToggle = true;
-					if (!mTreasures.Inspecting)
-						MRGame.TheGame.InspectStack(mTreasures);
-					else
-						MRGame.TheGame.InspectStack(null);
-					break;
-				}
-			}
+			Debug.Log("Treasures inspected: " + mName);
+			if (!mTreasures.Inspecting)
+				MRGame.TheGame.InspectStack(mTreasures);
+			else
+				MRGame.TheGame.InspectStack(null);
 		}
-		else if (!MRGame.IsTouchHeld && mInspectionToggle)
-		{
-			mInspectionToggle = false;
-		}
+		return true;
 	}
 
 	#endregion
@@ -123,7 +123,6 @@ public class MRTreasureChartLocation : MonoBehaviour
 	private Collider2D mCollider;
 	private Camera mCamera;
 	private string mName;
-	private bool mInspectionToggle;
 
 	#endregion
 }

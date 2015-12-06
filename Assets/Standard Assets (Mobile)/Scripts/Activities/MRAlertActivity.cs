@@ -36,11 +36,7 @@ public class MRAlertActivity : MRActivity
 	{
 		if (Owner is MRCharacter && Owner.CanExecuteActivity(this))
 		{
-			// todo: if character has magic chits, offer option to alert one of them
-			// todo: if berserker, offer to activate berserk chit
-
-			// alert character's active weapon
-			((MRCharacter)Owner).AlertActiveWeapon();
+			MRGame.TheGame.AddUpdateEvent(new MRAlertEvent((MRCharacter)Owner, MRActionChit.eAction.Alert));
 		}
 		Executed = true;
 	}

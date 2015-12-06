@@ -25,6 +25,7 @@
 // THE SOFTWARE.
 using UnityEngine;
 using System.Collections;
+using System.Text;
 
 public class MRDuckChit : MRMoveChit
 {
@@ -33,8 +34,53 @@ public class MRDuckChit : MRMoveChit
 	public override eType Type
 	{
 		get{
-			return eType.duck;
+			return eType.Duck;
 		}
+	}
+
+	#endregion
+
+	#region Methods
+
+	// Update is called once per frame
+	public override void Update ()
+	{
+		base.Update();
+		
+		StringBuilder buffer = new StringBuilder("DUCK\n");
+		buffer.Append(CurrentStrength.ToChitString());
+		buffer.Append(" ");
+		buffer.Append(CurrentTime);
+		buffer.Append("\n");
+		for (int i = 0; i < CurrentAsterisks; ++i)
+		{
+			buffer.Append("*");
+			if (i < CurrentAsterisks - 1)
+				buffer.Append(" ");
+		}
+		TextMesh text = mCounter.GetComponentInChildren<TextMesh>();
+		text.text = buffer.ToString();
+	}
+
+	public override bool CanBeUsedFor(eAction action, MRGame.eStrength strength)
+	{
+		bool canBeUsed = false;
+		if (strength == MRGame.eStrength.Any || strength <= BaseStrength)
+		{
+			switch (action)
+			{
+				case eAction.Duck:
+				case eAction.Fatigue:
+				case eAction.FatigueMove:
+					canBeUsed = true;
+					break;
+				case eAction.FatigueChange:
+				case eAction.FatigueChangeMove:
+					canBeUsed = (BaseAsterisks == 1);
+					break;
+			}
+		}
+		return canBeUsed;
 	}
 
 	#endregion

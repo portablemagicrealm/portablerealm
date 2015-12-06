@@ -171,7 +171,7 @@ public class MRSiteChit : MRMapChit
 				    !character.HasActiveItem(MRItem.GetItem(MRUtility.IdForName("7-league boots"))) &&
 				    !character.HasActiveItem(MRItem.GetItem(MRUtility.IdForName("gloves of strength"))))
 				{
-					character.SetFatigueBalance(1, MRActionChit.eType.any, MRGame.eStrength.Tremendous);
+					character.SetFatigueBalance(1, MRActionChit.eType.Any, MRGame.eStrength.Tremendous);
 				}
 			}
 		}

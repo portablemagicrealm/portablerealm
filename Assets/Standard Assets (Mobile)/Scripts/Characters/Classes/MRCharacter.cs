@@ -56,14 +56,29 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		}
 	}
 
+	public MRSelectChitEvent.MRSelectChitFilter SelectChitFilter
+	{
+		get{
+			return mSelectChitFilter;
+		}
+
+		set{
+			mSelectChitFilter = value;
+		}
+	}
+
 	public MRSelectChitEvent SelectChitData
 	{
 		get{
 			return mSelectChitData;
 		}
-
+		
 		set{
 			mSelectChitData = value;
+			if (mSelectChitData != null)
+				SelectChitFilter = mSelectChitData.Filter;
+			else
+				SelectChitFilter = null;
 		}
 	}
 
@@ -616,7 +631,8 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 				chit.BaseTime = speed;
 				int effort = ((JSONNumber)chitData["effort"]).IntValue;
 				chit.BaseAsterisks = effort;
-				chit.State = MRActionChit.eState.active;
+				chit.State = MRActionChit.eState.Active;
+				chit.Owner = this;
 				
 				mChits.Add(chit);
 				mActiveChits.Add(chit);
@@ -908,13 +924,292 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	//}
 
 	/// <summary>
+	/// Returns if a chit can be selected by the character for the current game mode.
+	/// </summary>
+	/// <returns><c>true</c>, if the chit is selectable, <c>false</c> otherwise.</returns>
+	/// <param name="chit">Chit.</param>
+	public bool CanSelectChit(MRChit chit)
+	{
+		switch (MRGame.TheGame.CurrentView)
+		{
+			case MRGame.eViews.SelectAttack:
+				return IsValidAttack(chit);
+			case MRGame.eViews.SelectManeuver:
+				return IsValidManeuver(chit);
+			case MRGame.eViews.FatigueCharacter:
+				if (FatigueBalance != 0)
+					return IsValidFatigueChit(chit);
+				else if (WoundBalance != 0)
+					return IsValidWoundChit(chit);
+				else if (HealBalance != 0)
+					return IsValidHealChit(chit);
+				break;
+			case MRGame.eViews.SelectChit:
+			case MRGame.eViews.Alert:
+				return IsValidSelectChit(chit);
+			default:
+				break;
+		}
+		return true;
+	}
+
+	/// <summary>
+	/// Flags all chits as not being used in combat.
+	/// </summary>
+	public void ClearCombatChits()
+	{
+		foreach (MRActionChit chit in mChits)
+		{
+			chit.UsedThisRound = false;
+		}
+	}
+
+	/// <summary>
+	/// Returns the number of asterisks used by chits this combat round.
+	/// </summary>
+	/// <returns>The asterisks used.</returns>
+	public int GetAsterisksUsed()
+	{
+		int used = 0;
+		foreach (MRActionChit chit in mActiveChits)
+		{
+			if (chit.UsedThisRound && chit.BaseAsterisks > 0)
+				used += chit.BaseAsterisks;
+		}
+		return used;
+	}
+
+	/// <summary>
+	/// Returns the type of chits with asterisks this combat round. If multiple types used, MRActionChit.eType.Any will be returned.
+	/// </summary>
+	/// <returns>The asterisks type.</returns>
+	public MRActionChit.eType GetAsterisksTypeForFatigue()
+	{
+		MRActionChit.eType type = MRActionChit.eType.Any;
+		foreach (MRActionChit chit in mActiveChits)
+		{
+			if (chit.UsedThisRound && chit.BaseAsterisks > 0)
+			{
+				MRActionChit.eType chitType = MRActionChit.eType.Any;
+				if (chit is MRFightChit)
+					chitType = MRActionChit.eType.Fight;
+				else if (chit is MRMoveChit)
+					chitType = MRActionChit.eType.Move;
+				else if (chit is MRMagicChit)
+					chitType = MRActionChit.eType.Magic;
+				if (type == MRActionChit.eType.Any)
+					type = chitType;
+				else if (type != chitType)
+				{
+					// multiple types used
+					type = MRActionChit.eType.Any;
+					break;
+				}
+			}
+		}
+		return type;
+	}
+
+	/// <summary>
+	/// Returns if a given chit can be used to attack.
+	/// </summary>
+	/// <returns><c>true</c> if the chit is valid; otherwise, <c>false</c>.</returns>
+	/// <param name="chit">Chit.</param>
+	public bool IsValidAttack(MRChit chit)
+	{
+		bool isValid = false;
+		MRFightChit attack = chit as MRFightChit;
+		MRActionChit.eAction action = MRActionChit.eAction.Move;
+		switch (MRGame.TheGame.CombatManager.LastSelectedAttackType)
+		{
+			case MRCombatManager.eAttackType.Smash:
+				action = MRActionChit.eAction.Smash;
+				break;
+			case MRCombatManager.eAttackType.Swing:
+				action = MRActionChit.eAction.Swing;
+				break;
+			case MRCombatManager.eAttackType.Thrust:
+				action = MRActionChit.eAction.Thrust;
+				break;
+			default:
+				break;
+		}
+
+		// make sure the selected chit is valid for the weapon
+		if (attack != null && attack.CanBeUsedFor(action) && !attack.UsedThisRound && (ActiveWeapon == null || attack.CurrentStrength >= ActiveWeapon.BaseWeight))
+		{
+			// make sure the chit asterisk limit isn't exceeded
+			if (GetAsterisksUsed() + attack.CurrentAsterisks <= CombatAsteriskLimit)
+			{
+				isValid = true;
+			}
+		}
+		return isValid;
+	}
+
+	/// <summary>
+	/// Returns if a given chit can be used to maneuver.
+	/// </summary>
+	/// <returns><c>true</c> if the chit is valid; otherwise, <c>false</c>.</returns>
+	/// <param name="chit">Chit.</param>
+	public bool IsValidManeuver(MRChit chit)
+	{
+		bool isValid = false;
+		MRMoveChit move = chit as MRMoveChit;
+		MRActionChit.eAction action = MRActionChit.eAction.Move;
+		switch (MRGame.TheGame.CombatManager.LastSelectedDefenseType)
+		{
+			case MRCombatManager.eDefenseType.Charge:
+				action = MRActionChit.eAction.Charge;
+				break;
+			case MRCombatManager.eDefenseType.Dodge:
+				action = MRActionChit.eAction.Dodge;
+				break;
+			case MRCombatManager.eDefenseType.Duck:
+				action = MRActionChit.eAction.Duck;
+				break;
+			default:
+				break;
+		}
+
+		// make sure the selected chit is valid
+		if (move != null && move.CanBeUsedFor(action) && !move.UsedThisRound && move.CurrentStrength >= GetHeaviestWeight(false, false))
+		{
+			// make sure the chit asterisk limit isn't exceeded
+			if (GetAsterisksUsed() + move.CurrentAsterisks <= CombatAsteriskLimit)
+			{
+				isValid = true;
+			}
+		}
+		return isValid;
+	}
+
+	/// <summary>
+	/// Returns if a given chit can be used to fatigue.
+	/// </summary>
+	/// <returns><c>true</c> if the chit is valid; otherwise, <c>false</c>.</returns>
+	/// <param name="chit">Chit.</param>
+	public bool IsValidFatigueChit(MRChit chit)
+	{
+		return IsValidFatigueChit(chit, FatigueBalance, mFatigueBalanceType, MRGame.eStrength.Any, mFatigueChange);
+	}
+
+	/// <summary>
+	/// Returns if a given chit can be used to fatigue.
+	/// </summary>
+	/// <returns><c>true</c> if the chit is valid; otherwise, <c>false</c>.</returns>
+	/// <param name="chit">Chit.</param>
+	/// <param name="fatigueBalance">amount of fatigue needed</param>
+	/// <param name="fatigueBalanceType">type of fatigue</param>
+	/// <param name="strength">strength of the chit that needs to be fatigued</param>
+	/// <param name="makingChange">flag that we are making change</param>
+	public bool IsValidFatigueChit(MRChit chit, int fatigueBalance, MRActionChit.eType fatigueBalanceType, MRGame.eStrength strength, bool makingChange)
+	{
+		bool isValid = false;
+		
+		MRActionChit action = chit as MRActionChit;
+		if (action != null && fatigueBalance != 0)
+		{
+			// verify chit type against fatigue type
+			MRActionChit.eAction fatigueType = MRActionChit.eAction.Fatigue;
+			switch (fatigueBalanceType)
+			{
+				case MRActionChit.eType.Any:
+					if (mFatigueChange)
+						fatigueType = MRActionChit.eAction.FatigueChange;
+					break;
+				case MRActionChit.eType.Fight:
+					if (makingChange)
+						fatigueType = MRActionChit.eAction.FatigueChangeFight;
+					else
+						fatigueType = MRActionChit.eAction.FatigueFight;
+					break;
+				case MRActionChit.eType.Move:
+					if (makingChange)
+						fatigueType = MRActionChit.eAction.FatigueChangeMove;
+					else
+						fatigueType = MRActionChit.eAction.FatigueMove;
+					break;
+			}
+			if (action.CanBeUsedFor(fatigueType, strength))
+			{
+				// verify chit state
+				if ((fatigueBalance > 0 && action.State == MRActionChit.eState.Active) ||
+				    (fatigueBalance < 0 && action.State == MRActionChit.eState.Fatigued))
+				{
+					isValid = true;
+				}
+			}
+		}
+		return isValid;
+	}
+
+	/// <summary>
+	/// Returns if a given chit can be used to wound.
+	/// </summary>
+	/// <returns><c>true</c> if the chit is valid; otherwise, <c>false</c>.</returns>
+	/// <param name="chit">Chit.</param>
+	public bool IsValidWoundChit(MRChit chit)
+	{
+		bool isValid = false;
+
+		return isValid;
+	}
+
+	/// <summary>
+	/// Returns if a given chit can be used to heal.
+	/// </summary>
+	/// <returns><c>true</c> if the chit is valid; otherwise, <c>false</c>.</returns>
+	/// <param name="chit">Chit.</param>
+	public bool IsValidHealChit(MRChit chit)
+	{
+		bool isValid = false;
+
+		MRActionChit action = chit as MRActionChit;
+		if (action != null && (action.State == MRActionChit.eState.Fatigued || action.State == MRActionChit.eState.Wounded))
+		{
+			if (action.BaseAsterisks == 2)
+			{
+				// can only heal a 2-asterisk chit if there is a 1-asterisk chit available to fatigue
+				foreach (MRActionChit activeChit in mActiveChits)
+				{
+					if (activeChit.BaseAsterisks == 1)
+					{
+						isValid = true;
+						break;
+					}
+				}
+			}
+			else
+				isValid = true;
+		}
+
+		return isValid;
+	}
+
+	/// <summary>
+	/// Returns if a given chit can be selected, based on the data in mSelectChitData.
+	/// </summary>
+	/// <returns><c>true</c> if the chit is valid; otherwise, <c>false</c>.</returns>
+	/// <param name="chit">Chit.</param>
+	public bool IsValidSelectChit(MRChit chit)
+	{
+		bool isValid = true;
+
+		if (mSelectChitFilter != null)
+			isValid = mSelectChitFilter.IsValidSelectChit(chit);
+
+		return isValid;
+	}
+
+	/// <summary>
 	/// Returns if the character can fatigue a given number of asterisks of any type of chit.
 	/// </summary>
 	/// <returns><c>true</c> if this instance can fatigue chit the specified count; otherwise, <c>false</c>.</returns>
 	/// <param name="count">number of asterisks that must be fatigued</param>
 	public bool CanFatigueChit(int count)
 	{
-		return CanFatigueChit(count, MRActionChit.eType.any, MRGame.eStrength.Any);
+		return CanFatigueChit(count, MRActionChit.eType.Any, MRGame.eStrength.Any);
 	}
 
 	/// <summary>
@@ -928,18 +1223,8 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	{
 		foreach (MRActionChit chit in mActiveChits)
 		{
-			if (chit.BaseAsterisks <= 0)
-				continue;
-			if (type != MRActionChit.eType.any && type != chit.Type)
-				continue;
-			if (strength != MRGame.eStrength.Any)
-			{
-				if (chit is MRFightChit && ((MRFightChit)chit).BaseStrength != strength)
-					continue;
-				if (chit is MRMoveChit && ((MRMoveChit)chit).BaseStrength != strength)
-					continue;
-			}
-			count -= chit.BaseAsterisks;
+			if (IsValidFatigueChit(chit, count, type, strength, false))
+				count -= chit.BaseAsterisks;
 		}	
 
 		return count <= 0;
@@ -951,7 +1236,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	/// <param name="count">the asterisk count</param>
 	public void SetFatigueBalance(int count)
 	{
-		SetFatigueBalance(count, MRActionChit.eType.any, MRGame.eStrength.Any);
+		SetFatigueBalance(count, MRActionChit.eType.Any, MRGame.eStrength.Any);
 	}
 
 	/// <summary>
@@ -991,33 +1276,40 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	/// <param name="chit">chit to fatigue</param>
 	public void FatigueChit(MRActionChit chit)
 	{
-		// can't fatigue chits with no asterisks
-		if (chit.BaseAsterisks == 0)
-			return;
-
-		// test for valid fatigue
-		if (mFatigueBalance > 0 && chit.State == MRActionChit.eState.active &&
-		    (mFatigueBalanceType == MRActionChit.eType.any || mFatigueBalanceType == chit.Type))
+		if (IsValidFatigueChit(chit))
 		{
-			mActiveChits.Remove(chit);
-			mFatiguedChits.Add(chit);
-			chit.State = MRActionChit.eState.fatigued;
-			mFatigueBalance -= chit.BaseAsterisks;
-			if (mFatigueBalance < 0)
+			if (mFatigueBalance > 0)
 			{
-				// if the character will need to "make change", the chit needs to be the same type
-				mFatigueBalanceType = chit.Type;
+				mActiveChits.Remove(chit);
+				mFatiguedChits.Add(chit);
+				chit.State = MRActionChit.eState.Fatigued;
+				mFatigueBalance -= chit.BaseAsterisks;
+				if (mFatigueBalance < 0)
+				{
+					// verify that there is a valid chit we can make change with
+					bool canMakeChange = false;
+					foreach (MRActionChit testChit in mFatiguedChits)
+					{
+						if (IsValidFatigueChit(testChit, mFatigueBalance, chit.Type, MRGame.eStrength.Any, true))
+						{
+							mFatigueBalanceType = chit.Type;
+							mFatigueChange = true;
+							canMakeChange = true;
+							break;
+						}
+					}
+					if (!canMakeChange)
+						mFatigueBalance = 0;
+				}
 			}
-			return;
-		}
-		// test for "making change"
-		if (mFatigueBalance < 0 && chit.State == MRActionChit.eState.fatigued &&
-		    (mFatigueBalanceType == MRActionChit.eType.any || mFatigueBalanceType == chit.Type))
-		{
-			mFatiguedChits.Remove(chit);
-			mActiveChits.Add(chit);
-			chit.State = MRActionChit.eState.active;
-			mFatigueBalance += chit.BaseAsterisks;
+			else if (mFatigueBalance < 0)
+			{
+				mFatiguedChits.Remove(chit);
+				mActiveChits.Add(chit);
+				chit.State = MRActionChit.eState.Active;
+				mFatigueBalance += chit.BaseAsterisks;
+				mFatigueChange = false;
+			}
 		}
 	}
 
@@ -1035,18 +1327,18 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		{
 			if (mActiveChits.Contains(chit))
 			{
-				if (chit.State == MRActionChit.eState.enchanted)
+				if (chit.State == MRActionChit.eState.Enchanted)
 				{
 					// enchanted chits can only be wounded if there are no non-enchanted active chits left
 					foreach (MRActionChit testChit in mActiveChits)
 					{
-						if (testChit.State == MRActionChit.eState.active)
+						if (testChit.State == MRActionChit.eState.Active)
 							return;
 					}
 				}
 				mActiveChits.Remove(chit);
 				mWoundedChits.Add(chit);
-				chit.State = MRActionChit.eState.wounded;
+				chit.State = MRActionChit.eState.Wounded;
 				--mWoundBalance;
 			}
 		}
@@ -1058,7 +1350,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 			{
 				mFatiguedChits.Remove(chit);
 				mWoundedChits.Add(chit);
-				chit.State = MRActionChit.eState.wounded;
+				chit.State = MRActionChit.eState.Wounded;
 				--mWoundBalance;
 			}
 		}
@@ -1068,6 +1360,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 			mWoundBalance = 0;
 			mFatigueBalance = 0;
 			mHealBalance = 0;
+			mFatigueChange = false;
 			mIsDead = true;
 		}
 	}
@@ -1081,56 +1374,58 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		if (mHealBalance <= 0 || mActiveChits.Contains(chit))
 			return;
 
-		if (chit.State == MRActionChit.eState.fatigued && HasCurse(MRGame.eCurses.Wither))
+		if (chit.State == MRActionChit.eState.Fatigued && HasCurse(MRGame.eCurses.Wither))
 			return;
 
 		// 1-asterisk fatigued and no-asterisk wounded chits are made active
-		if (chit.State == MRActionChit.eState.fatigued && chit.BaseAsterisks == 1)
+		if (chit.State == MRActionChit.eState.Fatigued && chit.BaseAsterisks == 1)
 		{
 			mFatiguedChits.Remove(chit);
 			mActiveChits.Add(chit);
-			chit.State = MRActionChit.eState.active;
+			chit.State = MRActionChit.eState.Active;
 			--mHealBalance;
 			return;
 		}
-		if (chit.State == MRActionChit.eState.wounded && chit.BaseAsterisks == 0)
+		if (chit.State == MRActionChit.eState.Wounded && chit.BaseAsterisks == 0)
 		{
 			mWoundedChits.Remove(chit);
 			mActiveChits.Add(chit);
-			chit.State = MRActionChit.eState.active;
+			chit.State = MRActionChit.eState.Active;
 			--mHealBalance;
 			return;
 		}
 		// 1-asterisk wounded chits are fatigued
-		if (chit.State == MRActionChit.eState.wounded && chit.BaseAsterisks == 1)
+		if (chit.State == MRActionChit.eState.Wounded && chit.BaseAsterisks == 1)
 		{
 			mWoundedChits.Remove(chit);
 			mFatiguedChits.Add(chit);
-			chit.State = MRActionChit.eState.fatigued;
+			chit.State = MRActionChit.eState.Fatigued;
 			--mHealBalance;
 			return;
 		}
 		// 2-asterisk fatigued chits can be made active if the character can fatigue a 1-asterisk chit
-		if (chit.State == MRActionChit.eState.fatigued && chit.BaseAsterisks == 2 && CanFatigueChit(1))
+		if (chit.State == MRActionChit.eState.Fatigued && chit.BaseAsterisks == 2 && CanFatigueChit(1))
 		{
 			mFatiguedChits.Remove(chit);
 			mActiveChits.Add(chit);
-			chit.State = MRActionChit.eState.active;
+			chit.State = MRActionChit.eState.Active;
 			--mHealBalance;
 			mFatigueBalance = 1;
-			mFatigueBalanceType = chit.Type;
+			mFatigueChange = true;
+			mFatigueBalanceType = MRActionChit.eType.Any;
 			mFatigueBalanceStrength = MRGame.eStrength.Any;
 			return;
 		}
 		// 2-asterisk wounded chits can be fatigued if the character can fatigue a 1-asterisk chit
-		if (chit.State == MRActionChit.eState.wounded && chit.BaseAsterisks == 2 && CanFatigueChit(1))
+		if (chit.State == MRActionChit.eState.Wounded && chit.BaseAsterisks == 2 && CanFatigueChit(1))
 		{
 			mWoundedChits.Remove(chit);
 			mFatiguedChits.Add(chit);
-			chit.State = MRActionChit.eState.fatigued;
+			chit.State = MRActionChit.eState.Fatigued;
 			--mHealBalance;
 			mFatigueBalance = 1;
-			mFatigueBalanceType = chit.Type;
+			mFatigueChange = true;
+			mFatigueBalanceType = MRActionChit.eType.Any;
 			mFatigueBalanceStrength = MRGame.eStrength.Any;
 			return;
 		}
@@ -1337,21 +1632,6 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	}
 
 	/// <summary>
-	/// Alerts the character's active weapon.
-	/// </summary>
-	public void AlertActiveWeapon()
-	{
-		foreach (MRIGamePiece piece in mActiveItems)
-		{
-			if (piece is MRWeapon)
-			{
-				((MRWeapon)piece).Alerted = true;
-				break;
-			}
-		}
-	}
-
-	/// <summary>
 	/// Returns the weight of the heaviest item owned by the character.
 	/// </summary>
 	/// <returns>The heaviest weight.</returns>
@@ -1415,7 +1695,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		// test if we have a move chit of a strength >= the item's weight
 		foreach (MRActionChit chit in mMoveChits)
 		{
-			if ((chit is MRMoveChit) && !(chit is MRDuckChit) && mActiveChits.Contains(chit))
+			if (chit.CanBeUsedFor(MRActionChit.eAction.Move) && mActiveChits.Contains(chit))
 			{
 				if (((MRMoveChit)chit).BaseStrength >= item.BaseWeight)
 					return true;
@@ -1518,7 +1798,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 			{
 				return true;
 			}
-			return CanFatigueChit(1, MRActionChit.eType.any, MRGame.eStrength.Tremendous);
+			return CanFatigueChit(1, MRActionChit.eType.Any, MRGame.eStrength.Tremendous);
 		}
 		return true;
 	}
@@ -1562,7 +1842,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		{
 			if (!HasLostKeysOrTStrengthTreasure())
 			{
-				SetFatigueBalance(1, MRActionChit.eType.any, MRGame.eStrength.Tremendous);
+				SetFatigueBalance(1, MRActionChit.eType.Any, MRGame.eStrength.Tremendous);
 			}
 		}
 	}
@@ -1615,7 +1895,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 			}
 			foreach (MRActionChit chit in toFatigue)
 			{
-				chit.State = MRActionChit.eState.fatigued;
+				chit.State = MRActionChit.eState.Fatigued;
 				mFatiguedChits.Add(chit);
 				mActiveChits.Remove(chit);
 			}
@@ -1940,8 +2220,10 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	protected int mFatigueBalance;
 	protected int mWoundBalance;
 	protected int mHealBalance;
+	protected bool mFatigueChange;
 	protected MRActionChit.eType mFatigueBalanceType;
 	protected MRGame.eStrength mFatigueBalanceStrength;
+	protected MRSelectChitEvent.MRSelectChitFilter mSelectChitFilter;
 	protected MRSelectChitEvent mSelectChitData;
 
 	protected float mFame;

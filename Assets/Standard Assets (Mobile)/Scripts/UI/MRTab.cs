@@ -26,7 +26,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class MRTab : MonoBehaviour
+public class MRTab : MonoBehaviour, MRITouchable
 {
 	#region Constants
 	
@@ -87,27 +87,26 @@ public class MRTab : MonoBehaviour
 			Image.GetComponent<SpriteRenderer>().color = selectedColor;
 		else
 			Image.GetComponent<SpriteRenderer>().color = unselectedColor;
+	}
 
-		if (MRGame.IsSingleTapped)
+	public bool OnSingleTapped(GameObject touchedObject)
+	{
+		if (touchedObject == gameObject)
 		{
-			Vector3 screenPos = new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane);
-			Vector3 viewportTouch = mCamera.ScreenToViewportPoint(screenPos);
-			if (viewportTouch.x > 0 && viewportTouch.x < 1 && viewportTouch.y > 0 && viewportTouch.y < 1)
-			{
-				Vector3 worldTouch = mCamera.ScreenToWorldPoint(screenPos);
-				RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero);
-				for (int i = 0; hits != null && i < hits.Length; ++i)
-				{
-					RaycastHit2D hit = hits[i];
-					if (hit.collider == gameObject.collider2D)
-					{
-						Debug.Log("Tab selected: " + gameObject.name);
-						SendMessageUpwards("OnTabSelected", this, SendMessageOptions.DontRequireReceiver);
-						break;
-					}
-				}
-			}
+			Debug.Log("Tab selected: " + gameObject.name);
+			SendMessageUpwards("OnTabSelected", this, SendMessageOptions.DontRequireReceiver);
 		}
+		return true;
+	}
+
+	public bool OnDoubleTapped(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	#endregion

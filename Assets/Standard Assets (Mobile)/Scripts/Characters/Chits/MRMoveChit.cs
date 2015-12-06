@@ -34,7 +34,7 @@ public class MRMoveChit : MRActionChit
 	public override eType Type
 	{
 		get{
-			return eType.move;
+			return eType.Move;
 		}
 	}
 
@@ -89,6 +89,35 @@ public class MRMoveChit : MRActionChit
 		}
 		TextMesh text = mCounter.GetComponentInChildren<TextMesh>();
 		text.text = buffer.ToString();
+	}
+
+	public override bool CanBeUsedFor(eAction action, MRGame.eStrength strength)
+	{
+		bool canBeUsed = false;
+		if (strength == MRGame.eStrength.Any || strength <= BaseStrength)
+		{
+			switch (action)
+			{
+				case eAction.Move:
+				case eAction.Charge:
+				case eAction.Dodge:
+				case eAction.Duck:
+				case eAction.RunAway:
+					canBeUsed = true;
+					break;
+				case eAction.Fatigue:
+				case eAction.FatigueMove:
+					canBeUsed = (BaseAsterisks > 0);
+					break;
+				case eAction.FatigueChange:
+				case eAction.FatigueChangeMove:
+					canBeUsed = (BaseAsterisks == 1);
+					break;
+				default:
+					break;
+			}
+		}
+		return canBeUsed;
 	}
 
 	#endregion

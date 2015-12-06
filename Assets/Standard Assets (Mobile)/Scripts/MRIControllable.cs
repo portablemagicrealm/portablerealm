@@ -48,6 +48,12 @@ public interface MRIControllable : MRIGamePiece
 	// base weight of the controllable
 	MRGame.eStrength BaseWeight { get; }
 
+	// base vulnerability of the controllable
+	MRGame.eStrength BaseVulnerability { get; }
+
+	// current vulnerability of the controllable
+	MRGame.eStrength CurrentVulnerability { get; set; }
+
 	// Actual gold the controllable has
 	int BaseGold { get; set; }
 

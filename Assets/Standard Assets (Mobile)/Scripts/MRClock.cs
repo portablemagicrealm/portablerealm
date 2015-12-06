@@ -27,7 +27,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class MRClock : MonoBehaviour
+public class MRClock : MonoBehaviour, MRITouchable
 {
 	#region Properties
 
@@ -60,15 +60,6 @@ public class MRClock : MonoBehaviour
 		cameraRect.y = 1.0f - cameraRect.height;
 		mCamera.rect = cameraRect;
 
-		// make sure our collider matches the camera view area
-		Camera mapCamera = MRGame.TheGame.TheMap.MapCamera;
-		BoxCollider2D collider = gameObject.GetComponent<BoxCollider2D>();
-		Vector3 cameraLLPosScreen = mCamera.ViewportToScreenPoint(Vector3.zero);
-		Vector3 cameraURPosScreen = mCamera.ViewportToScreenPoint(Vector3.one);
-		Vector3 cameraLLPosMap = mapCamera.ScreenToWorldPoint(cameraLLPosScreen);
-		Vector3 cameraURPosMap = mapCamera.ScreenToWorldPoint(cameraURPosScreen);
-		collider.size = new Vector2(cameraURPosMap.x - cameraLLPosMap.x, cameraURPosMap.y - cameraLLPosMap.y);
-
 		foreach (Transform t in gameObject.GetComponentsInChildren<Transform>())
 		{
 			if (t.gameObject.name == "TimeOfDay")
@@ -93,20 +84,28 @@ public class MRClock : MonoBehaviour
 		Vector3 cameraPosMap = mapCamera.ScreenToWorldPoint(cameraPosScreen);
 		Vector3 colliderPosWorld = transform.TransformPoint(new Vector3(collider.center.x - collider.size.x / 2.0f, collider.center.y - collider.size.y / 2.0f, 0));
 		transform.Translate(cameraPosMap.x - colliderPosWorld.x, cameraPosMap.y - colliderPosWorld.y, 0);
-		colliderPosWorld = transform.TransformPoint(new Vector3(collider.center.x - collider.size.x / 2.0f, collider.center.y - collider.size.y / 2.0f, 0));
-
-		if (MRGame.IsDoubleTapped && MRGame.TheGame.GameState == MRGame.eGameState.Active)
-		{
-			Vector3 worldTouch = mapCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane));
-			RaycastHit2D hit = Physics2D.Raycast(worldTouch, Vector2.zero);
-			if (hit.collider == collider2D)
-			{
-				SendMessageUpwards("NextGameTime");
-			}
-		}
 
 		mClockImage.transform.localRotation = Quaternion.AngleAxis(30.0f + 60.0f * (int)MRGame.TimeOfDay, Vector3.forward);
 		mDateText.text = MRGame.DayOfMonth.ToString();
+	}
+
+	public bool OnSingleTapped(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnDoubleTapped(GameObject touchedObject)
+	{
+		if (MRGame.TheGame.GameState == MRGame.eGameState.Active && touchedObject == gameObject)
+		{
+			SendMessageUpwards("NextGameTime");
+		}
+		return true;
+	}
+
+	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	#endregion

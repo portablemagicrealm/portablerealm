@@ -188,6 +188,32 @@ public class MRChit : MonoBehaviour, MRIGamePiece, MRISerializable
 		}
 	}
 
+	public virtual Color FrontColor
+	{
+		get{
+			return mFrontColor;
+		}
+
+		set{
+			mFrontColor = value;
+			if (mFrontSide != null)
+				mFrontSide.color = mFrontColor;
+		}
+	}
+
+	public virtual Color BackColor
+	{
+		get{
+			return mBackColor;
+		}
+
+		set{
+			mBackColor = value;
+			if (mBackSide != null)
+				mBackSide.color = mBackColor;
+		}
+	}
+
 	#endregion
 
 	#region Methods
@@ -199,6 +225,16 @@ public class MRChit : MonoBehaviour, MRIGamePiece, MRISerializable
 		{
 			mCounter.transform.parent = gameObject.transform;
 			mCounter.transform.localPosition = Vector3.zero;
+			SpriteRenderer[] sprites = mCounter.GetComponentsInChildren<SpriteRenderer>();
+			foreach (SpriteRenderer sprite in sprites)
+			{
+				if (sprite.gameObject.name == "FrontSide")
+					mFrontSide = sprite;
+				else if (sprite.gameObject.name == "BackSide")
+					mBackSide = sprite;
+			}
+			FrontColor = MRGame.white;
+			BackColor = MRGame.white;
 		}
 		catch (Exception err)
 		{
@@ -274,6 +310,10 @@ public class MRChit : MonoBehaviour, MRIGamePiece, MRISerializable
 	protected MRGamePieceStack mStack;
 	private uint mId;
 	private string mName;
+	private Color mFrontColor;
+	private Color mBackColor;
+	private SpriteRenderer mFrontSide;
+	private SpriteRenderer mBackSide;
 
 	#endregion
 }

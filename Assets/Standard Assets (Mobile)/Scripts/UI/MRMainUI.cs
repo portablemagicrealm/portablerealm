@@ -126,10 +126,10 @@ public class MRMainUI : MonoBehaviour
 	public void DisplaySelectionDialog(string title, string subtitle, string[] buttons, OnButtonPressed callback)
 	{
 		mSelectionDialog = (GameObject)Instantiate(SelectionDialogPrototype);
-		Vector3 scale = mSelectionDialog.transform.localScale;
-		scale.x *= MRGame.DpiScale;
-		scale.y *= MRGame.DpiScale;
-		mSelectionDialog.transform.localScale = scale;
+//		Vector3 scale = mSelectionDialog.transform.localScale;
+//		scale.x *= MRGame.DpiScale;
+//		scale.y *= MRGame.DpiScale;
+//		mSelectionDialog.transform.localScale = scale;
 
 		// set the title
 		foreach (Text text in mSelectionDialog.GetComponentsInChildren<Text>())
@@ -228,10 +228,10 @@ public class MRMainUI : MonoBehaviour
 	public void DisplayMessageDialog(string message, string title, OnButtonPressed callback)
 	{
 		mMessageDialog = (GameObject)Instantiate(MessageDialogPrototype);
-		Vector3 scale = mMessageDialog.transform.localScale;
-		scale.x *= MRGame.DpiScale;
-		scale.y *= MRGame.DpiScale;
-		mMessageDialog.transform.localScale = scale;
+//		Vector3 scale = mMessageDialog.transform.localScale;
+//		scale.x *= MRGame.DpiScale;
+//		scale.y *= MRGame.DpiScale;
+//		mMessageDialog.transform.localScale = scale;
 		
 		// set the title and message
 		if (title == null)
@@ -257,15 +257,25 @@ public class MRMainUI : MonoBehaviour
 		MRGame.ShowingUI = true;
 	}
 
-	public void DisplayAttackManeuverDialog()
+	public void DisplayAttackManeuverDialog(float leftPositionViewport, float topPositionViewport)
 	{
 		if (mAttackManeuverDialog == null)
 		{
 			mAttackManeuverDialog = (GameObject)Instantiate(AttackManeuverDialogPrototype);
-			Vector3 scale = mAttackManeuverDialog.transform.localScale;
-			scale.x *= MRGame.DpiScale;
-			scale.y *= MRGame.DpiScale;
-			mAttackManeuverDialog.transform.localScale = scale;
+//			Vector3 scale = mAttackManeuverDialog.transform.localScale;
+//			scale.x *= MRGame.DpiScale;
+//			scale.y *= MRGame.DpiScale;
+//			mAttackManeuverDialog.transform.localScale = scale;
+			Vector2 anchor = ((RectTransform)mAttackManeuverDialog.transform).anchorMin;
+			anchor.x = leftPositionViewport;
+			anchor.y = topPositionViewport;
+			((RectTransform)mAttackManeuverDialog.transform).anchorMin = anchor;
+			((RectTransform)mAttackManeuverDialog.transform).anchorMax = anchor;
+			//Vector3 position = mAttackManeuverDialog.transform.localPosition;
+			// note world x 0 is left screen, but ui 0 is the center
+
+			//position.x = leftPosition - (Screen.width / 2.0f) + (((RectTransform)mAttackManeuverDialog.transform).rect.width * scale.x / 2.0f);
+			//mAttackManeuverDialog.transform.localPosition = position;
 			mAttackManeuverDialog.transform.SetParent(transform, false);
 
 			// set button callbacks
@@ -298,10 +308,10 @@ public class MRMainUI : MonoBehaviour
 		if (mTimedMessageBox != null)
 			DestroyObject(mTimedMessageBox);
 		mTimedMessageBox = (GameObject)Instantiate(TimedMessagePrototype);
-		Vector3 scale = mTimedMessageBox.transform.localScale;
-		scale.x *= MRGame.DpiScale;
-		scale.y *= MRGame.DpiScale;
-		mTimedMessageBox.transform.localScale = scale;
+//		Vector3 scale = mTimedMessageBox.transform.localScale;
+//		scale.x *= MRGame.DpiScale;
+//		scale.y *= MRGame.DpiScale;
+//		mTimedMessageBox.transform.localScale = scale;
 		Text text = mTimedMessageBox.GetComponentInChildren<Text>();
 		string message;
 		if (pool.DieRolls.Length == 1)
@@ -324,10 +334,10 @@ public class MRMainUI : MonoBehaviour
 		if (mTimedMessageBox != null)
 			DestroyObject(mTimedMessageBox);
 		mTimedMessageBox = (GameObject)Instantiate(TimedMessagePrototype);
-		Vector3 scale = mTimedMessageBox.transform.localScale;
-		scale.x *= MRGame.DpiScale;
-		scale.y *= MRGame.DpiScale;
-		mTimedMessageBox.transform.localScale = scale;
+//		Vector3 scale = mTimedMessageBox.transform.localScale;
+//		scale.x *= MRGame.DpiScale;
+//		scale.y *= MRGame.DpiScale;
+//		mTimedMessageBox.transform.localScale = scale;
 		Text text = mTimedMessageBox.GetComponentInChildren<Text>();
 		if (pool.DieRolls.Length == 1)
 			message += " = " + pool.Roll;
@@ -356,10 +366,10 @@ public class MRMainUI : MonoBehaviour
 		if (message != null)
 		{
 			mInstructionMessage = (GameObject)Instantiate(InstructionMessagePrototype);
-			Vector3 scale = mInstructionMessage.transform.localScale;
-			scale.x *= MRGame.DpiScale;
-			scale.y *= MRGame.DpiScale;
-			mInstructionMessage.transform.localScale = scale;
+//			Vector3 scale = mInstructionMessage.transform.localScale;
+//			scale.x *= MRGame.DpiScale;
+//			scale.y *= MRGame.DpiScale;
+//			mInstructionMessage.transform.localScale = scale;
 			Text text = mInstructionMessage.GetComponentInChildren<Text>();
 			text.text = message;
 			mInstructionMessage.transform.SetParent(transform, false);
@@ -377,10 +387,10 @@ public class MRMainUI : MonoBehaviour
 		if (mCombatActionDialog == null)
 		{
 			mCombatActionDialog = (GameObject)Instantiate(CombatActionDialogPrototype);
-			Vector3 scale = mCombatActionDialog.transform.localScale;
-			scale.x *= MRGame.DpiScale;
-			scale.y *= MRGame.DpiScale;
-			mCombatActionDialog.transform.localScale = scale;
+//			Vector3 scale = mCombatActionDialog.transform.localScale;
+//			scale.x *= MRGame.DpiScale;
+//			scale.y *= MRGame.DpiScale;
+//			mCombatActionDialog.transform.localScale = scale;
 			mCombatActionDialog.transform.SetParent(transform, false);
 			
 			// set button callbacks
@@ -415,10 +425,10 @@ public class MRMainUI : MonoBehaviour
 		if (mVictoryPointsSelectionDialog == null)
 		{
 			mVictoryPointsSelectionDialog = (GameObject)Instantiate(VictoryPointsSelectionDialogPrototype);
-			Vector3 scale = mVictoryPointsSelectionDialog.transform.localScale;
-			scale.x *= MRGame.DpiScale;
-			scale.y *= MRGame.DpiScale;
-			mVictoryPointsSelectionDialog.transform.localScale = scale;
+//			Vector3 scale = mVictoryPointsSelectionDialog.transform.localScale;
+//			scale.x *= MRGame.DpiScale;
+//			scale.y *= MRGame.DpiScale;
+//			mVictoryPointsSelectionDialog.transform.localScale = scale;
 			mVictoryPointsSelectionDialog.transform.SetParent(transform, false);
 
 			MonoBehaviour[] scripts = mVictoryPointsSelectionDialog.GetComponents<MonoBehaviour>();

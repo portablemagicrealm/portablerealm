@@ -225,5 +225,44 @@ public static class MRUtility
 			id = id * 256 + b;
 		return id;
 	}
+
+	public static bool compare(this MRSelectChitEvent.eCompare comparision, int lhs, int rhs)
+	{
+		switch (comparision)
+		{
+			case MRSelectChitEvent.eCompare.LessThan:
+				return lhs < rhs;
+			case MRSelectChitEvent.eCompare.LessThanEqualTo:
+				return lhs <= rhs;
+			case MRSelectChitEvent.eCompare.GreaterThanEqualTo:
+				return lhs >= rhs;
+			case MRSelectChitEvent.eCompare.GreaterThan:
+				return lhs > rhs;
+			default:
+				break;
+		}
+		return lhs == rhs;
+	}
+
+	public static bool compare(this MRSelectChitEvent.eCompare comparision, MRGame.eStrength lhs, MRGame.eStrength rhs)
+	{
+		if (lhs == MRGame.eStrength.Any || rhs == MRGame.eStrength.Any)
+			return true;
+
+		switch (comparision)
+		{
+			case MRSelectChitEvent.eCompare.LessThan:
+				return lhs < rhs;
+			case MRSelectChitEvent.eCompare.LessThanEqualTo:
+				return lhs <= rhs;
+			case MRSelectChitEvent.eCompare.GreaterThanEqualTo:
+				return lhs >= rhs;
+			case MRSelectChitEvent.eCompare.GreaterThan:
+				return lhs > rhs;
+			default:
+				break;
+		}
+		return lhs == rhs;
+	}
 }
 

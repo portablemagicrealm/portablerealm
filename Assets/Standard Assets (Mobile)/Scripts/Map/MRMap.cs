@@ -231,11 +231,8 @@ public class MRMap : MonoBehaviour, MRISerializable
 
 		if (mMapTiles.Count == 0)
 		{
-			while (!BuildMap()) {}
-			PlaceMapChits();
+			StartCoroutine(BuildMap());
 		}
-
-		mMapCreated = true;
 	}
 
 	private void CreateTilePool()
@@ -266,8 +263,9 @@ public class MRMap : MonoBehaviour, MRISerializable
 	/// Creates a random map from the tile set.
 	/// </summary>
 	/// <returns><c>true</c>, if map was built, <c>false</c> otherwise.</returns>
-	private bool BuildMap()
+	private IEnumerator BuildMap()
 	{
+		mIsValidMap = false;
 		foreach (MRTile tile in mMapTiles.Values)
 		{
 			Destroy(tile.gameObject);
@@ -438,16 +436,24 @@ public class MRMap : MonoBehaviour, MRISerializable
 				// put the tile back in the tilesLeft container
 				if (tilesLeft.Count == 0)
 				{
-					Debug.LogError("Unable to complete map");
-					return false;
+					//Debug.LogError("Unable to complete map");
+					MRMainUI.TheUI.DisplayMessageDialog("Can't create map. Send game seed to portablemagicrealm@gmail.com.");
+					while (true)
+						yield return null;
 				}
 				Debug.LogWarning("Failed to add tile " + tileId);
 				Destroy(newTile.gameObject);
 				tilesLeft.Add(tileId);
 				tilesLeft.Shuffle();
 			}
+			yield return null;
 		}
-		return true;
+
+		mIsValidMap = true;
+
+		PlaceMapChits();
+
+		mMapCreated = true;
 	}
 
 	/// <summary>
@@ -817,6 +823,13 @@ public class MRMap : MonoBehaviour, MRISerializable
 		}
 	}
 
+	public void CenterMapOnTile(MRTile tile)
+	{
+		Vector3 tilePos = tile.transform.position;
+		Vector3 cameraPos = mMapCamera.transform.position;
+		mMapCamera.transform.position = new Vector3(tilePos.x, tilePos.y, cameraPos.z);
+	}
+
 	public bool Load(JSONObject root)
 	{
 		// todo: clean up old map so we can create the new one
@@ -891,6 +904,7 @@ public class MRMap : MonoBehaviour, MRISerializable
 
 	#region Members
 
+	private bool mIsValidMap;
 	private bool mMapCreated;
 	private Camera mMapCamera;
 	private bool mMapZoomed;

@@ -31,7 +31,7 @@ using System.IO;
 using System.Text;
 using AssemblyCSharp;
 
-public class MRMain : MonoBehaviour
+public class MRMain : MonoBehaviour, MRITouchable
 {
 	#region Constants
 
@@ -46,7 +46,9 @@ public class MRMain : MonoBehaviour
 	#endregion
 
 	#region Properties
-	
+
+	//public TextMesh TapTest;
+
 	public Camera CombatCamera
 	{
 		get{
@@ -72,6 +74,8 @@ public class MRMain : MonoBehaviour
 			}
 		}
 	}
+
+
 
 	#endregion
 
@@ -224,56 +228,6 @@ public class MRMain : MonoBehaviour
 					chit.Layer = mChitPositions[i].layer;
 					chit.Position = mChitPositions[i].transform.position;
 					chit.LocalScale = new Vector3(1.3f, 1.3f, 1f);
-				}
-			}
-		}
-
-		// test user interaction
-		if (MRGame.IsSingleTapped)
-		{
-			Vector3 worldTouch = mCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane));
-			RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero);
-			foreach (RaycastHit2D hit in hits)
-			{
-				if (hit.collider.gameObject == mNewGameButton && mNewGameButton.renderer.enabled)
-				{
-					CreateNewGame();
-					return;
-				}
-				else if (hit.collider.gameObject == mAddCharacterButton && mAddCharacterButton.renderer.enabled)
-				{
-					AddCharacter(mDisplayedCharacterIndex);
-					return;
-				}
-				else if (hit.collider.gameObject == mRemoveCharacterButton && mRemoveCharacterButton.renderer.enabled)
-				{
-					RemoveCharacter(mDisplayedCharacterIndex);
-					return;
-				}
-				else if (hit.collider.gameObject == mStartGameButton && mStartGameButton.renderer.enabled)
-				{
-					StartGame();
-					return;
-				}
-				else if (hit.collider.gameObject == mLoadGameButton && mLoadGameButton.renderer.enabled)
-				{
-					LoadGame();
-					return;
-				}
-				else if (hit.collider.gameObject == mSaveGameButton && mSaveGameButton.renderer.enabled)
-				{
-					SaveGame();
-					return;
-				}
-				else if (hit.collider.gameObject == mCharacterLeftArrow && mCharacterLeftArrow.renderer.enabled && mDisplayedCharacterIndex > 0)
-				{
-					ChangeDisplayedCharacter(mDisplayedCharacterIndex - 1);
-					return;
-				}
-				else if (hit.collider.gameObject == mCharacterRightArrow && mCharacterRightArrow.renderer.enabled && mDisplayedCharacterIndex < mAvailableCharacters.Count - 1)
-				{
-					ChangeDisplayedCharacter(mDisplayedCharacterIndex + 1);
-					return;
 				}
 			}
 		}
@@ -431,6 +385,53 @@ public class MRMain : MonoBehaviour
 		// start the game proper 
 		mState = OptionsState.GameStarted;
 		MRGame.TheGame.StartGame();
+	}
+
+	public virtual bool OnSingleTapped(GameObject touchedObject)
+	{
+		if (touchedObject == mNewGameButton && mNewGameButton.renderer.enabled)
+		{
+			CreateNewGame();
+		}
+		else if (touchedObject == mAddCharacterButton && mAddCharacterButton.renderer.enabled)
+		{
+			AddCharacter(mDisplayedCharacterIndex);
+		}
+		else if (touchedObject == mRemoveCharacterButton && mRemoveCharacterButton.renderer.enabled)
+		{
+			RemoveCharacter(mDisplayedCharacterIndex);
+		}
+		else if (touchedObject == mStartGameButton && mStartGameButton.renderer.enabled)
+		{
+			StartGame();
+		}
+		else if (touchedObject == mLoadGameButton && mLoadGameButton.renderer.enabled)
+		{
+			LoadGame();
+		}
+		else if (touchedObject == mSaveGameButton && mSaveGameButton.renderer.enabled)
+		{
+			SaveGame();
+		}
+		else if (touchedObject == mCharacterLeftArrow && mCharacterLeftArrow.renderer.enabled && mDisplayedCharacterIndex > 0)
+		{
+			ChangeDisplayedCharacter(mDisplayedCharacterIndex - 1);
+		}
+		else if (touchedObject == mCharacterRightArrow && mCharacterRightArrow.renderer.enabled && mDisplayedCharacterIndex < mAvailableCharacters.Count - 1)
+		{
+			ChangeDisplayedCharacter(mDisplayedCharacterIndex + 1);
+		}
+		return true;
+	}
+	
+	public virtual bool OnDoubleTapped(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public virtual bool OnTouchHeld(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	private void LoadGame()

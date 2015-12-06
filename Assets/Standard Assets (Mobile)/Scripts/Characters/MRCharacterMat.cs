@@ -99,7 +99,8 @@ public class MRCharacterMat : MonoBehaviour
 
 		if (MRGame.TheGame.CurrentView == MRGame.eViews.SelectAttack ||
 		    MRGame.TheGame.CurrentView == MRGame.eViews.SelectManeuver ||
-		    MRGame.TheGame.CurrentView == MRGame.eViews.SelectChit)
+		    MRGame.TheGame.CurrentView == MRGame.eViews.SelectChit ||
+		    MRGame.TheGame.CurrentView == MRGame.eViews.Alert)
 		{
 			// force the selection of the items tab
 			tabs.SelectedTab = 0;
@@ -110,8 +111,6 @@ public class MRCharacterMat : MonoBehaviour
 			tabs.Enabled = true;
 		}
 	}
-
-
 
 	#endregion
 

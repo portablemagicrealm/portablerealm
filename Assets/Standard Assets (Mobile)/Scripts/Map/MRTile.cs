@@ -30,7 +30,7 @@ using System.Collections;
 using System.Collections.Generic;
 using AssemblyCSharp;
 
-public class MRTile : MonoBehaviour, MRISerializable
+public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 {
 	#region Constants
 
@@ -198,22 +198,26 @@ public class MRTile : MonoBehaviour, MRISerializable
 	{
 		if (MRGame.TheGame.CurrentView != MRGame.eViews.Map)
 			return;
+	}
 
-		if (MRGame.IsDoubleTapped)
+	public bool OnSingleTapped(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnDoubleTapped(GameObject touchedObject)
+	{
+		if (touchedObject == gameObject)
 		{
-			Vector3 screenPos = new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mMapCamera.nearClipPlane);
-			Vector3 viewportTouch = mMapCamera.ScreenToViewportPoint(screenPos);
-			if (viewportTouch.x > 0 && viewportTouch.x < 1 && viewportTouch.y > 0 && viewportTouch.y < 1)
-			{
-				Vector3 worldTouch = mMapCamera.ScreenToWorldPoint(screenPos);
-				RaycastHit2D hit = Physics2D.Raycast(worldTouch, Vector2.zero);
-				if (hit.collider == collider2D)
-				{
-					Debug.Log("Tile selected: " + tileName);
-					SendMessageUpwards("OnTileSelectedGame", this, SendMessageOptions.DontRequireReceiver);
-				}
-			}
+			Debug.Log("Tile selected: " + tileName);
+			SendMessageUpwards("OnTileSelectedGame", this, SendMessageOptions.DontRequireReceiver);
 		}
+		return true;
+	}
+
+	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	/// <summary>

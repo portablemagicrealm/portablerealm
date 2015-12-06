@@ -1,10 +1,10 @@
 //
-// MRMagicChit.cs
+// MRITouchable.cs
 //
 // Author:
 //       Steve Jakab <>
 //
-// Copyright (c) 2014 Steve Jakab
+// Copyright (c) 2015 Steve Jakab
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,85 +26,10 @@
 using UnityEngine;
 using System.Collections;
 
-public class MRMagicChit : MRActionChit
+public interface MRITouchable
 {
-	#region Properties
-
-	public override eType Type
-	{
-		get{
-			return eType.Magic;
-		}
-	}
-
-	public int BaseMagicType
-	{
-		get{
-			return mBaseMagicType;
-		}
-		
-		set{
-			mBaseMagicType = value;
-		}
-	}
-	
-	public int CurrentMagicType
-	{
-		get{
-			return mCurrentMagicType;
-		}
-		
-		set{
-			mCurrentMagicType = value;
-		}
-	}
-
-	#endregion
-
-	#region Methods
-
-	// Use this for initialization
-	public override void Start ()
-	{
-		base.Start();
-	}
-	
-	// Update is called once per frame
-	public override void Update ()
-	{
-		base.Update();
-	}
-
-	public override bool CanBeUsedFor(eAction action, MRGame.eStrength strength)
-	{
-		bool canBeUsed = false;
-		if (strength == MRGame.eStrength.Any)
-		{
-			switch (action)
-			{
-				case eAction.Alert:
-					canBeUsed = true;
-					break;
-			}
-		}
-		return canBeUsed;
-	}
-	
-	public override void Alert(eAction action)
-	{
-		if (action == eAction.Alert)
-		{
-
-		}
-	}
-
-	#endregion
-
-	#region Members
-
-	private int mBaseMagicType;
-	private int mCurrentMagicType;
-
-	#endregion
+	bool OnSingleTapped(GameObject touchedObject);
+	bool OnDoubleTapped(GameObject touchedObject);
+	bool OnTouchHeld(GameObject touchedObject);
 }
 

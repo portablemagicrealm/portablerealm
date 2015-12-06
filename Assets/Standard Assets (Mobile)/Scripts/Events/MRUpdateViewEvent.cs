@@ -96,6 +96,7 @@ public class MRUpdateViewEvent : MRUpdateEvent
 			case MRGame.eViews.SelectAttack:
 			case MRGame.eViews.SelectManeuver:
 			case MRGame.eViews.SelectChit:
+			case MRGame.eViews.Alert:
 				MRGame.TheGame.CharacterMat.Visible = true;
 				MRGame.TheGame.TheMap.Visible = false;
 				MRGame.TheGame.MonsterChart.Visible = false;

@@ -29,7 +29,7 @@ using System.Collections;
 using System.Collections.Generic;
 using AssemblyCSharp;
 
-public class MRClearing : MonoBehaviour, MRILocation
+public class MRClearing : MonoBehaviour, MRILocation, MRITouchable
 {
 
 	public enum eType
@@ -141,37 +141,33 @@ public class MRClearing : MonoBehaviour, MRILocation
 	{
 		if (MRGame.TheGame.CurrentView != MRGame.eViews.Map && MRGame.TheGame.CurrentView != MRGame.eViews.SelectClearing)
 			return;
+	}
 
-		if (mMyTileSide.Tile.Front == mMyTileSide.type)
+	public bool OnSingleTapped(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnDoubleTapped(GameObject touchedObject)
+	{
+		if (touchedObject == gameObject)
 		{
-			if (MRGame.IsDoubleTapped)
-			{
-				Vector3 worldTouch = mMapCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mMapCamera.nearClipPlane));
-				RaycastHit2D hit = Physics2D.Raycast(worldTouch, Vector2.zero);
-				if (hit.collider == collider2D)
-				{
-					Debug.Log("Clearing selected: " + Name);
-					SendMessageUpwards("OnClearingSelectedGame", this, SendMessageOptions.DontRequireReceiver);
-				}
-			}
-			else if (MRGame.IsTouchHeld && mPieces.Count > 0 && !mInspectionToggle)
-			{
-				Vector3 worldTouch = mMapCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mMapCamera.nearClipPlane));
-				RaycastHit2D hit = Physics2D.Raycast(worldTouch, Vector2.zero);
-				if (hit.collider == collider2D)
-				{
-					mInspectionToggle = true;
-					if (!mPieces.Inspecting)
-						MRGame.TheGame.InspectStack(mPieces);
-					else
-						MRGame.TheGame.InspectStack(null);
-				}
-			}
-			else if (!MRGame.IsTouchHeld && mInspectionToggle)
-			{
-				mInspectionToggle = false;
-			}
+			Debug.Log("Clearing selected: " + Name);
+			SendMessageUpwards("OnClearingSelectedGame", this, SendMessageOptions.DontRequireReceiver);
 		}
+		return true;
+	}
+
+	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		if (mMyTileSide.Tile.Front == mMyTileSide.type && mPieces.Count > 0)
+		{
+			if (!mPieces.Inspecting)
+				MRGame.TheGame.InspectStack(mPieces);
+			else
+				MRGame.TheGame.InspectStack(null);
+		}
+		return true;
 	}
 
 	/// <summary>
@@ -268,7 +264,6 @@ public class MRClearing : MonoBehaviour, MRILocation
 	private Camera mMapCamera;
 	private MRGamePieceStack mPieces;
 	private MRGamePieceStack mAbandonedItems;
-	private bool mInspectionToggle = false;
 
 	#endregion
 }

@@ -25,6 +25,7 @@
 // THE SOFTWARE.
 using UnityEngine;
 using System.Collections;
+using System.Text;
 
 public class MRBerserkChit : MRFightChit
 {
@@ -33,7 +34,74 @@ public class MRBerserkChit : MRFightChit
 	public override eType Type
 	{
 		get{
-			return eType.berserk;
+			return eType.Berserk;
+		}
+	}
+
+	#endregion
+
+	#region Methods
+	
+	// Update is called once per frame
+	public override void Update ()
+	{
+		base.Update();
+		
+		StringBuilder buffer = new StringBuilder("BSERK\n");
+		buffer.Append(CurrentStrength.ToChitString());
+		buffer.Append(" ");
+		buffer.Append(CurrentTime);
+		buffer.Append("\n");
+		for (int i = 0; i < CurrentAsterisks; ++i)
+		{
+			buffer.Append("*");
+			if (i < CurrentAsterisks - 1)
+				buffer.Append(" ");
+		}
+		TextMesh text = mCounter.GetComponentInChildren<TextMesh>();
+		text.text = buffer.ToString();
+	}
+	
+	public override bool CanBeUsedFor(eAction action, MRGame.eStrength strength)
+	{
+		bool canBeUsed = false;
+		if (strength == MRGame.eStrength.Any || strength <= BaseStrength)
+		{
+			switch (action)
+			{
+				case eAction.Fatigue:
+				case eAction.FatigueFight:
+					canBeUsed = true;
+					break;
+				case eAction.FatigueChange:
+				case eAction.FatigueChangeFight:
+					canBeUsed = (BaseAsterisks == 1);
+					break;
+				case eAction.Alert:
+				case eAction.CombatAlert:
+					if (State == eState.Active)
+						canBeUsed = true;
+					break;
+				default:
+					break;
+			}
+		}
+		return canBeUsed;
+	}
+
+	public override void Alert(eAction action)
+	{
+		if (State == eState.Active)
+		{
+			Owner.CurrentVulnerability = MRGame.eStrength.Tremendous;
+			if (action == eAction.Alert)
+			{
+				Owner.SetFatigueBalance(BaseAsterisks);
+				Owner.FatigueChit(this);
+			}
+			else if (action == eAction.CombatAlert)
+			{
+			}
 		}
 	}
 

@@ -1,5 +1,5 @@
 //
-// MRUpdateEvent.cs
+// MRAlertEvent.cs
 //
 // Author:
 //       Steve Jakab <>
@@ -24,68 +24,75 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using UnityEngine;
-using System;
 using System.Collections;
 
-public abstract class MRUpdateEvent : IComparable
+public class MRAlertEvent : MRUpdateEvent
 {
-	#region Constants
-
-	// Events will be handled in priority order (low->high).
-	public enum ePriority
-	{
-		CreateMapEvent,
-		CreateCharacterEvent,
-		RollForCurseEvent,
-		UpdateViewEvent,
-		FatigueCharacterEvent,
-		AlertEvent,
-		SelectChitEvent,
-		SelectClearingEvent,
-		CombatEvent,
-		MonsterRollEvent,
-		EndPhaseEvent,
-		EndTurnEvent,
-		InitGameTimeEvent,
-		UpdateActivityListEvent,
-	}
-
-	#endregion
-
 	#region Properties
 
-	public abstract ePriority Priority { get; }
+	public override ePriority Priority 
+	{ 
+		get {
+			return ePriority.AlertEvent;
+		}
+	}
 
 	#endregion
 
 	#region Methods
 
+	public MRAlertEvent(MRCharacter character, MRActionChit.eAction alertType)
+	{
+		mCharacter = character;
+		mAlertType = alertType;
+	}
+
 	/// <summary>
 	/// Updates this instance.
 	/// </summary>
 	/// <returns>true if other events in the update loop should be processed this frame, false if not</returns>
-	public abstract bool Update ();
+	public override bool Update ()
+	{
+		if (mAlertType == MRActionChit.eAction.CombatAlert || mAlertType == MRActionChit.eAction.Alert)
+		{
+			MRMainUI.TheUI.DisplayInstructionMessage("Alert weapon or chit");
+		}
+		else
+		{
+			MRGame.TheGame.RemoveUpdateEvent(this);
+			return false;
+		}
+
+		if (!mFirstPass)
+		{
+			mCharacter.SelectChitFilter = new MRSelectChitEvent.MRSelectChitFilter(mAlertType);
+			MRGame.TheGame.CharacterMat.Controllable = mCharacter;
+			MRGame.TheGame.PushView(MRGame.eViews.Alert);
+			mFirstPass = true;
+		}
+		return false;
+	}
 
 	/// <summary>
 	/// Called to end the event.
 	/// </summary>
-	public virtual void EndEvent()
+	public override void EndEvent()
 	{
-		MRGame.TheGame.RemoveUpdateEvent(this);
+		base.EndEvent();
+
+		MRMainUI.TheUI.DisplayInstructionMessage(null);
+		mCharacter.SelectChitFilter = null;
+		MRGame.TheGame.CharacterMat.Controllable = null;
+		MRGame.TheGame.PopView();
 	}
 
-	public int CompareTo(object obj)
-	{
-		if (obj is MRUpdateEvent)
-		{
-			return (int)Priority - (int)(((MRUpdateEvent)obj).Priority);
-		}
-		throw new ArgumentException();
-	}
+	#endregion
 
-	public virtual void OnClearingSelected(MRClearing clearing)
-	{
-	}
+	#region Members
+
+	private bool mFirstPass;
+	private MRCharacter mCharacter;
+	private MRActionChit.eAction mAlertType;
 
 	#endregion
 }

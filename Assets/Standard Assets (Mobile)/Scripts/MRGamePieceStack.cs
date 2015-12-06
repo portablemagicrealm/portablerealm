@@ -31,7 +31,7 @@ using AssemblyCSharp;
 /// <summary>
 /// A stack of pieces. Responsible for setting the pieces positions and layer.
 /// </summary>
-public class MRGamePieceStack : MonoBehaviour, MRISerializable
+public class MRGamePieceStack : MonoBehaviour, MRISerializable, MRITouchable
 {
 	#region Properties
 
@@ -204,7 +204,20 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 			}
 		}
 
-		if (MRGame.IsDoubleTapped && (mInspecting || mPieces.Count == 1))
+//		if (MRGame.IsDoubleTapped && (mInspecting || mPieces.Count == 1))
+//		{
+//			OnDoubleTapped();
+//		}
+	}
+
+	public bool OnSingleTapped(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnDoubleTapped(GameObject touchedObject)
+	{
+		if (mInspecting || mPieces.Count == 1)
 		{
 			// see if a piece was selected
 			Camera camera = null;
@@ -240,6 +253,12 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable
 				}
 			}
 		}
+		return true;
+	}
+
+	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	/// <summary>

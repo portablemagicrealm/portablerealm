@@ -26,7 +26,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class MRInspectionArea : MonoBehaviour
+public class MRInspectionArea : MonoBehaviour, MRITouchable
 {
 	#region Properties
 
@@ -193,6 +193,36 @@ public class MRInspectionArea : MonoBehaviour
 			case MRGame.eViews.SelectClearing:
 				break;
 		}
+	}
+
+	public bool OnSingleTapped(GameObject touchedObject)
+	{
+		return false;
+	}
+
+	public bool OnDoubleTapped(GameObject touchedObject)
+	{
+		if (MRGame.TheGame.CurrentView == MRGame.eViews.Map && touchedObject == mHeader)
+		{
+			if (MRGame.TheGame.TheMap != null &&
+			    MRGame.TheGame.ActiveControllable != null &&
+			    MRGame.TheGame.ActiveControllable.Location != null)
+			{
+				MRGame.TheGame.TheMap.CenterMapOnTile(MRGame.TheGame.ActiveControllable.Location.MyTileSide.Tile);
+				return true;
+			}
+		}
+		else if (touchedObject == this.gameObject && MRGame.TheGame.InspectionStack != null)
+		{
+			MRGame.TheGame.InspectionStack.OnDoubleTapped(MRGame.TheGame.InspectionStack.gameObject);
+			return true;
+		}
+		return false;
+	}
+
+	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		return false;
 	}
 
 	#endregion

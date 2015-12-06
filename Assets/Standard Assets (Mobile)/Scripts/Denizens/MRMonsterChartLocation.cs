@@ -26,7 +26,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class MRMonsterChartLocation : MonoBehaviour
+public class MRMonsterChartLocation : MonoBehaviour, MRITouchable
 {
 	#region Properties
 
@@ -71,7 +71,7 @@ public class MRMonsterChartLocation : MonoBehaviour
 		{
 			Debug.LogError("No camera found for monster stack " + stackName);
 		}
-		mInspectionToggle = false;
+
 		mLocationMarker = gameObject.GetComponentInChildren<SpriteRenderer>().gameObject;
 		mCollider = mLocationMarker.gameObject.GetComponent<Collider2D>();
 		TextMesh text = gameObject.GetComponentInChildren<TextMesh>();
@@ -102,30 +102,29 @@ public class MRMonsterChartLocation : MonoBehaviour
 			else
 				mOccupants.gameObject.transform.localScale = mOriginalScale;
 		}
+	}
 
-		// see if we are being selected for inspection
-		if (MRGame.IsTouchHeld && !mInspectionToggle && mOccupants.Count > 0)
+	public bool OnSingleTapped(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnDoubleTapped(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		if (mOccupants.Count > 0)
 		{
-			Vector3 worldTouch = mCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane));
-			RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero);
-			foreach (RaycastHit2D hit in hits)
-			{
-				if (hit.collider == mCollider)
-				{
-					Debug.Log("Occupants inspected: " + mName);
-					mInspectionToggle = true;
-					if (!mOccupants.Inspecting)
-						MRGame.TheGame.InspectStack(mOccupants);
-					else
-						MRGame.TheGame.InspectStack(null);
-					break;
-				}
-			}
+			Debug.Log("Occupants inspected: " + mName);
+			if (!mOccupants.Inspecting)
+				MRGame.TheGame.InspectStack(mOccupants);
+			else
+				MRGame.TheGame.InspectStack(null);
 		}
-		else if (!MRGame.IsTouchHeld && mInspectionToggle)
-		{
-			mInspectionToggle = false;
-		}
+		return true;
 	}
 
 	#endregion
@@ -137,7 +136,6 @@ public class MRMonsterChartLocation : MonoBehaviour
 	private Collider2D mCollider;
 	private Camera mCamera;
 	private string mName;
-	private bool mInspectionToggle;
 	private Vector3 mOriginalScale = Vector3.zero;
 
 	#endregion

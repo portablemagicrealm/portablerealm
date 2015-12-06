@@ -1,13 +1,13 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Standard Assets (Mobile)\Scripts\MRGame.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Standard Assets (Mobile)\Scripts\Map\MRMap.cs">
     <Files>
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\MRGame.cs" Line="855" Column="24" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\MRGame.cs" Line="1" Column="1" />
       <File FileName="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRCharacter.cs" Line="1" Column="1" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Characters\MRCharacterItemsDisplay.cs" Line="1" Column="1" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Characters\MRCharacterMat.cs" Line="1" Column="1" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\UI\MRMainUI.cs" Line="1" Column="1" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Map\MRMap.cs" Line="134" Column="62" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Events\MRUpdateEvent.cs" Line="1" Column="1" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatManager.cs" Line="1" Column="1" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Events\MRAlertEvent.cs" Line="1" Column="1" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Map\MRMap.cs" Line="449" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -15,13 +15,11 @@
           <Node name="Assembly-CSharp" expanded="True">
             <Node name="Standard Assets (Mobile)" expanded="True">
               <Node name="Scripts" expanded="True">
-                <Node name="Characters" expanded="True">
-                  <Node name="Classes" expanded="True" />
-                </Node>
                 <Node name="Combat" expanded="True" />
-                <Node name="Map" expanded="True" />
-                <Node name="UI" expanded="True" />
-                <Node name="MRGame.cs" selected="True" />
+                <Node name="Events" expanded="True" />
+                <Node name="Map" expanded="True">
+                  <Node name="MRMap.cs" selected="True" />
+                </Node>
               </Node>
             </Node>
           </Node>
@@ -39,7 +37,7 @@
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
-      <Catchpoint exceptionName="System.Collections.Generic.KeyNotFoundException" />
+      <Catchpoint enabled="false" exceptionName="System.Collections.Generic.KeyNotFoundException" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />

@@ -139,6 +139,26 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 		}
 	}
 
+	// base vulnerability of the controllable
+	public MRGame.eStrength BaseVulnerability 
+	{ 
+		get {
+			return BaseWeight;
+		}
+	}
+	
+	// current vulnerability of the controllable
+	public MRGame.eStrength CurrentVulnerability 
+	{ 
+		get {
+			return mVulnerability;
+		}
+
+		set {
+			mVulnerability = value;
+		}
+	}
+
 	// Actual gold the controllable has
 	public virtual int BaseGold 
 	{ 
@@ -486,6 +506,7 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 	public virtual void StartMidnight()
 	{
 		Blocked = false;
+		CurrentVulnerability = BaseVulnerability;
 	}
 	
 	// Tests if the controllable is allowed to do the activity.
@@ -504,6 +525,7 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 
 		string weight = ((JSONString)jsonData["weight"]).Value;
 		mWeight = weight.Strength();
+		mVulnerability = mWeight;
 
 		Id = MRUtility.IdForName(mName, index);
 	}
@@ -757,6 +779,11 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 				return false;
 			}
 		}
+		if (root["vulnerability"] != null)
+		{
+			int vulnerability = ((JSONNumber)root["vulnerability"]).IntValue;
+			mVulnerability = (MRGame.eStrength)vulnerability;
+		}
 
 		return true;
 	}
@@ -767,6 +794,7 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 		root["gold"] = new JSONNumber(mGold);
 		root["hidden"] = new JSONBoolean(mHidden);
 		root["blocked"] = new JSONBoolean(mBlocked);
+		root["vulnerability"] = new JSONNumber((int)mVulnerability);
 		if (Location != null)
 		{
 			root["location"] = new JSONNumber(Location.Id);
@@ -821,6 +849,7 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 	protected BitArray mDiscoveredSites = new BitArray(Enum.GetValues(typeof(MRMapChit.eSiteChitType)).Length);
 	protected IList<uint> mDiscoveredTreasues = new List<uint>();
 	protected MRGame.eStrength mWeight;
+	protected MRGame.eStrength mVulnerability;
 	protected int mGold;
 	protected bool mHidden;
 	protected bool mBlocked;

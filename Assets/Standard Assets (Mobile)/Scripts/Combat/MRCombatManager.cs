@@ -401,18 +401,8 @@ public class MRCombatManager
 					MRControllable combatant = CurrentCombatant;
 					if (combatant is MRCharacter)
 					{
-						int fatigueCount = 0;
-						MRActionChit.eType fatigueType = MRActionChit.eType.any;
-						if (combatant.CombatSheet.CharacterData.attackChit != null)
-						{
-							fatigueCount = combatant.CombatSheet.CharacterData.attackChit.CurrentAsterisks;
-							fatigueType = MRActionChit.eType.fight;
-						}
-						if (combatant.CombatSheet.CharacterData.maneuverChit != null)
-						{
-							fatigueCount += combatant.CombatSheet.CharacterData.maneuverChit.CurrentAsterisks;
-							fatigueType = (fatigueType == MRActionChit.eType.any ? MRActionChit.eType.move : MRActionChit.eType.any);
-						}
+						int fatigueCount = ((MRCharacter)combatant).GetAsterisksUsed();
+						MRActionChit.eType fatigueType = ((MRCharacter)combatant).GetAsterisksTypeForFatigue();
 						--fatigueCount;
 						int woundCount = combatant.CombatSheet.CharacterData.pendingWounds;
 						combatant.CombatSheet.CharacterData.pendingWounds = 0;
@@ -597,6 +587,7 @@ public class MRCombatManager
 				else
 				{
 					((MRCharacter)combatant).PositionAttentionChit(null, Vector3.zero);
+					((MRCharacter)combatant).ClearCombatChits();
 				}
 				mClearing.AddPieceToBottom(combatant);
 			}
@@ -624,6 +615,7 @@ public class MRCombatManager
 		if (character.CombatSheet != null)
 			mCombatSheets.Remove(character.CombatSheet);
 		character.CombatSheet = null;
+		character.ClearCombatChits();
 		mCombatants.Remove(character);
 		mFriends.Remove(character);
 		character.PositionAttentionChit(null, Vector3.zero);
@@ -948,38 +940,44 @@ public class MRCombatManager
 		{
 			MRCharacter character = (MRCharacter)CurrentCombatant;
 
-			// get the fastest denizen on the sheet
+			// get the fastest opponent on the sheet
 			int fastestTime = FastestOpponentTime(character);
 
 			// test against the character's fight chits
-			foreach (MRActionChit chit in character.FightChits)
+			if (character.ActiveWeapon != null)
 			{
-				if (chit.State == MRActionChit.eState.active && chit.CurrentTime < fastestTime)
+				MRSelectChitEvent.MRSelectChitFilter filter = new MRSelectChitEvent.MRSelectChitFilter(
+					MRActionChit.eAction.ActivateWeapon, 
+					character.ActiveWeapon.BaseWeight, MRSelectChitEvent.eCompare.GreaterThanEqualTo,
+					fastestTime, MRSelectChitEvent.eCompare.LessThan);
+				foreach (MRActionChit chit in character.ActiveChits)
 				{
-					if (character.ActiveWeapon == null || 
-					    ((MRFightChit)chit).CurrentStrength >= character.ActiveWeapon.BaseWeight)
+					if (filter.IsValidSelectChit(chit))
 					{
 						canActivateWeapon = true;
 						break;
 					}
 				}
+				// todo: test gloves
 			}
 
+			// todo: test that the character can move to a valid clearing
 			// test against the character's move chits
-			MRGame.eStrength heaviest = character.GetHeaviestWeight(false, false);
-			foreach (MRActionChit chit in character.MoveChits)
 			{
-				if (chit.State == MRActionChit.eState.active && 
-				    chit.CurrentTime < fastestTime &&
-				    ((MRMoveChit)chit).CurrentStrength >= heaviest)
+				MRSelectChitEvent.MRSelectChitFilter filter = new MRSelectChitEvent.MRSelectChitFilter(
+					MRActionChit.eAction.RunAway, 
+					character.GetHeaviestWeight(false, false), MRSelectChitEvent.eCompare.GreaterThanEqualTo,
+					fastestTime, MRSelectChitEvent.eCompare.LessThan);
+				foreach (MRActionChit chit in character.ActiveChits)
 				{
-					// todo: test that the character can move to a valid clearing
-
-					canRunAway = true;
-					break;
+					if (filter.IsValidSelectChit(chit))
+					{
+						canRunAway = true;
+						break;
+					}
 				}
+				// todo: test horse and items
 			}
-			// todo: test horse and items
 		}
 
 		if (canActivateWeapon || canRunAway || canCastSpell)
@@ -1003,13 +1001,32 @@ public class MRCombatManager
 		int fastestTime = FastestOpponentTime(character);
 		MRGame.eStrength heaviest = character.GetHeaviestWeight(false, false);
 
-		// todo: test horse and items - if they can be used then no chit needs to be selected
+		// todo: test horse, boots, and magic carpet - if they can be used then no chit needs to be selected
 
 		// select what chit to use for running
-		MRGame.TheGame.AddUpdateEvent(new MRSelectChitEvent(character, MRActionChit.eType.move,
+		MRGame.TheGame.AddUpdateEvent(new MRSelectChitEvent(character, MRActionChit.eAction.RunAway,
 		                                                    heaviest, MRSelectChitEvent.eCompare.GreaterThanEqualTo,
 		                                                    fastestTime, MRSelectChitEvent.eCompare.LessThan,
 		                                                    OnRunChitSeleted));
+	}
+
+	/// <summary>
+	/// Called when the current combatant tries to activate or unactivate their weapon.
+	/// </summary>
+	private void FlipWeapon()
+	{
+		MRCharacter character = (MRCharacter)CurrentCombatant;
+		
+		int fastestTime = FastestOpponentTime(character);
+		MRGame.eStrength heaviest = character.ActiveWeapon.BaseWeight;
+		
+		// todo: test gloves - if they can be used then no chit needs to be selected
+		
+		// select what chit to use for activating the weapon
+		MRGame.TheGame.AddUpdateEvent(new MRSelectChitEvent(character, MRActionChit.eAction.ActivateWeapon,
+		                                                    heaviest, MRSelectChitEvent.eCompare.GreaterThanEqualTo,
+		                                                    fastestTime, MRSelectChitEvent.eCompare.LessThan,
+		                                                    OnFlipWeaponChitSeleted));
 	}
 
 	/// <summary>
@@ -1021,7 +1038,7 @@ public class MRCombatManager
 		MRCharacter character = (MRCharacter)CurrentCombatant;
 		if (mRunAwayChit != null && mRunAwayChit.BaseAsterisks > 1)
 		{
-			character.SetFatigueBalance(mRunAwayChit.BaseAsterisks - 1, MRActionChit.eType.move, MRGame.eStrength.Any);
+			character.SetFatigueBalance(mRunAwayChit.BaseAsterisks - 1, MRActionChit.eType.Move, MRGame.eStrength.Any);
 		}
 
 		// remove the character from combat and put them on the road segment
@@ -1035,14 +1052,13 @@ public class MRCombatManager
 	/// <param name="chit">Chit.</param>
 	private void OnRunChitSeleted(MRActionChit chit)
 	{
-		// double check the chit is valid
-
 		MRCharacter character = (MRCharacter)CurrentCombatant;
-		int fastestTime = FastestOpponentTime(character);
-		MRGame.eStrength heaviest = character.GetHeaviestWeight(false, false);
-		if (chit != null && chit is MRMoveChit && ((MRMoveChit)chit).CurrentTime < fastestTime &&
-		    ((MRMoveChit)chit).CurrentStrength >= heaviest)
+
+		// double check the chit is valid
+		if (character.IsValidSelectChit(chit))
 		{
+			character.SelectChitData = null;
+			chit.UsedThisRound = true;
 			mRunAwayChit = chit;
 			MRRoad lastRoad = null;
 			MRClearing lastClearing = character.LastClearingEntered;
@@ -1062,9 +1078,33 @@ public class MRCombatManager
 		else
 		{
 			// go back and ask for an encounter selection
+			character.SelectChitData = null;
 			--mCurrentCombatantIndex;
 			EndPhase();
 		}
+	}
+
+	/// <summary>
+	/// Called when a chit is selected to flip a weapon.
+	/// </summary>
+	/// <param name="chit">Chit.</param>
+	private void OnFlipWeaponChitSeleted(MRActionChit chit)
+	{
+		MRCharacter character = (MRCharacter)CurrentCombatant;
+		
+		// double check the chit is valid
+		if (character.IsValidSelectChit(chit) && character.ActiveWeapon != null)
+		{
+			chit.UsedThisRound = true;
+			character.ActiveWeapon.Alerted = !character.ActiveWeapon.Alerted;
+		}
+		else
+		{
+			// go back and ask for an encounter selection
+			--mCurrentCombatantIndex;
+		}
+		character.SelectChitData = null;
+		EndPhase();
 	}
 
 	/// <summary>
@@ -1105,22 +1145,17 @@ public class MRCombatManager
 				{
 					if (attackType == eAttackType.None)
 						attackType = mLastSelectedAttackType != eAttackType.None ? mLastSelectedAttackType : eAttackType.Thrust;
-					MRWeapon weapon = attacker.ActiveWeapon;
-					// make sure the selected chit is valid for the weapon
-					if (weapon == null || chit.CurrentStrength >= weapon.BaseWeight)
+
+					// make sure the selected chit is valid
+					if (attacker.IsValidAttack(chit))
 					{
-						// make sure the chit asterisk limit isn't exceeded
-						if (combatData.CharacterData.maneuverChit == null ||
-							combatData.CharacterData.maneuverChit.CurrentAsterisks + chit.CurrentAsterisks <= attacker.CombatAsteriskLimit)
-						{
-							if (combatData.CharacterData.attackChit != null)
-								combatData.CharacterData.attackChit.UsedThisRound = false;
-							chit.UsedThisRound = true;
-							combatData.CharacterData.weapon = weapon;
-							combatData.CharacterData.attackChit = chit;
-							combatData.CharacterData.attackType = attackType;
-							success = true;
-						}
+						if (combatData.CharacterData.attackChit != null)
+							combatData.CharacterData.attackChit.UsedThisRound = false;
+						chit.UsedThisRound = true;
+						combatData.CharacterData.weapon = attacker.ActiveWeapon;
+						combatData.CharacterData.attackChit = chit;
+						combatData.CharacterData.attackType = attackType;
+						success = true;
 					}
 				}
 				else
@@ -1160,19 +1195,14 @@ public class MRCombatManager
 					if (maneuverType == eDefenseType.None)
 						maneuverType = mLastSelectedDefenseType != eDefenseType.None ? mLastSelectedDefenseType : eDefenseType.Charge;
 					// make sure the maneuver matches or exceeds the weight limit
-					if (chit.CurrentStrength >= attacker.GetHeaviestWeight(false, false))
+					if (attacker.IsValidManeuver(chit))
 					{
-						// make sure the chit asterisk limit isn't exceeded
-						if (combatData.CharacterData.attackChit == null ||
-						    combatData.CharacterData.attackChit.CurrentAsterisks + chit.CurrentAsterisks <= attacker.CombatAsteriskLimit)
-						{
-							if (combatData.CharacterData.maneuverChit != null)
-								combatData.CharacterData.maneuverChit.UsedThisRound = false;
-							chit.UsedThisRound = true;
-							combatData.CharacterData.maneuverChit = chit;
-							combatData.CharacterData.maneuverType = maneuverType;
-							success = true;
-						}
+						if (combatData.CharacterData.maneuverChit != null)
+							combatData.CharacterData.maneuverChit.UsedThisRound = false;
+						chit.UsedThisRound = true;
+						combatData.CharacterData.maneuverChit = chit;
+						combatData.CharacterData.maneuverType = maneuverType;
+						success = true;
 					}
 				}
 				else
@@ -1382,7 +1412,7 @@ public class MRCombatManager
 			}
 			else
 			{
-				if (damage >= target.BaseWeight)
+				if (damage >= target.CurrentVulnerability)
 				{
 					mRoundsWithNothing = -1;
 					targetDead = true;
@@ -1647,14 +1677,12 @@ public class MRCombatManager
 				{
 					if (combatSheet.CharacterData.attackChit.Stack != null)
 						combatSheet.CharacterData.attackChit.Stack.RemovePiece(combatSheet.CharacterData.attackChit);
-					combatSheet.CharacterData.attackChit.UsedThisRound = false;
 					combatSheet.CharacterData.attackChit = null;
 				}
 				if (combatSheet.CharacterData.maneuverChit != null)
 				{
 					if (combatSheet.CharacterData.maneuverChit.Stack != null)
 						combatSheet.CharacterData.maneuverChit.Stack.RemovePiece(combatSheet.CharacterData.maneuverChit);
-					combatSheet.CharacterData.maneuverChit.UsedThisRound = false;
 					combatSheet.CharacterData.maneuverChit = null;
 				}
 				if (combatSheet.CharacterData.weapon != null)
@@ -1667,6 +1695,11 @@ public class MRCombatManager
 				combatSheet.CharacterData.maneuverType = eDefenseType.None;
 			}
 		}
+		foreach (MRControllable combatant in mCombatants)
+		{
+			if (combatant is MRCharacter)
+				((MRCharacter)combatant).ClearCombatChits();
+		}
 	}
 
 	private void OnCombatActionSelected(int buttonId)
@@ -1674,7 +1707,7 @@ public class MRCombatManager
 		switch (buttonId)
 		{
 			case (int)MRMainUI.eCombatActionButton.FlipWeapon:
-				EndPhase();
+				FlipWeapon();
 				break;
 			case (int)MRMainUI.eCombatActionButton.RunAway:
 				RunAway();

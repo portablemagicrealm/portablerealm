@@ -21,3 +21,5 @@ How to use the map screen:
 * Also on the map screen: you can double-tap on a non-clearing area of the map to zoom in to a single tile or zoom back out. Using pinch-zoom will be implemented in the future.
 
 * If you press and hold on a clearing, the contents of the clearing will be shown on the left. Press and hold on the clearing to restore the items. This can also be used in combat to show and target monsters in a defense box.
+
+* Double-tapping on the character name centers their hex on the screen.

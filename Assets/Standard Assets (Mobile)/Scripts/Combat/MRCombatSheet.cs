@@ -28,7 +28,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-public class MRCombatSheet : MonoBehaviour
+public class MRCombatSheet : MonoBehaviour, MRITouchable
 {
 	#region Constants
 
@@ -321,6 +321,7 @@ public class MRCombatSheet : MonoBehaviour
 				}
 				if (mCombatData.CharacterData.attackChit != null)
 				{
+					mCombatData.CharacterData.attackChit.FrontColor = MRGame.offWhite;
 					mAttackPositions[mCombatData.CharacterData.attackType].AddPieceToTop(mCombatData.CharacterData.attackChit);
 				}
 			}
@@ -330,6 +331,7 @@ public class MRCombatSheet : MonoBehaviour
 			{
 				if (mCombatData.CharacterData.maneuverChit != null)
 				{
+					mCombatData.CharacterData.maneuverChit.FrontColor = MRGame.offWhite;
 					mManeuverPositions[mCombatData.CharacterData.maneuverType].AddPieceToTop(mCombatData.CharacterData.maneuverChit);
 				}
 			}
@@ -346,124 +348,143 @@ public class MRCombatSheet : MonoBehaviour
 		{
 			mManeuverPositions[mCombatData.DefenderTarget.defenseType].AddPieceToTop(mCombatData.DefenderTarget.defender);
 		}
+	}
 
-		// test user interaction
-		if (MRGame.IsDoubleTapped)
+	public bool OnSingleTapped(GameObject touchedObject)
+	{
+		// test for changing character sheets
+		if (mCombat.CombatSheets.Count > 1)
 		{
-			Vector3 worldTouch = mCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane));
-			RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero);
-			foreach (RaycastHit2D hit in hits)
+			if (touchedObject.name == "nextSheet")
 			{
-				if (hit.collider.gameObject.name == "endCombat")
-				{
-					if (mCombat.AllowEndCombat)
-						MRGame.TheGame.CombatManager.CombatPhase = MRCombatManager.eCombatPhase.CombatDone;
-					return;
-				}
-				if (hit.collider.gameObject.name == "endPhase")
-				{
-					MRGame.TheGame.CombatManager.EndPhase();
-					return;
-				}
-				if (mCombatData.SheetOwner is MRCharacter && mCombat.CombatPhase == MRCombatManager.eCombatPhase.SelectAttackAndManeuver)
-				{
-					// test shield interaction
-					foreach (MRCombatManager.eAttackType attackType in Enum.GetValues(typeof(MRCombatManager.eAttackType)))
-					{
-						if (mAttackerShields.ContainsKey(attackType) && hit.collider.gameObject == mAttackerShields[attackType])
-						{
-							mCombatData.CharacterData.shieldType = attackType;
-							break;
-						}
-					}
-					// test weapon interaction
-					foreach (MRCombatManager.eAttackType attackType in Enum.GetValues(typeof(MRCombatManager.eAttackType)))
-					{
-						if (mAttackerAttacks.ContainsKey(attackType) && hit.collider.gameObject == mAttackerAttacks[attackType])
-						{
-							if (mCombatData.CharacterData.attackChit == null || mCombatData.CharacterData.attackType == attackType)
-							{
-								// select fight chit
-								MRGame.TheGame.CharacterMat.Controllable = mCombatData.SheetOwner;
-								MRGame.TheGame.CombatManager.LastSelectedAttackType = attackType;
-								MRGame.TheGame.PushView(MRGame.eViews.SelectAttack);
-							}
-							else
-							{
-								// change attack type
-								mCombatData.CharacterData.attackType = attackType;
-							}
-							break;
-						}
-					}
-					// test maneuver interaction
-					foreach (MRCombatManager.eDefenseType defenseType in Enum.GetValues(typeof(MRCombatManager.eDefenseType)))
-					{
-						if (mAttackerManeuvers.ContainsKey(defenseType) && hit.collider.gameObject == mAttackerManeuvers[defenseType])
-						{
-							if (mCombatData.CharacterData.maneuverChit == null || mCombatData.CharacterData.maneuverType == defenseType)
-							{
-								// select maneuver chit
-								MRGame.TheGame.CharacterMat.Controllable = mCombatData.SheetOwner;
-								MRGame.TheGame.CombatManager.LastSelectedDefenseType = defenseType;
-								MRGame.TheGame.PushView(MRGame.eViews.SelectManeuver);
-							}
-							else
-							{
-								// change attack type
-								mCombatData.CharacterData.maneuverType = defenseType;
-							}
-							break;
-						}
-					}
-				}
+				++MRGame.TheGame.CombatManager.CurrentCombatantSheetIndex;
+			}
+			else if (touchedObject.name == "prevSheet")
+			{
+				--MRGame.TheGame.CombatManager.CurrentCombatantSheetIndex;
 			}
 		}
-		else if (MRGame.IsSingleTapped)
+		return true;
+	}
+
+	public bool OnDoubleTapped(GameObject touchedObject)
+	{
+		if (touchedObject.name == "endCombat")
 		{
-			Vector3 worldTouch = mCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane));
-			RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero);
-			foreach (RaycastHit2D hit in hits)
+			if (mCombat.AllowEndCombat)
+				MRGame.TheGame.CombatManager.CombatPhase = MRCombatManager.eCombatPhase.CombatDone;
+			return true;
+		}
+		if (touchedObject.name == "endPhase")
+		{
+			MRGame.TheGame.CombatManager.EndPhase();
+			return true;
+		}
+		if (mCombatData.SheetOwner is MRCharacter && mCombat.CombatPhase == MRCombatManager.eCombatPhase.SelectAttackAndManeuver)
+		{
+			MRCharacter character = mCombatData.SheetOwner as MRCharacter;
+
+			// test shield interaction
+			foreach (MRCombatManager.eAttackType attackType in Enum.GetValues(typeof(MRCombatManager.eAttackType)))
 			{
-				if (mCombat.CombatSheets.Count > 1)
+				if (mAttackerShields.ContainsKey(attackType) && touchedObject == mAttackerShields[attackType])
 				{
-					if (hit.collider.gameObject.name == "nextSheet")
-					{
-						++MRGame.TheGame.CombatManager.CurrentCombatantSheetIndex;
-					}
-					else if (hit.collider.gameObject.name == "prevSheet")
-					{
-						--MRGame.TheGame.CombatManager.CurrentCombatantSheetIndex;
-					}
+					mCombatData.CharacterData.shieldType = attackType;
+					break;
 				}
 			}
-		}
-		else if (MRGame.IsTouchHeld && !mInspectionToggle)
-		{
-			Vector3 worldTouch = mCamera.ScreenToWorldPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane));
-			RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero);
-			foreach (RaycastHit2D hit in hits)
+			// test weapon interaction
+			foreach (MRCombatManager.eAttackType attackType in Enum.GetValues(typeof(MRCombatManager.eAttackType)))
 			{
-				MRCombatManager.eDefenseType defenseType;
-				if (mDefenderDefense.TryGetValue(hit.collider.gameObject.name, out defenseType))
+				if (mAttackerAttacks.ContainsKey(attackType) && touchedObject == mAttackerAttacks[attackType])
 				{
-					mInspectionToggle = true;
-					MRGamePieceStack defenseStack = mDefenderPositions[defenseType];
-					if (!defenseStack.Inspecting)
+					if (mCombatData.CharacterData.attackChit == null || mCombatData.CharacterData.attackType == attackType)
 					{
-						MRGame.TheGame.InspectStack(defenseStack);
+						// select fight chit
+						MRGame.TheGame.CharacterMat.Controllable = character;
+						MRActionChit.eAction actionType = MRActionChit.eAction.Attack;
+						switch (attackType)
+						{
+							case MRCombatManager.eAttackType.Smash:
+								actionType = MRActionChit.eAction.Smash;
+								break;
+							case MRCombatManager.eAttackType.Swing:
+								actionType = MRActionChit.eAction.Swing;
+								break;
+							case MRCombatManager.eAttackType.Thrust:
+								actionType = MRActionChit.eAction.Thrust;
+								break;
+							default:
+								break;
+						}
+						character.SelectChitFilter = new MRSelectChitEvent.MRSelectChitFilter(actionType);
+						MRGame.TheGame.CombatManager.LastSelectedAttackType = attackType;
+						MRGame.TheGame.PushView(MRGame.eViews.SelectAttack);
 					}
 					else
 					{
-						MRGame.TheGame.InspectStack(null);
+						// change attack type
+						mCombatData.CharacterData.attackType = attackType;
 					}
+					break;
+				}
+			}
+			// test maneuver interaction
+			foreach (MRCombatManager.eDefenseType defenseType in Enum.GetValues(typeof(MRCombatManager.eDefenseType)))
+			{
+				if (mAttackerManeuvers.ContainsKey(defenseType) && touchedObject == mAttackerManeuvers[defenseType])
+				{
+					if (mCombatData.CharacterData.maneuverChit == null || mCombatData.CharacterData.maneuverType == defenseType)
+					{
+						// select maneuver chit
+						MRGame.TheGame.CharacterMat.Controllable = character;
+						MRActionChit.eAction actionType = MRActionChit.eAction.Move;
+						switch (defenseType)
+						{
+							case MRCombatManager.eDefenseType.Charge:
+								actionType = MRActionChit.eAction.Charge;
+								break;
+							case MRCombatManager.eDefenseType.Dodge:
+								actionType = MRActionChit.eAction.Dodge;
+								break;
+							case MRCombatManager.eDefenseType.Duck:
+								actionType = MRActionChit.eAction.Duck;
+								break;
+							default:
+								break;
+						}
+						character.SelectChitFilter = new MRSelectChitEvent.MRSelectChitFilter(actionType);
+						MRGame.TheGame.CombatManager.LastSelectedDefenseType = defenseType;
+						MRGame.TheGame.PushView(MRGame.eViews.SelectManeuver);
+					}
+					else
+					{
+						// change attack type
+						mCombatData.CharacterData.maneuverType = defenseType;
+					}
+					break;
 				}
 			}
 		}
-		else if (!MRGame.IsTouchHeld && mInspectionToggle)
+		return true;
+	}
+
+	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		MRCombatManager.eDefenseType defenseType;
+		if (mDefenderDefense.TryGetValue(touchedObject.name, out defenseType))
 		{
-			mInspectionToggle = false;
+			MRGamePieceStack defenseStack = mDefenderPositions[defenseType];
+			if (!defenseStack.Inspecting)
+			{
+				MRGame.TheGame.InspectStack(defenseStack);
+			}
+			else
+			{
+				MRGame.TheGame.InspectStack(null);
+			}
 		}
+		return true;
 	}
 
 	/// <summary>
@@ -529,7 +550,6 @@ public class MRCombatSheet : MonoBehaviour
 	private GameObject mSheetLeftArrow;
 	private GameObject mSheetRightArrow;
 	private SpriteRenderer mEndCombatEnabled;
-	private bool mInspectionToggle = false;
 
 	private MRCombatManager mCombat;
 	private MRCombatSheetData mCombatData;

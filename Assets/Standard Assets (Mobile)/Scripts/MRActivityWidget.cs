@@ -28,7 +28,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 
-public class MRActivityWidget : MonoBehaviour
+public class MRActivityWidget : MonoBehaviour, MRITouchable
 {
 	#region Properties
 
@@ -259,13 +259,6 @@ public class MRActivityWidget : MonoBehaviour
 			}
 			mChangingActivity = true;
 		}
-		else if (MRGame.TimeOfDay == MRGame.eTimeOfDay.Daylight && MRGame.IsDoubleTapped)
-		{
-			Vector3 viewportTouch = mCamera.ScreenToViewportPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane));
-			if (viewportTouch.x < 0 || viewportTouch.y < 0 || viewportTouch.x > 1 || viewportTouch.y > 1)
-				return;
-			mSelectingActivity = true;
-		}
 		if (mChangingActivity)
 		{
 			if (MRGame.IsTouching)
@@ -292,10 +285,28 @@ public class MRActivityWidget : MonoBehaviour
 				UpdateActivityForWidget();
 			}
 		}
-		else if (mSelectingActivity && !mActivity.Executed)
+	}
+
+	public bool OnSingleTapped(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnDoubleTapped(GameObject touchedObject)
+	{
+		if (MRGame.TimeOfDay == MRGame.eTimeOfDay.Daylight)
 		{
-			mActivity.Active = true;
+			if (!mActivity.Executed)
+			{
+				mActivity.Active = true;
+			}
 		}
+		return true;
+	}
+
+	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	//
@@ -355,7 +366,6 @@ public class MRActivityWidget : MonoBehaviour
 	private float mMaxActivityListPos;
 	private bool mChangingActivity = false;
 	private bool mEditingActivity = false;
-	private bool mSelectingActivity = false;
 	private MRActivity mActivity;
 	private MRClearingSelector mClearing;
 	private int mListPosition;

@@ -27,7 +27,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 
-public class MRViewButton : MonoBehaviour
+public class MRViewButton : MonoBehaviour, MRITouchable
 {
 	#region Constants
 
@@ -81,7 +81,7 @@ public class MRViewButton : MonoBehaviour
 		Vector3 desiredWorldPos = mCamera.ScreenToWorldPoint(new Vector3(0, wantedButtonHeight * (int)id, 0));
 		gameObject.transform.position = new Vector3(desiredWorldPos.x + bounds.extents.x, 
 		                                            desiredWorldPos.y + bounds.extents.y * yScale, 
-		                                            0);
+		                                            gameObject.transform.position.z);
 
 		mSelected = false;
 	}
@@ -93,26 +93,26 @@ public class MRViewButton : MonoBehaviour
 			mBackground.GetComponent<SpriteRenderer>().color = selectedColor;
 		else
 			mBackground.GetComponent<SpriteRenderer>().color = unselectedColor;
+	}
 
-		if (MRGame.IsSingleTapped)
+	public bool OnSingleTapped(GameObject touchedObject)
+	{
+		if (touchedObject == mBackground)
 		{
-			Vector3 screenPos = new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane);
-			Vector3 viewportTouch = mCamera.ScreenToViewportPoint(screenPos);
-			if (viewportTouch.x > 0 && viewportTouch.x < 1 && viewportTouch.y > 0 && viewportTouch.y < 1)
-			{
-				Vector3 worldTouch = mCamera.ScreenToWorldPoint(screenPos);
-				RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero);
-				foreach (RaycastHit2D hit in hits)
-				{
-					if (hit.collider == mBackground.collider2D)
-					{
-						Debug.Log("Tab selected: " + id);
-						SendMessageUpwards("OnViewButtonSelectedGame", this, SendMessageOptions.DontRequireReceiver);
-						break;
-					}
-				}
-			}
+			Debug.Log("Tab selected: " + id);
+			SendMessageUpwards("OnViewButtonSelectedGame", this, SendMessageOptions.DontRequireReceiver);
 		}
+		return true;
+	}
+
+	public bool OnDoubleTapped(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	#endregion

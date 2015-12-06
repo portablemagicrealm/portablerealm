@@ -32,20 +32,42 @@ public abstract class MRActionChit : MRChit
 
 	public enum eType
 	{
-		move,
-		fight,
-		magic,
-		duck,
-		berserk,
-		any
+		Move,
+		Fight,
+		Magic,
+		Duck,
+		Berserk,
+		Any
 	}
 
 	public enum eState
 	{
-		active,
-		fatigued,
-		wounded,
-		enchanted
+		Active,
+		Fatigued,
+		Wounded,
+		Enchanted
+	}
+
+	public enum eAction
+	{
+		Attack,
+		Thrust,
+		Swing,
+		Smash,
+		Move,
+		Charge,
+		Dodge,
+		Duck,
+		RunAway,
+		ActivateWeapon,
+		Fatigue,
+		FatigueFight,
+		FatigueMove,
+		FatigueChange,
+		FatigueChangeFight,
+		FatigueChangeMove,
+		Alert,
+		CombatAlert,
 	}
 
 	#endregion
@@ -122,6 +144,17 @@ public abstract class MRActionChit : MRChit
 		}
 	}
 
+	public MRCharacter Owner
+	{
+		get{
+			return mOwner;
+		}
+
+		set{
+			mOwner = value;
+		}
+	}
+
 	#endregion
 
 	#region Methods
@@ -146,6 +179,20 @@ public abstract class MRActionChit : MRChit
 		base.Update();
 	}
 
+	public bool CanBeUsedFor(eAction action)
+	{
+		return CanBeUsedFor(action, MRGame.eStrength.Any);
+	}
+
+	public virtual bool CanBeUsedFor(eAction action, MRGame.eStrength strength)
+	{
+		return false;
+	}
+
+	public virtual void Alert(eAction action)
+	{
+	}
+
 	#endregion
 
 	#region Members
@@ -156,6 +203,7 @@ public abstract class MRActionChit : MRChit
 	protected int mCurrentAsterisks;
 	protected eState mState;
 	protected bool mUsedThisRound;
+	protected MRCharacter mOwner;
 
 	#endregion
 }
