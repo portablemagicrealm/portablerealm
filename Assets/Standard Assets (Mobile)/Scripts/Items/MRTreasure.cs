@@ -39,6 +39,8 @@ using AssemblyCSharp;
 
 public class MRTreasure : MRItem
 {
+	#region Properties
+
 	public bool IsGreatTreasure
 	{
 		get{
@@ -70,6 +72,15 @@ public class MRTreasure : MRItem
 			mHidden = value;
 		}
 	}
+
+	public override int SortValue
+	{
+		get{
+			return (int)MRGame.eSortValue.Treasure;
+		}
+	}
+
+	#endregion
 
 	#region Methods
 
@@ -110,11 +121,18 @@ public class MRTreasure : MRItem
 		base.Update();
 
 		Vector3 orientation = mCounter.transform.localEulerAngles;
-		if (Hidden)
-			orientation.y = 180f;
-		else
-			orientation.y = 0;
-		mCounter.transform.localEulerAngles = orientation;
+		if ((Hidden && Math.Abs(orientation.y - 180f) > 0.1f) ||
+			(!Hidden && Math.Abs(orientation.y) > 0.1f))
+		{
+			mCounter.transform.Rotate(new Vector3(0, 180f, 0));
+		}
+
+//		Vector3 orientation = mCounter.transform.localEulerAngles;
+//		if (Hidden)
+//			orientation.y = 180f;
+//		else
+//			orientation.y = 0;
+//		mCounter.transform.localEulerAngles = orientation;
 	}
 
 	#endregion

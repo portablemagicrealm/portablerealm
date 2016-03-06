@@ -193,10 +193,10 @@ public class MRActivityWidget : MonoBehaviour, MRITouchable
 			Debug.LogError("No canceled border for activity widget");
 			Application.Quit();
 		}
-		mBorder.renderer.enabled = true;
-		mCanceledBorder.renderer.enabled = false;
-		mBorderSize = ((SpriteRenderer)mBorder.renderer).sprite.bounds.extents.y;
-		mPixelSize = ((SpriteRenderer)mBorder.renderer).sprite.rect.height;
+		mBorder.GetComponent<Renderer>().enabled = true;
+		mCanceledBorder.GetComponent<Renderer>().enabled = false;
+		mBorderSize = ((SpriteRenderer)mBorder.GetComponent<Renderer>()).sprite.bounds.extents.y;
+		mPixelSize = ((SpriteRenderer)mBorder.GetComponent<Renderer>()).sprite.rect.height;
 
 		// adjust the camera so it just shows the border area
 		mCamera = gameObject.GetComponentsInChildren<Camera> ()[0];
@@ -217,7 +217,7 @@ public class MRActivityWidget : MonoBehaviour, MRITouchable
 			Application.Quit();
 		}
 
-		mActivityStripWidth = ((SpriteRenderer)mActivityStrip.renderer).sprite.bounds.extents.x * 2.0f;
+		mActivityStripWidth = ((SpriteRenderer)mActivityStrip.GetComponent<Renderer>()).sprite.bounds.extents.x * 2.0f;
 		int numActivities = Enum.GetValues(typeof(MRGame.eActivity)).Length;
 		mActivityWidth = mActivityStripWidth / numActivities;
 		mMaxActivityListPos = (mActivityStripWidth / 2) - (0.5f * mActivityWidth);
@@ -237,8 +237,8 @@ public class MRActivityWidget : MonoBehaviour, MRITouchable
 		mCamera.enabled = true;
 
 		// show the appropriate border, for the canceled state of the activity
-		mBorder.renderer.enabled = (mActivity == null || !mActivity.Canceled);
-		mCanceledBorder.renderer.enabled = !mBorder.renderer.enabled;
+		mBorder.GetComponent<Renderer>().enabled = (mActivity == null || !mActivity.Canceled);
+		mCanceledBorder.GetComponent<Renderer>().enabled = !mBorder.GetComponent<Renderer>().enabled;
 
 		if (!mIsInteractive)
 		{
@@ -248,7 +248,7 @@ public class MRActivityWidget : MonoBehaviour, MRITouchable
 			return;
 		}
 
-		if (MRGame.TimeOfDay == MRGame.eTimeOfDay.Birdsong && MRGame.JustTouched)
+		if (MRGame.TimeOfDay == MRGame.eTimeOfDay.Birdsong && MRGame.JustTouched && MRGame.TheGame.CurrentView == MRGame.eViews.Map)
 		{
 			// if the user starts a touch in our area, let them change the action
 			if (!mChangingActivity)
@@ -285,6 +285,16 @@ public class MRActivityWidget : MonoBehaviour, MRITouchable
 				UpdateActivityForWidget();
 			}
 		}
+	}
+
+	public bool OnTouched(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnReleased(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	public bool OnSingleTapped(GameObject touchedObject)
@@ -345,7 +355,7 @@ public class MRActivityWidget : MonoBehaviour, MRITouchable
 		mCamera.rect = newPos;
 
 		// if we're not enabled, don't show the activity strip
-		mActivityStrip.renderer.enabled = mIsEnabled;
+		mActivityStrip.GetComponent<Renderer>().enabled = mIsEnabled;
 	}
 
 	#endregion

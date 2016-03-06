@@ -84,6 +84,8 @@ public class MRMainUI : MonoBehaviour
 	public GameObject AttackManeuverDialogPrototype;
 	public GameObject CombatActionDialogPrototype;
 	public GameObject VictoryPointsSelectionDialogPrototype;
+	public GameObject InstructionsDialogPrototype;
+	public GameObject CreditsDialogPrototype;
 
 	public static MRMainUI TheUI
 	{
@@ -126,10 +128,6 @@ public class MRMainUI : MonoBehaviour
 	public void DisplaySelectionDialog(string title, string subtitle, string[] buttons, OnButtonPressed callback)
 	{
 		mSelectionDialog = (GameObject)Instantiate(SelectionDialogPrototype);
-//		Vector3 scale = mSelectionDialog.transform.localScale;
-//		scale.x *= MRGame.DpiScale;
-//		scale.y *= MRGame.DpiScale;
-//		mSelectionDialog.transform.localScale = scale;
 
 		// set the title
 		foreach (Text text in mSelectionDialog.GetComponentsInChildren<Text>())
@@ -228,11 +226,7 @@ public class MRMainUI : MonoBehaviour
 	public void DisplayMessageDialog(string message, string title, OnButtonPressed callback)
 	{
 		mMessageDialog = (GameObject)Instantiate(MessageDialogPrototype);
-//		Vector3 scale = mMessageDialog.transform.localScale;
-//		scale.x *= MRGame.DpiScale;
-//		scale.y *= MRGame.DpiScale;
-//		mMessageDialog.transform.localScale = scale;
-		
+
 		// set the title and message
 		if (title == null)
 			title = "";
@@ -262,10 +256,6 @@ public class MRMainUI : MonoBehaviour
 		if (mAttackManeuverDialog == null)
 		{
 			mAttackManeuverDialog = (GameObject)Instantiate(AttackManeuverDialogPrototype);
-//			Vector3 scale = mAttackManeuverDialog.transform.localScale;
-//			scale.x *= MRGame.DpiScale;
-//			scale.y *= MRGame.DpiScale;
-//			mAttackManeuverDialog.transform.localScale = scale;
 			Vector2 anchor = ((RectTransform)mAttackManeuverDialog.transform).anchorMin;
 			anchor.x = leftPositionViewport;
 			anchor.y = topPositionViewport;
@@ -308,10 +298,6 @@ public class MRMainUI : MonoBehaviour
 		if (mTimedMessageBox != null)
 			DestroyObject(mTimedMessageBox);
 		mTimedMessageBox = (GameObject)Instantiate(TimedMessagePrototype);
-//		Vector3 scale = mTimedMessageBox.transform.localScale;
-//		scale.x *= MRGame.DpiScale;
-//		scale.y *= MRGame.DpiScale;
-//		mTimedMessageBox.transform.localScale = scale;
 		Text text = mTimedMessageBox.GetComponentInChildren<Text>();
 		string message;
 		if (pool.DieRolls.Length == 1)
@@ -334,10 +320,6 @@ public class MRMainUI : MonoBehaviour
 		if (mTimedMessageBox != null)
 			DestroyObject(mTimedMessageBox);
 		mTimedMessageBox = (GameObject)Instantiate(TimedMessagePrototype);
-//		Vector3 scale = mTimedMessageBox.transform.localScale;
-//		scale.x *= MRGame.DpiScale;
-//		scale.y *= MRGame.DpiScale;
-//		mTimedMessageBox.transform.localScale = scale;
 		Text text = mTimedMessageBox.GetComponentInChildren<Text>();
 		if (pool.DieRolls.Length == 1)
 			message += " = " + pool.Roll;
@@ -366,10 +348,6 @@ public class MRMainUI : MonoBehaviour
 		if (message != null)
 		{
 			mInstructionMessage = (GameObject)Instantiate(InstructionMessagePrototype);
-//			Vector3 scale = mInstructionMessage.transform.localScale;
-//			scale.x *= MRGame.DpiScale;
-//			scale.y *= MRGame.DpiScale;
-//			mInstructionMessage.transform.localScale = scale;
 			Text text = mInstructionMessage.GetComponentInChildren<Text>();
 			text.text = message;
 			mInstructionMessage.transform.SetParent(transform, false);
@@ -387,10 +365,6 @@ public class MRMainUI : MonoBehaviour
 		if (mCombatActionDialog == null)
 		{
 			mCombatActionDialog = (GameObject)Instantiate(CombatActionDialogPrototype);
-//			Vector3 scale = mCombatActionDialog.transform.localScale;
-//			scale.x *= MRGame.DpiScale;
-//			scale.y *= MRGame.DpiScale;
-//			mCombatActionDialog.transform.localScale = scale;
 			mCombatActionDialog.transform.SetParent(transform, false);
 			
 			// set button callbacks
@@ -425,10 +399,6 @@ public class MRMainUI : MonoBehaviour
 		if (mVictoryPointsSelectionDialog == null)
 		{
 			mVictoryPointsSelectionDialog = (GameObject)Instantiate(VictoryPointsSelectionDialogPrototype);
-//			Vector3 scale = mVictoryPointsSelectionDialog.transform.localScale;
-//			scale.x *= MRGame.DpiScale;
-//			scale.y *= MRGame.DpiScale;
-//			mVictoryPointsSelectionDialog.transform.localScale = scale;
 			mVictoryPointsSelectionDialog.transform.SetParent(transform, false);
 
 			MonoBehaviour[] scripts = mVictoryPointsSelectionDialog.GetComponents<MonoBehaviour>();
@@ -444,6 +414,48 @@ public class MRMainUI : MonoBehaviour
 				}
 			}
 		}
+	}
+
+	/// <summary>
+	/// Displays the instructions dialog.
+	/// </summary>
+	public void DisplayInstructionsDialog()
+	{
+		mInstructionsDialog = (GameObject)Instantiate(InstructionsDialogPrototype);
+		mInstructionsDialog.transform.SetParent(transform, false);
+
+		// set button callbacks
+		Button[] buttons = mInstructionsDialog.GetComponentsInChildren<Button>();
+		foreach (Button button in buttons)
+		{
+			if (button.gameObject.name == "Back")
+			{
+				button.onClick.AddListener(OnInstructionsBackClicked);
+			}
+		}
+
+		MRGame.ShowingUI = true;
+	}
+
+	/// <summary>
+	/// Displays the credits dialog.
+	/// </summary>
+	public void DisplayCreditsDialog()
+	{
+		mCreditsDialog = (GameObject)Instantiate(CreditsDialogPrototype);
+		mCreditsDialog.transform.SetParent(transform, false);
+
+		// set button callbacks
+		Button[] buttons = mCreditsDialog.GetComponentsInChildren<Button>();
+		foreach (Button button in buttons)
+		{
+			if (button.gameObject.name == "Back")
+			{
+				button.onClick.AddListener(OnCreditsBackClicked);
+			}
+		}
+
+		MRGame.ShowingUI = true;
 	}
 
 	/// <summary>
@@ -524,6 +536,22 @@ public class MRMainUI : MonoBehaviour
 		mVictoryPointsSelectionDialog = null;
 	}
 
+	private void OnInstructionsBackClicked()
+	{
+		MRGame.ShowingUI = false;
+		
+		Destroy (mInstructionsDialog);
+		mInstructionsDialog = null;
+	}
+
+	private void OnCreditsBackClicked()
+	{
+		MRGame.ShowingUI = false;
+		
+		Destroy (mCreditsDialog);
+		mCreditsDialog = null;
+	}
+
 	#endregion
 
 	#region Members
@@ -536,6 +564,8 @@ public class MRMainUI : MonoBehaviour
 	private GameObject mAttackManeuverDialog;
 	private GameObject mCombatActionDialog;
 	private GameObject mVictoryPointsSelectionDialog;
+	private GameObject mInstructionsDialog;
+	private GameObject mCreditsDialog;
 	private Button[] mDialogButtons;
 	private ButtonClickedAction[] mDialogCallbacks;
 	private OnButtonPressed mOkCallback;

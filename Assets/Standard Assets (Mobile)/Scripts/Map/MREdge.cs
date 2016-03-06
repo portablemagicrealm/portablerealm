@@ -29,6 +29,8 @@ using System.Collections;
 
 public class MREdge : MonoBehaviour
 {
+	#region Properties
+
 	// this value corresponds to the facing of MRTile
 	//
 	//       0
@@ -38,9 +40,64 @@ public class MREdge : MonoBehaviour
 	//
 	public int side;
 
+	/// <summary>
+	/// Returns the current road connected to the edge.
+	/// </summary>
+	/// <value>The road, or null if not connected to a road</value>
+	public MRRoad Road
+	{
+		get{
+			if (mTile != null)
+			{
+				if (mTile.Front == MRTileSide.eType.Normal)
+					return mRoad;
+				else
+					return mEnchantedRoad;
+			}
+			return null;
+		}
+	}
+
+	public MRRoad NormalRoad
+	{
+		get{
+			return mRoad;
+		}
+
+		set{
+			mRoad = value;
+		}
+	}
+
+	public MRRoad EnchantedRoad
+	{
+		get{
+			return mEnchantedRoad;
+		}
+
+		set{
+			mEnchantedRoad = value;
+		}
+	}
+
+	public MRTile Tile
+	{
+		get{
+			return mTile;
+		}
+
+		set{
+			mTile = value;
+		}
+	}
+
+	#endregion
+
+	#region Methods
+
 	void Awake ()
 	{
-		renderer.enabled = false;
+		GetComponent<Renderer>().enabled = false;
 		gameObject.SetActive(false);
 		enabled = false;
 	}
@@ -68,11 +125,14 @@ public class MREdge : MonoBehaviour
 		return edge;
 	}
 
+	#endregion
+
 	#region Members
 	
 	private MRRoad mRoad;
 	private MRRoad mEnchantedRoad;
-	
+	private MRTile mTile;
+
 	#endregion
 }
 

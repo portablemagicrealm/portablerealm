@@ -70,16 +70,12 @@ public class MRDwelling : MRChit
 		}
 	}
 
-//	public override Vector3 LocalScale
-//	{
-//		get{
-//			return base.LocalScale;
-//		}
-//		
-//		set{
-//			base.LocalScale = value;
-//		}
-//	}
+	public override int SortValue
+	{
+		get{
+			return (int)MRGame.eSortValue.Dwelling;
+		}
+	}
 
 	#endregion
 

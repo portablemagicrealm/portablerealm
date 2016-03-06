@@ -54,30 +54,29 @@ public class MREndTurnEvent : MRUpdateEvent
 			MRILocation currentClearing = activeControllable.Location;
 			MRTile currentTile = currentClearing.MyTileSide.Tile;
 
-			// move any non-blocked prowling monsters in the same tile to the controllable's clearing
-			IList<MRMonster> prowling = MRGame.TheGame.MonsterChart.ProwlingMonsters;
-			foreach (MRMonster monster in prowling)
+			if (currentClearing != null && currentClearing is MRClearing)
 			{
-				if (!monster.Blocked && monster.Location != null && monster.Location.MyTileSide.Tile == currentTile)
+				// move any non-blocked prowling monsters in the same tile to the controllable's clearing
+				IList<MRMonster> prowling = MRGame.TheGame.MonsterChart.ProwlingMonsters;
+				foreach (MRMonster monster in prowling)
 				{
-					monster.Location = currentClearing;
-					if (!activeControllable.Hidden)
+					if (!monster.Blocked && monster.Location != null && monster.Location.MyTileSide.Tile == currentTile)
 					{
-						// blocked
-						if (!activeControllable.Blocked)
+						monster.Location = currentClearing;
+						if (!activeControllable.Hidden)
 						{
-							MRGame.TheGame.ShowInformationDialog("Blocked!");
-							activeControllable.Blocked = true;
+							// blocked
+							if (!activeControllable.Blocked)
+							{
+								MRGame.TheGame.ShowInformationDialog("Blocked!");
+								activeControllable.Blocked = true;
+							}
+							monster.Blocked = true;
 						}
-						monster.Blocked = true;
 					}
 				}
+				currentClearing.Pieces.SortBySize();
 			}
-
-			// re-add the character to the clearing so he'll be on top
-			//if (activeControllable is MRCharacter)
-			//	activeControllable.Clearing = currentClearing;
-
 			// flip and relocate tile chits
 			currentTile.ActivateMapChits();
 
@@ -119,39 +118,34 @@ public class MREndTurnEvent : MRUpdateEvent
 								summonClearing = currentTile.FrontSide.GetClearing(((MRSiteChit)chit).ClearingNumber);
 								break;
 						}
-						foreach (MRDenizen denizen in summoned)
+						if (summonClearing != null && summonClearing is MRClearing)
 						{
-							Debug.Log("Chit " + chit.LongName + " summons " + denizen.Name);
-							denizen.Location = summonClearing;
-							if (denizen is MRMonster && currentClearing == summonClearing && !activeControllable.Hidden)
+							foreach (MRDenizen denizen in summoned)
 							{
-								// blocked
-								if (!activeControllable.Blocked)
+								Debug.Log("Chit " + chit.LongName + " summons " + denizen.Name);
+								denizen.Location = summonClearing;
+								if (denizen is MRMonster && currentClearing == summonClearing && !activeControllable.Hidden)
 								{
-									MRGame.TheGame.ShowInformationDialog("Blocked!");
-									activeControllable.Blocked = true;
+									// blocked
+									if (!activeControllable.Blocked)
+									{
+										MRGame.TheGame.ShowInformationDialog("Blocked!");
+										activeControllable.Blocked = true;
+									}
+									denizen.Blocked = true;
 								}
-								denizen.Blocked = true;
 							}
+							summonClearing.Pieces.SortBySize();
+						}
+						else if (summonClearing == null)
+						{
+							Debug.LogError("No summon clearing for chit " + chit.Name);
 						}
 					}
 				}
 			}
-			// re-add map chits to tile so they'll be on top
-			//currentTile.ActivateMapChits();
 		}
 		MRGame.TheGame.RemoveUpdateEvent(this);
-/*
-		if (MRGame.TimeOfDay == MRGame.eTimeOfDay.Midnight)
-		{
-			++MRGame.DayOfMonth;
-			MRGame.TimeOfDay = MRGame.eTimeOfDay.Birdsong;
-		}
-		else
-			++MRGame.TimeOfDay;
-		MRGame.TheGame.RemoveUpdateEvent(this);
-		MRGame.TheGame.AddUpdateEvent(new MRInitGameTimeEvent());
-*/
 		return true;
 	}
 

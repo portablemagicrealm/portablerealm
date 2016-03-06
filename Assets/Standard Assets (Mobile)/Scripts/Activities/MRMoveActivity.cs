@@ -63,12 +63,12 @@ public class MRMoveActivity : MRActivity
 
 		// make sure the clearings connect
 		bool validForMoveType = false;
-		MRILocation currentClearing = Owner.Location;
+		MRILocation currentLocation = Owner.Location;
 		switch (Owner.MoveType)
 		{
 			case MRGame.eMoveType.Walk:
 			{
-				MRRoad road = currentClearing.RoadTo(Clearing);
+				MRRoad road = currentLocation.RoadTo(Clearing);
 				if (road != null)
 				{
 					// if we're walking along a hidden road, make sure we've discovered it
@@ -88,8 +88,8 @@ public class MRMoveActivity : MRActivity
 				break;
 			}
 			case MRGame.eMoveType.WalkThroughWoods:
-				if (currentClearing.RoadTo(Clearing) != null ||
-			    	currentClearing.MyTileSide == Clearing.MyTileSide)
+				if (currentLocation.RoadTo(Clearing) != null ||
+			    	currentLocation.MyTileSide == Clearing.MyTileSide)
 				{
 					validForMoveType = true;
 				}

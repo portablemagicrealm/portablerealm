@@ -90,6 +90,16 @@ public class MRTreasureChartLocation : MonoBehaviour, MRITouchable
 			return;
 	}
 
+	public bool OnTouched(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnReleased(GameObject touchedObject)
+	{
+		return true;
+	}
+
 	public bool OnSingleTapped(GameObject touchedObject)
 	{
 		return true;

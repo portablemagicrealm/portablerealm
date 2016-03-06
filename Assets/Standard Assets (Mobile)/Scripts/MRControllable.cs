@@ -84,6 +84,12 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 	/// <value>The defense type.</value>
 	public abstract MRCombatManager.eDefenseType DefenseType { get; }
 
+	/// <summary>
+	/// Returns a value used for sorting counters in stacks.
+	/// </summary>
+	/// <value>The sort value.</value>
+	public abstract int SortValue { get; }
+
 	public GameObject Counter
 	{
 		get{
@@ -104,7 +110,10 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 			if (oldLocation != null)
 				oldLocation.RemovePiece(this);
 			if (mLocation != null)
+			{
 				mLocation.AddPieceToTop(this);
+				mLocation.Pieces.SortBySize();
+			}
 		}
 	}
 
@@ -386,17 +395,7 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 		}
 		
 		set{
-			//if (mLocation != null && mLocation.Pieces == Stack && !Stack.Inspecting)
-			//{
-			//	mCounter.transform.localScale = new Vector3(
-			//		1.0f / mLocation.Owner.transform.localScale.x,
-			//		1.0f / mLocation.Owner.transform.localScale.y,
-			//		1.0f);
-			//}
-			//else
-			{
-				mCounter.transform.localScale = value;
-			}
+			mCounter.transform.localScale = value;
 			UpdateAttackerPositions();
 		}
 	}
@@ -416,6 +415,8 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 		
 		set {
 			mCounter.transform.rotation = value;
+//			Vector3 orientation = mCounter.transform.eulerAngles;
+//			Debug.Log("rotation = " + orientation.ToString());
 		}
 	}
 
@@ -527,6 +528,7 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 		mWeight = weight.Strength();
 		mVulnerability = mWeight;
 
+		mIndex = index;
 		Id = MRUtility.IdForName(mName, index);
 	}
 
@@ -673,13 +675,13 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 	}
 
 	// Called when the controllable hits its target
-	public virtual void HitTarget(MRIControllable attacker, bool targetDead)
+	public virtual void HitTarget(MRIControllable target, bool targetDead)
 	{
 		// do nothing
 	}
 	
 	// Called when the controllable misses its target
-	public virtual void MissTarget(MRIControllable attacker)
+	public virtual void MissTarget(MRIControllable target)
 	{
 		// do nothing
 	}
@@ -860,6 +862,7 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 	protected MRCombatSheetData mCombatSheet;
 	protected MRIControllable mLuring;
 	protected MRIControllable mLurer;
+	protected int mIndex;
 	private uint mId;
 
 	#endregion

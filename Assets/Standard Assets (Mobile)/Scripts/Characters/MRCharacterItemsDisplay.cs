@@ -269,14 +269,14 @@ public class MRCharacterItemsDisplay : MRTabItems, MRITouchable
 		// adjust the active and wounded areas so they are on the far left and right of the view area
 		Vector3 left = Parent.CharacterMatCamera.ViewportToWorldPoint(new Vector3(0, 0, 0));
 		Vector3 activePos = mActiveChitsArea.transform.position;
-		float activeLeft = mActiveChitsBackground.renderer.bounds.min.x;
+		float activeLeft = mActiveChitsBackground.GetComponent<Renderer>().bounds.min.x;
 		float delta = left.x - activeLeft;
 		mActiveChitsArea.transform.position = new Vector3(activePos.x + delta, activePos.y, activePos.z);
 		activePos = mActiveItemsArea.transform.position;
 		mActiveItemsArea.transform.position = new Vector3(activePos.x + delta, activePos.y, activePos.z);
 		Vector3 right = Parent.CharacterMatCamera.ViewportToWorldPoint(new Vector3(1, 0, 0));
 		Vector3 woundedPos = mWoundedChitsArea.transform.position;
-		float woudnedRight = woundedBackground.renderer.bounds.max.x;
+		float woudnedRight = woundedBackground.GetComponent<Renderer>().bounds.max.x;
 		delta = right.x - woudnedRight;
 		mWoundedChitsArea.transform.position = new Vector3(woundedPos.x + delta, woundedPos.y, woundedPos.z);
 	}
@@ -300,10 +300,10 @@ public class MRCharacterItemsDisplay : MRTabItems, MRITouchable
 				// hide fatigued and wounded chits
 				mFatiguedChitsArea.SetActive(false);
 				mWoundedChitsArea.SetActive(false);
-				Bounds b = mActiveChitsBackground.renderer.bounds;
+				Bounds b = mActiveChitsBackground.GetComponent<Renderer>().bounds;
 				Vector3 bmax = mParent.CharacterMatCamera.WorldToViewportPoint(b.max);
 				Vector3 bmin = mParent.CharacterMatCamera.WorldToViewportPoint(b.min);
-				Vector3 activeUpRight = mParent.CharacterMatCamera.WorldToScreenPoint(mActiveChitsBackground.renderer.bounds.max);
+				Vector3 activeUpRight = mParent.CharacterMatCamera.WorldToScreenPoint(mActiveChitsBackground.GetComponent<Renderer>().bounds.max);
 				MRMainUI.TheUI.DisplayAttackManeuverDialog(activeUpRight.x / Screen.width, activeUpRight.y / (Screen.height * 2));
 			}
 
@@ -457,7 +457,7 @@ public class MRCharacterItemsDisplay : MRTabItems, MRITouchable
 			// display curses
 			foreach (MRGame.eCurses curse in Enum.GetValues(typeof(MRGame.eCurses)))
 			{
-				mCurses[curse].renderer.enabled = character.HasCurse(curse);
+				mCurses[curse].GetComponent<Renderer>().enabled = character.HasCurse(curse);
 			}
 			
 			// display ui elements
@@ -474,6 +474,16 @@ public class MRCharacterItemsDisplay : MRTabItems, MRITouchable
 				MRMainUI.TheUI.DisplayInstructionMessage("Select Chit");
 			}
 		}
+	}
+
+	public bool OnTouched(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnReleased(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	public bool OnSingleTapped(GameObject touchedObject)

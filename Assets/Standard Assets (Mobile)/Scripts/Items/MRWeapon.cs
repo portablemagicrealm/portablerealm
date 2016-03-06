@@ -142,6 +142,13 @@ public class MRWeapon : MRItem
 		}
 	}
 
+	public override int SortValue
+	{
+		get{
+			return (int)MRGame.eSortValue.Weapon;
+		}
+	}
+
 	#endregion
 
 	#region Methods

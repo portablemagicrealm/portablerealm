@@ -109,6 +109,13 @@ public class MRArmor : MRItem
 		}
 	}
 
+	public override int SortValue
+	{
+		get{
+			return mType == eType.Full ? (int)MRGame.eSortValue.LargeArmor : (int)MRGame.eSortValue.SmallArmor;
+		}
+	}
+
 	#endregion
 
 	#region Methods

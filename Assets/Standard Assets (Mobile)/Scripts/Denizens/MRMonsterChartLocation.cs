@@ -104,6 +104,16 @@ public class MRMonsterChartLocation : MonoBehaviour, MRITouchable
 		}
 	}
 
+	public bool OnTouched(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnReleased(GameObject touchedObject)
+	{
+		return true;
+	}
+
 	public bool OnSingleTapped(GameObject touchedObject)
 	{
 		return true;

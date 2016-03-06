@@ -77,8 +77,8 @@ public class MRClearingSelector : MonoBehaviour
 	{
 		mVisible = true;
 
-		mWorldSize = ((SpriteRenderer)renderer).sprite.bounds.extents.y;
-		mPixelSize = ((SpriteRenderer)renderer).sprite.rect.height;
+		mWorldSize = ((SpriteRenderer)GetComponent<Renderer>()).sprite.bounds.extents.y;
+		mPixelSize = ((SpriteRenderer)GetComponent<Renderer>()).sprite.rect.height;
 		
 		// adjust the camera so it just shows the border area
 		mCamera = gameObject.GetComponentsInChildren<Camera> ()[0];

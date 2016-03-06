@@ -46,6 +46,17 @@ public class MRNative : MRDenizen
 
 	#endregion
 
+	#region Properties
+
+	public override int SortValue
+	{
+		get{
+			return (int)MRGame.eSortValue.Denizen;
+		}
+	}
+
+	#endregion
+
 	#region Methods
 
 	public MRNative()

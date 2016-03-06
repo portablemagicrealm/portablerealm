@@ -47,15 +47,9 @@ public class MRMain : MonoBehaviour, MRITouchable
 
 	#region Properties
 
+	// for debugging
 	//public TextMesh TapTest;
 
-	public Camera CombatCamera
-	{
-		get{
-			return mCamera;
-		}
-	}
-	
 	public bool Visible
 	{
 		get{
@@ -74,8 +68,6 @@ public class MRMain : MonoBehaviour, MRITouchable
 			}
 		}
 	}
-
-
 
 	#endregion
 
@@ -110,43 +102,73 @@ public class MRMain : MonoBehaviour, MRITouchable
 					mSelectCharacter = obj;
 					break;
 				case "newGame":
-					mNewGameButton = obj;
+					mNewGameButton = obj.GetComponentInChildren<MRButton>();
 					break;
 				case "loadGame":
-					mLoadGameButton = obj;
+					mLoadGameButton = obj.GetComponentInChildren<MRButton>();
 					break;
 				case "saveGame":
-					mSaveGameButton = obj;
+					mSaveGameButton = obj.GetComponentInChildren<MRButton>();
+					break;
+				case "instructions":
+					mInstructionsButton = obj.GetComponentInChildren<MRButton>();
 					break;
 				case "credits":
-					mCreditsButton = obj;
+					mCreditsButton = obj.GetComponentInChildren<MRButton>();
 					break;
 				case "addCharacter":
-					mAddCharacterButton = obj;
+					mAddCharacterButton = obj.GetComponentInChildren<MRButton>();
 					break;
 				case "removeCharacter":
-					mRemoveCharacterButton = obj;
+					mRemoveCharacterButton = obj.GetComponentInChildren<MRButton>();
 					break;
 				case "startGame":
-					mStartGameButton = obj;
+					mStartGameButton = obj.GetComponentInChildren<MRButton>();
+					break;
+				case "back":
+					mBackButton = obj.GetComponentInChildren<MRButton>();
 					break;
 				case "CharacterData":
 					mCharacterDisplay = obj;
 					break;
 				case "nextCharacter":
-					mCharacterRightArrow = obj;
-					mEnabledArrow = ((SpriteRenderer)(mCharacterRightArrow.renderer)).sprite;
+					mCharacterRightArrow = obj.GetComponentInChildren<MRButton>();
+					mEnabledArrow = mCharacterRightArrow.GetComponent<SpriteRenderer>().sprite;
 					break;
 				case "prevCharacter":
-					mCharacterLeftArrow = obj;
-					mDisabledArrow = ((SpriteRenderer)(mCharacterLeftArrow.renderer)).sprite;
+					mCharacterLeftArrow = obj.GetComponentInChildren<MRButton>();
+					mDisabledArrow = mCharacterLeftArrow.GetComponent<SpriteRenderer>().sprite;
 					break;
 				case "Seed":
-					mRandomSeed = obj.GetComponent<TextMesh>();;
+					mRandomSeed = obj.GetComponent<TextMesh>();
 					break;
 				case "name":
 					if (obj.transform.parent.name == "ownerName")
 						mCharacterName = obj.GetComponent<TextMesh>();
+					break;
+				case "weight":
+					mCharacterWeight = obj.GetComponent<TextMesh>();
+					break;
+				case "location":
+					mCharacterStartLocation = obj.GetComponent<TextMesh>();
+					break;
+				case "special1":
+					mCharacterAbilities[0] = obj.GetComponent<TextMesh>();
+					break;
+				case "special2":
+					mCharacterAbilities[1] = obj.GetComponent<TextMesh>();
+					break;
+				case "weapon":
+					mWeaponPosition = obj;
+					break;
+				case "armor":
+					mArmorPosition = obj;
+					break;
+				case "helmet":
+					mHelmetPosition = obj;
+					break;
+				case "shield":
+					mShieldPosition = obj;
 					break;
 				default:
 					if (obj.name.StartsWith("chit"))
@@ -154,6 +176,9 @@ public class MRMain : MonoBehaviour, MRITouchable
 					break;
 			}
 		}
+
+		((SpriteRenderer)(mCharacterLeftArrow.GetComponent<Renderer>())).sprite = mEnabledArrow;
+		((SpriteRenderer)(mCharacterRightArrow.GetComponent<Renderer>())).sprite = mEnabledArrow;
 	}
 
 	// Update is called once per frame
@@ -170,14 +195,15 @@ public class MRMain : MonoBehaviour, MRITouchable
 			case OptionsState.NoGame:
 				MRUtility.SetObjectVisibility(mStartScreen, true);
 				MRUtility.SetObjectVisibility(mSelectCharacter, false);
-				MRUtility.SetObjectVisibility(mSaveGameButton, false);
+				mSaveGameButton.Visible = false;
 				break;
 			case OptionsState.NewGame:
 				MRUtility.SetObjectVisibility(mStartScreen, false);
 				MRUtility.SetObjectVisibility(mSelectCharacter, true);
-				MRUtility.SetObjectVisibility(mAddCharacterButton, mAvailableCharacters.Count > 0);
-				MRUtility.SetObjectVisibility(mRemoveCharacterButton, true);
-				MRUtility.SetObjectVisibility(mStartGameButton, mSelectedCharacters.Count > 0);
+				mAddCharacterButton.Visible = (mAvailableCharacters.Count > 0);
+				mRemoveCharacterButton.Visible = true;
+				mStartGameButton.Visible = (mSelectedCharacters.Count > 0);
+				mBackButton.Visible = (mSelectedCharacters.Count == 0);
 				break;
 			case OptionsState.SelectStartingLocations:
 				MRUtility.SetObjectVisibility(mStartScreen, false);
@@ -187,33 +213,61 @@ public class MRMain : MonoBehaviour, MRITouchable
 			case OptionsState.GameStarted:
 				MRUtility.SetObjectVisibility(mStartScreen, true);
 				MRUtility.SetObjectVisibility(mSelectCharacter, false);
-				MRUtility.SetObjectVisibility(mNewGameButton, false);
-				MRUtility.SetObjectVisibility(mLoadGameButton, false);
+				mNewGameButton.Visible = false;
+				mLoadGameButton.Visible = false;
 				break;
 		}
 
 		if (mDisplayedCharacterIndex >= 0 && mAvailableCharacters.Count > 0)
 		{
-			// display the next/prev character arrows
-			if (mDisplayedCharacterIndex == 0)
-			{
-				((SpriteRenderer)(mCharacterLeftArrow.renderer)).sprite = mDisabledArrow;
-				((SpriteRenderer)(mCharacterRightArrow.renderer)).sprite = mEnabledArrow;
-			}
-			else if (mDisplayedCharacterIndex == mAvailableCharacters.Count - 1)
-			{
-				((SpriteRenderer)(mCharacterLeftArrow.renderer)).sprite = mEnabledArrow;
-				((SpriteRenderer)(mCharacterRightArrow.renderer)).sprite = mDisabledArrow;
-			}
-			else
-			{
-				((SpriteRenderer)(mCharacterLeftArrow.renderer)).sprite = mEnabledArrow;
-				((SpriteRenderer)(mCharacterRightArrow.renderer)).sprite = mEnabledArrow;
-			}
-
 			// display the character info
 			MRCharacter character = mAvailableCharacters[mDisplayedCharacterIndex];
 			mCharacterName.text = MRUtility.DisplayName(character.Name);
+			mCharacterWeight.text = "Weight - " + character.BaseWeight.ToString();
+			mCharacterStartLocation.text = "Start at - ";
+			for (int i = 0; i < character.StartingLocations.Length; ++i)
+			{
+				if (i > 0)
+					mCharacterStartLocation.text += ", ";
+				mCharacterStartLocation.text += MRUtility.DisplayName(character.StartingLocations[i]);
+			}
+			for (int i = 0; i < mCharacterAbilities.Length; ++i)
+				mCharacterAbilities[i].text = "";
+			for (int i = 0; i < character.Abilities.Length; ++i)
+			{
+				if (i < mCharacterAbilities.Length)
+					mCharacterAbilities[i].text += MRUtility.DisplayName(character.Abilities[i]);
+			}
+
+			// display the character's equipment
+			IList<MRItem> activeItems = character.ActiveItems;
+			foreach (MRItem item in activeItems)
+			{
+				if (item is MRWeapon)
+				{
+					SetItemPosition(item, mWeaponPosition);
+				}
+				else if (item is MRArmor)
+				{
+					MRArmor armor = (MRArmor)item;
+					switch (armor.Type)
+					{
+						case MRArmor.eType.Breastplate:
+						case MRArmor.eType.Full:
+							// breastplate and full are shown in the same slot, since no character starts with both
+							SetItemPosition(item, mArmorPosition);
+							break;
+						case MRArmor.eType.Helmet:
+							SetItemPosition(item, mHelmetPosition);
+							break;
+						case MRArmor.eType.Shield:
+							SetItemPosition(item, mShieldPosition);
+							break;
+						default:
+							break;
+					}
+				}
+			}
 
 			// display the character's chits
 			IList<MRActionChit> chits = character.Chits;
@@ -257,12 +311,43 @@ public class MRMain : MonoBehaviour, MRITouchable
 
 	private void ChangeDisplayedCharacter(int newCharacterIndex)
 	{
+		if (newCharacterIndex < 0)
+			newCharacterIndex = mAvailableCharacters.Count - 1;
+		else if (newCharacterIndex >= mAvailableCharacters.Count)
+			newCharacterIndex = 0;
 		if (mAvailableCharacters.Count > 0 && newCharacterIndex >= 0 && newCharacterIndex < mAvailableCharacters.Count && newCharacterIndex != mDisplayedCharacterIndex)
 		{
 			// hide the current character display
 			if (mDisplayedCharacterIndex >= 0 && mDisplayedCharacterIndex < mAvailableCharacters.Count)
 			{
 				MRCharacter character = mAvailableCharacters[mDisplayedCharacterIndex];
+
+				// hide items
+				IList<MRItem> activeItems = character.ActiveItems;
+				foreach (MRItem item in activeItems)
+				{
+					if (item is MRWeapon)
+					{
+						ClearItemPosition(item);
+					}
+					else if (item is MRArmor)
+					{
+						MRArmor armor = (MRArmor)item;
+						switch (armor.Type)
+						{
+							case MRArmor.eType.Breastplate:
+							case MRArmor.eType.Full:
+							case MRArmor.eType.Helmet:
+							case MRArmor.eType.Shield:
+								ClearItemPosition(item);
+								break;
+							default:
+								break;
+						}
+					}
+				}
+
+				// hide chits
 				IList<MRActionChit> chits = character.Chits;
 				for (int i = 0; i < chits.Count; ++i)
 				{
@@ -309,6 +394,27 @@ public class MRMain : MonoBehaviour, MRITouchable
 			return;
 
 		mState = OptionsState.SelectStartingLocations;
+
+		// delete any unselected characters
+		foreach (MRCharacter character in mAvailableCharacters)
+		{
+			if (!mSelectedCharacters.Contains(character))
+			{
+				character.Destroy();
+			}
+		}
+		mAvailableCharacters.Clear();
+	}
+
+	/// <summary>
+	/// Exits the character selection screen and goes back to the main menu.
+	/// </summary>
+	private void ExitNewGame()
+	{
+		if (mSelectedCharacters.Count > 0)
+			return;
+
+		mState = OptionsState.NoGame;
 
 		// delete any unselected characters
 		foreach (MRCharacter character in mAvailableCharacters)
@@ -387,37 +493,78 @@ public class MRMain : MonoBehaviour, MRITouchable
 		MRGame.TheGame.StartGame();
 	}
 
+	private void SetItemPosition(MRItem item, GameObject position)
+	{
+		if (item.Stack != null)
+			item.Stack.RemovePiece(item);
+		item.Parent = position.transform;
+		item.Layer = position.layer;
+		item.Position = position.transform.position;
+		item.LocalScale = new Vector3(1.3f, 1.3f, 1f);
+	}
+
+	private void ClearItemPosition(MRItem item)
+	{
+		item.LocalScale = new Vector3(1f, 1f, 1f);
+		item.Parent = null;
+		item.Layer = LayerMask.NameToLayer("Dummy");
+		item.Position = Vector3.zero;
+		item.LocalScale = Vector3.one;
+	}
+
+	public virtual bool OnTouched(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnReleased(GameObject touchedObject)
+	{
+		return true;
+	}
+
 	public virtual bool OnSingleTapped(GameObject touchedObject)
 	{
-		if (touchedObject == mNewGameButton && mNewGameButton.renderer.enabled)
+		if (touchedObject == mNewGameButton.gameObject && mNewGameButton.Visible)
 		{
 			CreateNewGame();
 		}
-		else if (touchedObject == mAddCharacterButton && mAddCharacterButton.renderer.enabled)
+		else if (touchedObject == mAddCharacterButton.gameObject && mAddCharacterButton.Visible)
 		{
 			AddCharacter(mDisplayedCharacterIndex);
 		}
-		else if (touchedObject == mRemoveCharacterButton && mRemoveCharacterButton.renderer.enabled)
+		else if (touchedObject == mRemoveCharacterButton.gameObject && mRemoveCharacterButton.Visible)
 		{
 			RemoveCharacter(mDisplayedCharacterIndex);
 		}
-		else if (touchedObject == mStartGameButton && mStartGameButton.renderer.enabled)
+		else if (touchedObject == mStartGameButton.gameObject && mStartGameButton.Visible)
 		{
 			StartGame();
 		}
-		else if (touchedObject == mLoadGameButton && mLoadGameButton.renderer.enabled)
+		else if (touchedObject == mBackButton.gameObject && mBackButton.Visible)
+		{
+			ExitNewGame();
+		}
+		else if (touchedObject == mLoadGameButton.gameObject && mLoadGameButton.Visible)
 		{
 			LoadGame();
 		}
-		else if (touchedObject == mSaveGameButton && mSaveGameButton.renderer.enabled)
+		else if (touchedObject == mSaveGameButton.gameObject && mSaveGameButton.Visible)
 		{
 			SaveGame();
 		}
-		else if (touchedObject == mCharacterLeftArrow && mCharacterLeftArrow.renderer.enabled && mDisplayedCharacterIndex > 0)
+		else if (touchedObject == mInstructionsButton.gameObject && mInstructionsButton.Visible)
+		{
+			ShowInstructions();
+		}
+		else if (touchedObject == mCreditsButton.gameObject && mCreditsButton.Visible)
+		{
+			ShowCredits();
+		}
+		else if (touchedObject == mCharacterLeftArrow.gameObject)
 		{
 			ChangeDisplayedCharacter(mDisplayedCharacterIndex - 1);
 		}
-		else if (touchedObject == mCharacterRightArrow && mCharacterRightArrow.renderer.enabled && mDisplayedCharacterIndex < mAvailableCharacters.Count - 1)
+		else if (touchedObject == mCharacterRightArrow.gameObject)
 		{
 			ChangeDisplayedCharacter(mDisplayedCharacterIndex + 1);
 		}
@@ -464,7 +611,6 @@ public class MRMain : MonoBehaviour, MRITouchable
 	private void SaveGame()
 	{
 		// todo: save game name/save slot
-
 		JSONObject gameData = new JSONObject();
 		MRGame.TheGame.Save(gameData);
 		StringBuilder dataBuffer = new StringBuilder();
@@ -482,6 +628,16 @@ public class MRMain : MonoBehaviour, MRITouchable
 		}
 	}
 
+	private void ShowInstructions()
+	{
+		MRMainUI.TheUI.DisplayInstructionsDialog();
+	}
+
+	private void ShowCredits()
+	{
+		MRMainUI.TheUI.DisplayCreditsDialog();
+	}
+
 	#endregion
 
 	#region Members
@@ -489,21 +645,30 @@ public class MRMain : MonoBehaviour, MRITouchable
 	private Camera mCamera;
 	private GameObject mStartScreen;
 	private GameObject mSelectCharacter;
-	private GameObject mNewGameButton;
-	private GameObject mLoadGameButton;
-	private GameObject mSaveGameButton;
-	private GameObject mCreditsButton;
-	private GameObject mAddCharacterButton;
-	private GameObject mRemoveCharacterButton;
-	private GameObject mStartGameButton;
+	private MRButton mNewGameButton;
+	private MRButton mLoadGameButton;
+	private MRButton mSaveGameButton;
+	private MRButton mInstructionsButton;
+	private MRButton mCreditsButton;
+	private MRButton mAddCharacterButton;
+	private MRButton mRemoveCharacterButton;
+	private MRButton mStartGameButton;
+	private MRButton mBackButton;
 	private GameObject mCharacterDisplay;
+	private GameObject mWeaponPosition;
+	private GameObject mArmorPosition;
+	private GameObject mHelmetPosition;
+	private GameObject mShieldPosition;
 	private GameObject[] mChitPositions = new GameObject[12];
 	private TextMesh mRandomSeed;
 	private TextMesh mCharacterName;
+	private TextMesh mCharacterWeight;
+	private TextMesh mCharacterStartLocation;
+	private TextMesh[] mCharacterAbilities = new TextMesh[2];
 	private Sprite mEnabledArrow;
 	private Sprite mDisabledArrow;
-	private GameObject mCharacterLeftArrow;
-	private GameObject mCharacterRightArrow;
+	private MRButton mCharacterLeftArrow;
+	private MRButton mCharacterRightArrow;
 	private OptionsState mState;
 	private int mDisplayedCharacterIndex;
 	private IList<MRCharacter> mAvailableCharacters = new List<MRCharacter>();

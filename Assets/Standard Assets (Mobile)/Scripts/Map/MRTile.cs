@@ -75,7 +75,19 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 			mId = value;
 		}
 	}
-	
+
+	public MRUtility.IntVector2 Coordinate
+	{
+		get{
+			return mCoordinate;
+		}
+
+		set{
+			mCoordinate = value;
+			//Debug.Log("Coordinate for tile " + tileName + " set to " + mCoordinate);
+		}
+	}
+
 	public MRTileSide.eType Front
 	{
 		get 
@@ -124,8 +136,8 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 			if (value != mFacing)
 			{
 				int delta = value - mFacing;
-				if (delta < 0)
-					delta = -(delta + 6);
+//				if (delta < 0)
+//					delta = -(delta + 6);
 				mFacing = value;
 				gameObject.transform.Rotate(0, 0, delta * 60.0f);
 			}
@@ -135,13 +147,13 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 	//
 	// Returns a boolean array. If an array element is true, that edge has a road.
 	//
-	public bool[] Edges
+	public bool[] RoadEdges
 	{
 		get
 		{
 			MRTileSide side;
 			if (mSides.TryGetValue(MRTileSide.eType.Normal, out side))
-				return side.Edges;
+				return side.RoadEdges;
 			return null;
 		}
 	}
@@ -174,7 +186,7 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 
 		// determine the hex size based on the collider height
 		float miny = 0, maxy = 0;
-		Vector2[] points = ((PolygonCollider2D)(gameObject.collider2D)).points;
+		Vector2[] points = ((PolygonCollider2D)(gameObject.GetComponent<Collider2D>())).points;
 		foreach (Vector2 pt in points)
 		{
 			if (pt.y > maxy)
@@ -198,6 +210,16 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 	{
 		if (MRGame.TheGame.CurrentView != MRGame.eViews.Map)
 			return;
+	}
+
+	public bool OnTouched(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnReleased(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	public bool OnSingleTapped(GameObject touchedObject)
@@ -314,27 +336,6 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 						tile.transform.RotateAround(transform.position, Vector3.forward, 60.0f * (Facing - mySide));
 						tile.transform.Rotate(new Vector3(0, 0, 60.0f * (mySide - Facing)));
 					}
-					// connect the tile to surrounding tiles
-					if (tile.GetAdjacentTile(MREdge.Normalize(theirSide + 1)) == null)
-					{
-						int myNextSide = MREdge.Normalize(mySide - 1);
-						MRTile adjacent = GetAdjacentTile(myNextSide);
-						if (adjacent != null)
-						{
-							myNextSide = MREdge.Normalize( mAdjacentTile[myNextSide].GetAdjacentTileSide(this) - 1);
-							adjacent.SetAdjacentTile(tile, MREdge.Normalize(theirSide + 1), myNextSide, false);
-						}
-					}
-					if (tile.GetAdjacentTile(MREdge.Normalize(theirSide - 1)) == null)
-					{
-						int myNextSide = MREdge.Normalize(mySide + 1);
-						MRTile adjacent = GetAdjacentTile(myNextSide);
-						if (adjacent != null)
-						{
-							myNextSide = MREdge.Normalize( mAdjacentTile[myNextSide].GetAdjacentTileSide(this) + 1);
-							adjacent.SetAdjacentTile(tile, MREdge.Normalize(theirSide - 1), myNextSide, false);
-						}
-					}
 				}
 			}
 		}
@@ -365,7 +366,7 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 		IList<int> roadEdges = new List<int>();
 		for (int i = 0; i < 6; ++i)
 		{
-			if (Edges[i])
+			if (RoadEdges[i])
 				roadEdges.Add(i);
 		}
 		roadEdges.Shuffle();
@@ -401,6 +402,61 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 	}
 
 	/// <summary>
+	/// Returns the coordinate offset for a given side of the tile.
+	/// </summary>
+	/// <returns>The offset for the side</returns>
+	/// <param name="side">Side to get the coordinate of.</param>
+	public MRUtility.IntVector2 OffsetForSide(int side)
+	{
+		side = MREdge.Normalize(6 - Facing + side);
+		if (mCoordinate.x % 2 == 0)
+			return MRMap.EvenTileOffsets[side];
+		else
+			return MRMap.OddTileOffsets[side];
+	}
+
+	/// <summary>
+	/// Returns the coordinate for a given side of the tile.
+	/// </summary>
+	/// <returns>The coordinate for the side</returns>
+	/// <param name="side">Side to get the coordinate of.</param>
+	public MRUtility.IntVector2 CoordinateForSide(int side)
+	{
+		return Coordinate + OffsetForSide(side);
+	}
+
+	/// <summary>
+	/// Returns the side number for a given adjacent coordinate.
+	/// </summary>
+	/// <returns>The side number, or -1 if the coordinate if not adjacent</returns>
+	/// <param name="adjacent">Adjacent coordinate.</param>
+	public int SideForCoordinate(MRUtility.IntVector2 adjacent)
+	{
+		MRUtility.IntVector2 offset = adjacent - Coordinate;
+		MRUtility.IntVector2[] offsets;
+		if (mCoordinate.x % 2 == 0)
+			offsets = MRMap.EvenTileOffsets;
+		else
+			offsets = MRMap.OddTileOffsets;
+		for (int i = 0; i < offsets.Length; ++i)
+		{
+			if (offsets[i] == offset)
+				return MREdge.Normalize(Facing + i);
+		}
+		return -1;
+	}
+
+	public MRUtility.IntVector2[] AdjacentCoordinates()
+	{
+		MRUtility.IntVector2[] adjacent = new MRUtility.IntVector2[6];
+		for (int i = 0; i < 6; ++i)
+		{
+			adjacent[i] = CoordinateForSide(i);
+		}
+		return adjacent;
+	}
+
+	/// <summary>
 	/// Tests if a tile can connect to this tile, and an adjacent tile.
 	/// </summary>
 	/// <returns><c>true</c>, if valid connection was tested, <c>false</c> otherwise.</returns>
@@ -408,46 +464,12 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 	/// <param name="tileEdge">Tile edge.</param>
 	/// <param name="myEdge">My edge.</param>
 	/// <param name="clockwise">If set to <c>true</c> clockwise.</param>
-	public bool TestValidConnection(MRTile testTile, int tileEdge, int myEdge, bool clockwise)
+	public bool TestValidConnection(int myEdge, MRTile testTile, int testEdge)
 	{
-		// see if we've wrapped around
-		if (mTestingValidConnection)
-			return true;
-
-		mTestingValidConnection = true;
-		bool result = false;
-		tileEdge = MREdge.Normalize(tileEdge);
+		testEdge = MREdge.Normalize(testEdge);
 		myEdge = MREdge.Normalize(myEdge);
 
-		if (testTile.Edges[tileEdge] == this.Edges[myEdge] && mAdjacentTile[myEdge] == null)
-		{
-			if (clockwise)
-			{
-				myEdge = MREdge.Normalize(myEdge - 1);
-				if (mAdjacentTile[myEdge] != null)
-				{
-					int adjacentEdge = MREdge.Normalize( mAdjacentTile[myEdge].GetAdjacentTileSide(this) - 1);
-					tileEdge = MREdge.Normalize(tileEdge + 1);
-					result = mAdjacentTile[myEdge].TestValidConnection(testTile, tileEdge, adjacentEdge, clockwise);
-				}
-				else
-					result = true;
-			}
-			else
-			{
-				myEdge = MREdge.Normalize(myEdge + 1);
-				if (mAdjacentTile[myEdge] != null)
-				{
-					int adjacentEdge = MREdge.Normalize(mAdjacentTile[myEdge].GetAdjacentTileSide(this) + 1);
-					tileEdge = MREdge.Normalize(tileEdge - 1);
-					result = mAdjacentTile[myEdge].TestValidConnection(testTile, tileEdge, adjacentEdge, clockwise);
-				}
-				else
-					result = true;
-			}
-		}
-		mTestingValidConnection = false;
-		return result;
+		return testTile.RoadEdges[testEdge] == this.RoadEdges[myEdge];
 	}
 
 	public void AddMapChit(MRMapChit chit)
@@ -515,7 +537,7 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 				MRDwelling dwelling = MRDwelling.Create();
 				dwelling.Parent = testClearing.gameObject.transform;
 				dwelling.Type = ((MRWarningChit)chit).Substitute;
-				testClearing.Pieces.AddPieceToBottom(dwelling);
+				testClearing.AddPieceToBottom(dwelling);
 				mMapChits.Remove((MRMapChit)chit);
 				DestroyObject(chit);
 			}
@@ -534,7 +556,7 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 				{
 					MRClearing clearing = FrontSide.GetClearing(clearingNumber);
 					if (clearing != null)
-						clearing.Pieces.AddPieceToTop(chit);
+						clearing.AddPieceToTop(chit);
 				}
 			}
 		}
@@ -673,9 +695,9 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 	private float mSize;
 	private Dictionary<MRTileSide.eType, MRTileSide> mSides = new Dictionary<MRTileSide.eType, MRTileSide>();
 	private MRTile[] mAdjacentTile = new MRTile[6];
+	private MRUtility.IntVector2 mCoordinate;
 	private IList<MRMapChit> mMapChits = new List<MRMapChit>();
 	private bool mInitialized;
-	private bool mTestingValidConnection;
 	private Camera mMapCamera;
 
 	#endregion

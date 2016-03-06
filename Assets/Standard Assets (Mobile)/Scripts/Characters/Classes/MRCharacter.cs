@@ -45,6 +45,13 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		}
 	}
 
+	public string[] Abilities
+	{
+		get{
+			return mAbilities;
+		}
+	}
+
 	public MRILocation StartingLocation
 	{
 		get{
@@ -528,14 +535,12 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	/**********************/
 	// MRIGamePiece properties
 
-	//public override Vector3 OldScale 
-	//{ 
-	//	get	{
-	//		return new Vector3(0.4f, 0.4f, 1.0f);
-	//	}
-	//	set {
-	//	}
-	//}
+	public override int SortValue
+	{
+		get{
+			return (int)MRGame.eSortValue.Character;
+		}
+	}
 
 	#endregion
 
@@ -569,6 +574,13 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 			mStartingLocations[i] = ((JSONString)startingLocations[i]).Value;
 		}
 
+		JSONArray abilities = (JSONArray)jsonData["abilities"];
+		mAbilities = new string[abilities.Count];
+		for (int i = 0; i < abilities.Count; ++i)
+		{
+			mAbilities[i] = ((JSONString)abilities[i]).Value;
+		}
+
 		// decode chits
 		JSONArray chits = (JSONArray)jsonData["chits"];
 		for (int i = 0; i < chits.Count; ++i)
@@ -582,7 +594,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 			{
 				case "mo":
 				{
-					chit = (MRActionChit)chitObject.AddComponent("MRMoveChit");
+					chit = (MRActionChit)chitObject.AddComponent<MRMoveChit>();
 					string strength = ((JSONString)chitData["strength"]).Value;
 					((MRMoveChit)chit).BaseStrength = strength.Strength();
 					mMoveChits.Add(chit);
@@ -590,7 +602,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 				}
 				case "f":
 				{
-					chit = (MRActionChit)chitObject.AddComponent("MRFightChit");
+					chit = (MRActionChit)chitObject.AddComponent<MRFightChit>();
 					string strength = ((JSONString)chitData["strength"]).Value;
 					((MRFightChit)chit).BaseStrength = strength.Strength();
 					mFightChits.Add (chit);
@@ -598,7 +610,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 				}
 				case "ma":
 				{
-					chit = (MRActionChit)chitObject.AddComponent("MRMagicChit");
+					chit = (MRActionChit)chitObject.AddComponent<MRMagicChit>();
 					string type = ((JSONString)chitData["strength"]).Value;
 					((MRMagicChit)chit).BaseMagicType = Int32.Parse(type);
 					mMagicChits.Add(chit);
@@ -606,7 +618,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 				}
 				case "b":
 				{
-					chit = (MRActionChit)chitObject.AddComponent("MRBerserkChit");
+					chit = (MRActionChit)chitObject.AddComponent<MRBerserkChit>();
 					string strength = ((JSONString)chitData["strength"]).Value;
 					((MRBerserkChit)chit).BaseStrength = strength.Strength();
 					mFightChits.Add (chit);
@@ -614,7 +626,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 				}
 				case "d":
 				{
-					chit = (MRActionChit)chitObject.AddComponent("MRDuckChit");
+					chit = (MRActionChit)chitObject.AddComponent<MRDuckChit>();
 					string strength = ((JSONString)chitData["strength"]).Value;
 					((MRDuckChit)chit).BaseStrength = strength.Strength();
 					mMoveChits.Add(chit);
@@ -717,6 +729,26 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	public override void Destroy()
 	{
 		base.Destroy();
+
+		// remove all items - make sure the character drops their items if needed before calling Destroy
+		foreach (MRItem item in mActiveItems)
+		{
+			if (item.StartStack != null)
+			{
+				item.StartStack.AddPieceToBottom(item);
+				item.StartStack.SortBySize();
+			}
+		}
+		mActiveItems.Clear();
+		foreach (MRItem item in mInactiveItems)
+		{
+			if (item.StartStack != null)
+			{
+				item.StartStack.AddPieceToBottom(item);
+				item.StartStack.SortBySize();
+			}
+		}
+		mInactiveItems.Clear();
 
 		// remove the action chits
 		foreach (MRActionChit chit in mChits)
@@ -1941,7 +1973,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	}
 
 	// Called when the controllable hits its target
-	public override void HitTarget(MRIControllable attacker, bool targetDead)
+	public override void HitTarget(MRIControllable target, bool targetDead)
 	{
 		// character's weapon becomes unalerted
 		if (CombatSheet != null && CombatSheet.CharacterData.weapon != null)
@@ -1949,7 +1981,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	}
 	
 	// Called when the controllable misses its target
-	public override void MissTarget(MRIControllable attacker)
+	public override void MissTarget(MRIControllable target)
 	{
 		// character's weapon becomes alerted
 		if (CombatSheet != null && CombatSheet.CharacterData.weapon != null)
@@ -1977,36 +2009,15 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		}
 	}
 
-	void OnGUI()
-	{
-		GUI.skin = MRGame.TheGame.skin;
-		if (MRGame.TimeOfDay == MRGame.eTimeOfDay.Daylight)
-		{
-			// update the day's activities
-			MRActivityList activities = ActivitiesForDay(MRGame.DayOfMonth);
-			foreach (MRActivity activity in activities.Activities)
-			{
-				activity.OnGUI();
-			}
-		}
-	}
-
 	// Update is called once per frame
 	public override void Update ()
 	{
-		if (mLocation == null)
-		{
-			// note; we need to re-add the character to their starting clearing to fix up a scale issue
-			//Clearing = MRGame.TheGame.GetClearing("B1");
-			//Clearing = MRGame.TheGame.GetClearing("B1");
-		}
-
 		Vector3 orientation = mCounter.transform.localEulerAngles;
-		if (mHidden)
-			orientation.y = 180f;
-		else
-			orientation.y = 0;
-		mCounter.transform.localEulerAngles = orientation;
+		if ((mHidden && Math.Abs(orientation.y - 180f) > 0.1f) ||
+			(!mHidden && Math.Abs(orientation.y) > 0.1f))
+		{
+			mCounter.transform.Rotate(new Vector3(0, 180f, 0));
+		}
 
 		if (MRGame.TimeOfDay == MRGame.eTimeOfDay.Daylight)
 		{
@@ -2241,6 +2252,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 
 	protected GameObject mAttentionChit;
 
+	protected string[] mAbilities;
 	protected string[] mStartingLocations;
 	protected MRILocation mStartingLocation;
 

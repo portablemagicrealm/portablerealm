@@ -28,8 +28,39 @@ using System.Collections;
 
 public interface MRITouchable
 {
+	/// <summary>
+	/// Called when the object is touched.
+	/// </summary>
+	/// <param name="touchedObject">Touched object.</param>
+	/// <returns>true if the event was handled, false if not</returns>
+	bool OnTouched(GameObject touchedObject);
+
+	/// <summary>
+	/// Called when the object has stopped being touched (not hte same as being tapped)
+	/// </summary>
+	/// <param name="touchedObject">Released object.</param>
+	/// <returns>true if the event was handled, false if not</returns>
+	bool OnReleased(GameObject touchedObject);
+
+	/// <summary>
+	/// Called when the object is single-tapped/clicked.
+	/// </summary>
+	/// <param name="touchedObject">Touched object.</param>
+	/// <returns>true if the event was handled, false if not</returns>
 	bool OnSingleTapped(GameObject touchedObject);
+
+	/// <summary>
+	/// Called when the object is double-tapped/clicked.
+	/// </summary>
+	/// <param name="touchedObject">Touched object.</param>
+	/// <returns>true if the event was handled, false if not</returns>
 	bool OnDoubleTapped(GameObject touchedObject);
+
+	/// <summary>
+	/// Called when the object is touched and held.
+	/// </summary>
+	/// <param name="touchedObject">Touched object.</param>
+	/// <returns>true if the event was handled, false if not</returns>
 	bool OnTouchHeld(GameObject touchedObject);
 }
 

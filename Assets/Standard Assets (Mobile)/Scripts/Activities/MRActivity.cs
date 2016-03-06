@@ -130,16 +130,6 @@ public abstract class MRActivity : MRISerializable
 #endif
 	}
 
-	// Called for GUI updates, derived classes can override as needed
-	public virtual void OnGUI()
-	{
-	}
-
-	// Called when the player selects a clearing, derived classes can override as needed
-	//public virtual void OnClearingSelected(MRClearing clearing)
-	//{
-	//}
-
 	public void Update()
 	{
 		if (!mExecuted && mActive)

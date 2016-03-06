@@ -93,8 +93,23 @@ public class MRInspectionArea : MonoBehaviour, MRITouchable
 			if (transform.gameObject.name == "Header")
 			{
 				mHeader = transform.gameObject;
-				mHeaderBackground = mHeader.GetComponentInChildren<SpriteRenderer>().gameObject;
-				mHeaderText = mHeader.GetComponentInChildren<TextMesh>();
+				break;
+			}
+		}
+		transforms = mHeader.GetComponentsInChildren<Transform>();
+		foreach (Transform transform in transforms)
+		{
+			switch (transform.gameObject.name)
+			{
+				case "text":
+					mHeaderText = transform.gameObject.GetComponentInChildren<TextMesh>();
+					break;
+				case "background":
+					mHeaderBackground = transform.gameObject;
+					break;
+				case "back":
+					mHeaderBack = transform.gameObject;
+					break;
 			}
 		}
 
@@ -119,7 +134,8 @@ public class MRInspectionArea : MonoBehaviour, MRITouchable
 		mHeader.transform.position = new Vector3(headerPosition.position.x,
 		                                         mInspectionBoundsWorld.min.y + mInspectionBoundsWorld.height - headerBounds.extents.y,
 		                                         headerPosition.position.z);
-		mHeaderBackground.transform.localScale = new Vector3((mInspectionBoundsWorld.width / 2.0f) / (headerBounds.extents.x / headerScale.localScale.x),
+		float headerStretch = (mInspectionBoundsWorld.width / 2.0f) / (headerBounds.extents.x / headerScale.localScale.x);
+		mHeaderBackground.transform.localScale = new Vector3(headerStretch,
 		                                                     headerScale.localScale.y,
 		                                                     headerScale.localScale.z);
 		headerBounds = mHeaderBackground.GetComponentInChildren<SpriteRenderer>().bounds;
@@ -158,11 +174,15 @@ public class MRInspectionArea : MonoBehaviour, MRITouchable
 			}
 		}
 
+		// display the inspection area back image
+		MRUtility.SetObjectVisibility(mHeaderBack, (MRGame.TheGame.InspectionStack != null && MRGame.TheGame.CurrentView != MRGame.eViews.Main));
+
 		// display the inspection area text
 		HeaderText = "";
 		switch (MRGame.TheGame.CurrentView)
 		{
 			case MRGame.eViews.Map:
+			case MRGame.eViews.SelectClearing:
 				if (MRGame.TheGame.InspectionStack != null)
 				{
 					HeaderText = MRGame.TheGame.InspectionStack.Name;
@@ -172,37 +192,65 @@ public class MRInspectionArea : MonoBehaviour, MRITouchable
 					HeaderText = MRGame.TheGame.ActiveControllable.Name;
 				}
 				break;
-			case MRGame.eViews.Characters:
-				break;
-			case MRGame.eViews.Monsters:
-				break;
-			case MRGame.eViews.Treasure:
-				break;
-			case MRGame.eViews.Main:
-				break;
-			case MRGame.eViews.FatigueCharacter:
-				break;
-			case MRGame.eViews.Combat:
-				break;
-			case MRGame.eViews.SelectAttack:
-				break;
-			case MRGame.eViews.SelectManeuver:
-				break;
-			case MRGame.eViews.SelectChit:
-				break;
-			case MRGame.eViews.SelectClearing:
+			default:
 				break;
 		}
 	}
 
+	public bool OnTouched(GameObject touchedObject)
+	{
+		return false;
+	}
+
+	public bool OnReleased(GameObject touchedObject)
+	{
+		return false;
+	}
+
 	public bool OnSingleTapped(GameObject touchedObject)
 	{
+		if (touchedObject == mHeader)
+		{
+			return HeaderTapped();
+		}
 		return false;
 	}
 
 	public bool OnDoubleTapped(GameObject touchedObject)
 	{
-		if (MRGame.TheGame.CurrentView == MRGame.eViews.Map && touchedObject == mHeader)
+		if (touchedObject == mHeader)
+		{
+			return HeaderTapped();
+		}
+		else if (touchedObject == this.gameObject)
+		{
+			if (MRGame.TheGame.InspectionStack != null)
+				return MRGame.TheGame.InspectionStack.OnDoubleTapped(MRGame.TheGame.InspectionStack.gameObject);
+			else if (MRGame.TheGame.CurrentView == MRGame.eViews.Combat)
+				return MRGame.TheGame.CombatManager.CombatStack.OnDoubleTapped(MRGame.TheGame.CombatManager.CombatStack.gameObject);
+		}
+		return false;
+	}
+
+	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		return false;
+	}
+
+	/// <summary>
+	/// Handles when the inspection area header image is tapped (or double-tapped).
+	/// </summary>
+	/// <returns><c>true</c>, if the tap was handled, <c>false</c> otherwise.</returns>
+	private bool HeaderTapped()
+	{
+		// if we are inspecting a stack, return the stack to its regular position
+		if (MRGame.TheGame.InspectionStack != null)
+		{
+			MRGame.TheGame.InspectStack(null);
+			return true;
+		}
+		// if we are on the map, center it on the current character
+		else if (MRGame.TheGame.CurrentView == MRGame.eViews.Map)
 		{
 			if (MRGame.TheGame.TheMap != null &&
 			    MRGame.TheGame.ActiveControllable != null &&
@@ -212,16 +260,6 @@ public class MRInspectionArea : MonoBehaviour, MRITouchable
 				return true;
 			}
 		}
-		else if (touchedObject == this.gameObject && MRGame.TheGame.InspectionStack != null)
-		{
-			MRGame.TheGame.InspectionStack.OnDoubleTapped(MRGame.TheGame.InspectionStack.gameObject);
-			return true;
-		}
-		return false;
-	}
-
-	public bool OnTouchHeld(GameObject touchedObject)
-	{
 		return false;
 	}
 
@@ -235,6 +273,7 @@ public class MRInspectionArea : MonoBehaviour, MRITouchable
 	private MRViewButton mCurrentViewButton;
 	private GameObject mHeader;
 	private GameObject mHeaderBackground;
+	private GameObject mHeaderBack;
 	private TextMesh mHeaderText;
 
 	#endregion

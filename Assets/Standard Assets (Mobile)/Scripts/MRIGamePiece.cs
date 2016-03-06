@@ -40,6 +40,7 @@ public interface MRIGamePiece
 	string Name { get; }
 	MRGamePieceStack Stack { get; set; }
 	bool Visible { get; set; }
+	int SortValue { get; }
 
 	void Update();
 }

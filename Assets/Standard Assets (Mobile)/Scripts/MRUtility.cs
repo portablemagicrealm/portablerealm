@@ -44,6 +44,64 @@ public static class MRUtility
 		unknown,
 	}
 
+	public class IntVector2
+	{
+		public int x;
+		public int y;
+
+		public IntVector2()
+		{
+			x = y = 0;
+		}
+
+		public IntVector2(int _x, int _y)
+		{
+			x = _x;
+			y = _y;
+		}
+
+		public override string ToString()
+		{
+			return x + " : " + y;
+		}
+
+		public override bool Equals (object obj)
+		{
+			if (obj is IntVector2)
+				return this == (IntVector2)obj;
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			return new {x, y}.GetHashCode();
+		}
+
+		public static IntVector2 operator +(IntVector2 lhs, IntVector2 rhs)
+		{
+			return new IntVector2(lhs.x + rhs.x, lhs.y + rhs.y);
+		}
+
+		public static IntVector2 operator -(IntVector2 lhs, IntVector2 rhs)
+		{
+			return new IntVector2(lhs.x - rhs.x, lhs.y - rhs.y);
+		}
+
+		public static bool operator ==(IntVector2 lhs, IntVector2 rhs)
+		{
+			bool lhsNull = object.ReferenceEquals(lhs, null);
+			bool rhsNull = object.ReferenceEquals(rhs, null);
+			if (!lhsNull && !rhsNull)
+				return lhs.x == rhs.x && lhs.y == rhs.y;
+			return lhsNull && rhsNull;
+		}
+
+		public static bool operator !=(IntVector2 lhs, IntVector2 rhs)
+		{
+			return !(lhs == rhs);
+		}
+	}
+
 	//
 	// Randomizes a list.
 	//
@@ -196,10 +254,13 @@ public static class MRUtility
 	/// <param name="visible">If set to <c>true</c> visible.</param>
 	public static void SetObjectVisibility(GameObject obj, bool visible)
 	{
-		Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
-		foreach (Renderer renderer in renderers)
+		if (obj != null)
 		{
-			renderer.enabled = visible;
+			Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+			foreach (Renderer renderer in renderers)
+			{
+				renderer.enabled = visible;
+			}
 		}
 	}
 

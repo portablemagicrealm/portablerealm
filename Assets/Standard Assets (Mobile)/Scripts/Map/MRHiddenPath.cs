@@ -48,12 +48,12 @@ public class MRHiddenPath : MonoBehaviour
 		if (MRGame.TheGame.ActiveControllable != null)
 		{
 			if (MRGame.TheGame.ActiveControllable.DiscoveredRoads.Contains(road))
-				renderer.enabled = false;
+				GetComponent<Renderer>().enabled = false;
 			else
-				renderer.enabled = true;
+				GetComponent<Renderer>().enabled = true;
 		}
 		else
-			renderer.enabled = true;
+			GetComponent<Renderer>().enabled = true;
 	}
 
 	#endregion

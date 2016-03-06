@@ -31,6 +31,7 @@ using AssemblyCSharp;
 
 public class MRClearing : MonoBehaviour, MRILocation, MRITouchable
 {
+	#region Constants
 
 	public enum eType
 	{
@@ -38,6 +39,8 @@ public class MRClearing : MonoBehaviour, MRILocation, MRITouchable
 		Cave,
 		Mountain,
 	}
+
+	#endregion
 
 	#region Properties
 
@@ -114,7 +117,7 @@ public class MRClearing : MonoBehaviour, MRILocation, MRITouchable
 	// Use this for initialization
 	void Start () 
 	{
-		renderer.enabled = false;
+		GetComponent<Renderer>().enabled = false;
 
 		mPieces.Layer = LayerMask.NameToLayer("Map");
 		mPieces.transform.parent = transform;
@@ -139,8 +142,16 @@ public class MRClearing : MonoBehaviour, MRILocation, MRITouchable
 	// Update is called once per frame
 	void Update () 
 	{
-		if (MRGame.TheGame.CurrentView != MRGame.eViews.Map && MRGame.TheGame.CurrentView != MRGame.eViews.SelectClearing)
-			return;
+	}
+
+	public bool OnTouched(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnReleased(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	public bool OnSingleTapped(GameObject touchedObject)

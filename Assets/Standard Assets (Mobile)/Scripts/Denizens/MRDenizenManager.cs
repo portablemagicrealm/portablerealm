@@ -54,7 +54,7 @@ namespace AssemblyCSharp
 				StringBuilder jsonText = new StringBuilder(denizenList.text);
 				JSONObject jsonData = (JSONObject)JSONDecoder.CreateJSONValue(jsonText);
 
-				// parse the monstger data
+				// parse the monster data
 				JSONArray monstersData = (JSONArray)jsonData["monsters"];
 				int count = monstersData.Count;
 				for (int i = 0; i < count; ++i)
@@ -68,6 +68,10 @@ namespace AssemblyCSharp
 							msMonsters.Add(((MRMonster)monster).Id, (MRMonster)monster);
 						}
 					}
+				}
+				foreach (MRMonster monster in msMonsters.Values)
+				{
+					monster.SetOwnership();
 				}
 			}
 			catch (Exception err)

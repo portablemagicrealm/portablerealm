@@ -203,11 +203,16 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable, MRITouchable
 				zpos -= 0.2f;
 			}
 		}
+	}
 
-//		if (MRGame.IsDoubleTapped && (mInspecting || mPieces.Count == 1))
-//		{
-//			OnDoubleTapped();
-//		}
+	public bool OnTouched(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnReleased(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	public bool OnSingleTapped(GameObject touchedObject)
@@ -378,7 +383,30 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable, MRITouchable
 			mPieces.Remove(piece);
 			piece.Layer = LayerMask.NameToLayer("Dummy");
 			piece.Stack = null;
+			piece.Visible = false;
 		}
+	}
+
+	/// <summary>
+	/// Sorts the items in the stack, with the biggest objects on the bottom. However, character chits will be put on top,
+	/// and monsters will be put over their head/club counters.
+	/// </summary>
+	public void SortBySize()
+	{
+		mPieces.Sort(
+			delegate(MRIGamePiece x, MRIGamePiece y)
+			{
+				if (Object.ReferenceEquals(x, y))
+					return 0;
+				// current character takes precidence
+				if (x is MRCharacter && (MRCharacter)x == MRGame.TheGame.ActiveControllable)
+					return -1;
+				else if (y is MRCharacter && (MRCharacter)y == MRGame.TheGame.ActiveControllable)
+					return 1;
+				else
+					return x.SortValue - y.SortValue;
+			}
+		);
 	}
 
 	/// <summary>
@@ -406,6 +434,7 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable, MRITouchable
 		piece.Parent = transform;
 		piece.LocalScale = new Vector3(piece.OldScale.x * mStackScale, piece.OldScale.y * mStackScale, 1f);
 		piece.Rotation = Quaternion.identity;
+		piece.Visible = mVisible;
 	}
 
 	private void SetPieceInspectionPos(MRIGamePiece piece)
@@ -486,7 +515,7 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable, MRITouchable
 	#region Members
 
 	// The list of pieces, in order of topmost to bottommost
-	private IList<MRIGamePiece> mPieces = new List<MRIGamePiece>();
+	private List<MRIGamePiece> mPieces = new List<MRIGamePiece>();
 	private int mLayer;
 	private bool mInspecting;
 	private float mInspectionOffset;

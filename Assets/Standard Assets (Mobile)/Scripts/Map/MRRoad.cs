@@ -142,6 +142,13 @@ public class MRRoad : MonoBehaviour, MRILocation
 		try
 		{
 			MRGame.TheGame.TheMap.Roads[Name] = this;
+			if (edgeConnection != null)
+			{
+				if (MyTileSide.type == MRTileSide.eType.Normal)
+					edgeConnection.NormalRoad = this;
+				else
+					edgeConnection.EnchantedRoad = this;
+			}
 		}
 		catch (Exception err)
 		{
@@ -151,20 +158,23 @@ public class MRRoad : MonoBehaviour, MRILocation
 
 	void OnDestroy()
 	{
-		try
+		if (MRGame.TheGame != null)
 		{
-			// remove ourself from the road map
-			MRGame.TheGame.RemoveRoad(this);
-			MRRoad test;
-			if (MRGame.TheGame.TheMap.Roads.TryGetValue(Name, out test))
+			try
 			{
-				if (test == this)
-					MRGame.TheGame.TheMap.Roads.Remove(Name);
+				// remove ourself from the road map
+				MRGame.TheGame.RemoveRoad(this);
+				MRRoad test;
+				if (MRGame.TheGame.TheMap.Roads.TryGetValue(Name, out test))
+				{
+					if (test == this)
+						MRGame.TheGame.TheMap.Roads.Remove(Name);
+				}
 			}
-		}
-		catch (Exception err)
-		{
-			Debug.LogError("Road " + Name + " : " + err.ToString());
+			catch (Exception err)
+			{
+				Debug.LogError("Road " + Name + " : " + err.ToString());
+			}
 		}
 	}
 
@@ -175,8 +185,7 @@ public class MRRoad : MonoBehaviour, MRILocation
 	/// <param name="clearing">Clearing.</param>
 	public MRRoad RoadTo(MRILocation target)
 	{
-		ICollection<MRRoad> targetRoads = target.Roads;
-		if (targetRoads.Contains(this))
+		if (System.Object.ReferenceEquals(clearingConnection0, target) || System.Object.ReferenceEquals(clearingConnection1, target))
 			return this;
 		return null;
 	}

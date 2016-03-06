@@ -232,6 +232,13 @@ public class MRCombatManager
 		}
 	}
 
+	public MRGamePieceStack CombatStack
+	{
+		get{
+			return mCombatStack;
+		}
+	}
+
 	public bool Active
 	{
 		get{
@@ -591,6 +598,7 @@ public class MRCombatManager
 				}
 				mClearing.AddPieceToBottom(combatant);
 			}
+			mClearing.Pieces.SortBySize();
 		}
 		mCombatants.Clear();
 		mCombatSheets.Clear();
@@ -757,6 +765,9 @@ public class MRCombatManager
 	{
 		foreach (MRDenizen enemy in mEnemies)
 		{
+			// skip head/club
+			if (enemy is MRMonster && ((MRMonster)enemy).OwnedBy != null)
+				continue;
 			if (enemy.CombatTarget == null)
 			{
 				// create a list of players that are involved in this combat; the player may not actually be in the clearing
@@ -871,6 +882,8 @@ public class MRCombatManager
 			{
 				// defending on own sheet always goes to "charge and thrust" box
 				sheet.AddDefender((MRDenizen)defender, eDefenseType.Charge);
+				if (defender is MRMonster && ((MRMonster)defender).Owns != null)
+					sheet.AddDefender(((MRMonster)defender).Owns, eDefenseType.Dodge);
 			}
 			else
 				sheet.AddDefender((MRDenizen)defender);
@@ -1433,7 +1446,15 @@ public class MRCombatManager
 			}
 		}
 		if (targetDead)
+		{
 			target.Killers.Add(combatant);
+			if (target is MRMonster)
+			{
+				// killing a monster also kills its head/club
+				if (((MRMonster)target).Owns != null)
+					((MRMonster)target).Owns.Killers.Add(combatant);
+			}
+		}
 
 		combatant.HitTarget(target, targetDead);
 
@@ -1565,9 +1586,13 @@ public class MRCombatManager
 			{
 				if (combatant.KillerCount > 0)
 				{
-					foreach (MRIControllable killer in combatant.Killers)
+					// no spoils for club/head
+					if (!(combatant is MRMonster) || ((MRMonster)combatant).OwnedBy == null)
 					{
-						killer.AwardSpoils(combatant, 1.0f / combatant.KillerCount);
+						foreach (MRIControllable killer in combatant.Killers)
+						{
+							killer.AwardSpoils(combatant, 1.0f / combatant.KillerCount);
+						}
 					}
 				}
 				combatant.Killers.Clear();
@@ -1627,6 +1652,8 @@ public class MRCombatManager
 		{
 			mCombatants.Remove(combatant);
 			mFriends.Remove(combatant);
+			if (combatant.CombatTarget != null)
+				combatant.CombatTarget.RemoveAttacker(combatant);
 			combatant.Lurer = null;
 			combatant.Luring = null;
 			if (combatant is MRDenizen)
@@ -1835,7 +1862,13 @@ public class MRCombatManager
 					break;
 				if (selector is MRCharacter)
 				{
-					selector.CombatTarget = piece;
+					// don't allow selecting head/club
+					if (piece is MRMonster && ((MRMonster)piece).OwnedBy != null)
+						break;
+					if (selector.CombatTarget != piece)
+						selector.CombatTarget = piece;
+					else
+						selector.CombatTarget = null;
 				}
 				break;
 			default:

@@ -236,10 +236,10 @@ public interface MRIControllable : MRIGamePiece
 	void RemoveAttacker(MRIControllable attacker);
 
 	// Called when the controllable hits its target
-	void HitTarget(MRIControllable attacker, bool targetDead);
+	void HitTarget(MRIControllable target, bool targetDead);
 
 	// Called when the controllable misses its target
-	void MissTarget(MRIControllable attacker);
+	void MissTarget(MRIControllable target);
 
 	/// <summary>
 	/// Awards the spoils of combat for killing a combatant.

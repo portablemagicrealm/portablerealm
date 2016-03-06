@@ -74,11 +74,11 @@ public class MRTileSide : MonoBehaviour
 	//
 	// Returns a boolean array. If an array element is true, that edge has a road.
 	//
-	public bool[] Edges
+	public bool[] RoadEdges
 	{
 		get
 		{
-			return mEdges;
+			return mRoadEdges;
 		}
 	}
 	
@@ -114,17 +114,17 @@ public class MRTileSide : MonoBehaviour
 		}
 		
 		// set up edges
-		bool hasEdge = false;
-		MREdge[] edges = gameObject.GetComponentsInChildren<MREdge> ();
-		foreach (MREdge edge in edges) 
+		bool hasRoadEdge = false;
+		MREdge[] roadEdges = gameObject.GetComponentsInChildren<MREdge> ();
+		foreach (MREdge roadEdge in roadEdges) 
 		{
-			if (edge.side >= 0 && edge.side < 6)
+			if (roadEdge.side >= 0 && roadEdge.side < 6)
 			{
-				mEdges[edge.side] = true;
-				hasEdge = true;
+				mRoadEdges[roadEdge.side] = true;
+				hasRoadEdge = true;
 			}
 		}
-		if (type == eType.Normal && !hasEdge)
+		if (type == eType.Normal && !hasRoadEdge)
 		{
 			Debug.LogError("no edges for tile");
 			Application.Quit();
@@ -153,6 +153,11 @@ public class MRTileSide : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
+		MREdge[] roadEdges = gameObject.GetComponentsInChildren<MREdge> ();
+		foreach (MREdge roadEdge in roadEdges) 
+		{
+			roadEdge.Tile = mTile;
+		}
 	}
 	
 	// Update is called once per frame
@@ -179,7 +184,7 @@ public class MRTileSide : MonoBehaviour
 
 	private MRTile mTile;
 	private MRClearing[] mClearings;
-	private bool[] mEdges = new bool[6];
+	private bool[] mRoadEdges = new bool[6];
 	private MRClearing[] mEdgeClearings = new MRClearing[6];
 	private bool mInitialized;
 

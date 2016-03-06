@@ -34,6 +34,15 @@ public class MRGame : MonoBehaviour, MRISerializable
 {
 	#region Constants
 
+	public enum eTouchType
+	{
+		None,
+		Touched,
+		Single,
+		Double,
+		Held
+	}
+
 	public enum eGameState
 	{
 		NoGame,
@@ -174,23 +183,38 @@ public class MRGame : MonoBehaviour, MRISerializable
 	}
 	public const int ViewTabCount = 5;
 
-	public static Color tan = new Color(248f / 255f, 207f / 255f, 127f / 255f);
-	public static Color green = new Color(157f / 255f, 203f / 255f, 0);
-	public static Color yellow = new Color(255f / 255f, 255f / 255f, 0);
-	public static Color red = new Color(255f / 255f, 81f / 255f, 81f / 255f);
-	public static Color gold = new Color(255f / 255f, 204f / 255f, 0);
-	public static Color lightGrey = new Color(192f / 255f, 192f / 255f, 192f / 255f);
-	public static Color offWhite = new Color(230f / 255f, 230f / 255f, 230f / 255f);
-	public static Color yellowGreen = new Color(208f / 255f, 184f / 255f, 0 / 255f);
-	public static Color lightBlue = new Color(203f / 255f, 223f / 255f, 227f / 255f);
-	public static Color darkBlue = new Color(131f / 255f, 196f / 255f, 214f / 255f);
-	public static Color purple = new Color(198f / 255f, 168f / 255f, 195f / 255f);
-	public static Color lightGrey2 = new Color(194f / 255f, 193f / 255f, 192f / 255f);
-	public static Color darkGrey = new Color(164f / 255f, 159f / 255f, 167f / 255f);
-	public static Color pink = new Color(228f / 255f, 177f / 255f, 195f / 255f);
-	public static Color lightGreen = new Color(206f / 255f, 210f / 255f, 114f / 255f);
-	public static Color darkGreen = new Color(146f / 255f, 193f / 255f, 4f / 255f);
-	public static Color white = new Color(255f / 255f, 255f / 255f, 255f / 255f);
+	public enum eSortValue
+	{
+		Chit,
+		Character,
+		Denizen,
+		Monster,
+		MonsterHead,
+		Weapon,
+		SmallArmor,
+		LargeArmor,
+		Item,
+		Dwelling,
+		Treasure
+	}
+
+	public static readonly Color tan = new Color(248f / 255f, 207f / 255f, 127f / 255f);
+	public static readonly Color green = new Color(157f / 255f, 203f / 255f, 0);
+	public static readonly Color yellow = new Color(255f / 255f, 255f / 255f, 0);
+	public static readonly Color red = new Color(255f / 255f, 81f / 255f, 81f / 255f);
+	public static readonly Color gold = new Color(255f / 255f, 204f / 255f, 0);
+	public static readonly Color lightGrey = new Color(192f / 255f, 192f / 255f, 192f / 255f);
+	public static readonly Color offWhite = new Color(230f / 255f, 230f / 255f, 230f / 255f);
+	public static readonly Color yellowGreen = new Color(208f / 255f, 184f / 255f, 0 / 255f);
+	public static readonly Color lightBlue = new Color(203f / 255f, 223f / 255f, 227f / 255f);
+	public static readonly Color darkBlue = new Color(131f / 255f, 196f / 255f, 214f / 255f);
+	public static readonly Color purple = new Color(198f / 255f, 168f / 255f, 195f / 255f);
+	public static readonly Color lightGrey2 = new Color(194f / 255f, 193f / 255f, 192f / 255f);
+	public static readonly Color darkGrey = new Color(164f / 255f, 159f / 255f, 167f / 255f);
+	public static readonly Color pink = new Color(228f / 255f, 177f / 255f, 195f / 255f);
+	public static readonly Color lightGreen = new Color(206f / 255f, 210f / 255f, 114f / 255f);
+	public static readonly Color darkGreen = new Color(146f / 255f, 193f / 255f, 4f / 255f);
+	public static readonly Color white = new Color(255f / 255f, 255f / 255f, 255f / 255f);
 
 	public const float MAP_CAMERA_FAR_SIZE = 5.0f;
 	public const float MAP_CAMERA_NEAR_SIZE = 2.2f;
@@ -291,24 +315,6 @@ public class MRGame : MonoBehaviour, MRISerializable
 		get{
 			if (!msShowingUI)
 				return msIsTouching;
-			return false;
-		}
-	}
-
-	public static bool IsSingleTapped
-	{
-		get{
-			if (!msShowingUI)
-				return msSingleTapped;
-			return false;
-		}
-	}
-
-	public static bool IsDoubleTapped
-	{
-		get{
-			if (!msShowingUI)
-				return msDoubleTapped;
 			return false;
 		}
 	}
@@ -480,7 +486,10 @@ public class MRGame : MonoBehaviour, MRISerializable
 
 	void Awake()
 	{
-		//MRRandom.seed = 731420681776UL;
+#if DEBUG
+		// set random seed for debugging here
+		MRRandom.seed = 15675905594576123712;
+#endif
 	}
 
 	// Use this for initialization
@@ -497,7 +506,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 		Screen.orientation = ScreenOrientation.AutoRotation;
 
 		#if UNITY_IPHONE
-		Handheld.SetActivityIndicatorStyle(iOSActivityIndicatorStyle.Gray);
+		Handheld.SetActivityIndicatorStyle(UnityEngine.iOS.ActivityIndicatorStyle.Gray);
 		#elif UNITY_ANDROID
 		Handheld.SetActivityIndicatorStyle(AndroidActivityIndicatorStyle.Small);
 		#endif
@@ -614,7 +623,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 		if (mActivityList != null)
 		{
 			mActivityList.Visible = false;
-			if (CurrentView == eViews.Map && mInspectionStack == null && mControllables.Count > 0)
+			if ((CurrentView == eViews.Map || CurrentView == eViews.SelectClearing) && mInspectionStack == null && mControllables.Count > 0)
 				mActivityList.Visible = true;
 			else
 				mActivityList.Visible = false;
@@ -666,7 +675,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 	//
 	public void OnGUI()
 	{
-		GUI.skin = skin;
+//		GUI.skin = skin;
 	}
 
 	public MRGamePieceStack NewGamePieceStack()
@@ -1062,32 +1071,41 @@ public class MRGame : MonoBehaviour, MRISerializable
 				switch (msTouch.phase)
 				{
 					case TouchPhase.Began:
+						Debug.Log("MRGame TestForTouch touch began");
 						msIsTouching = true;
 						msJustTouched = true;
 						msStartTouchPos = msTouch.position;
 						msTouchPos = msStartTouchPos;
 						msLastTouchPos = msStartTouchPos;
+						HandleTouch(eTouchType.Touched);
 						break;
 					case TouchPhase.Stationary:
+						Debug.Log("MRGame TestForTouch touch stationary");
 						if (msTouchDuration >= TOUCH_HELD_TIME)
 						{
 							if (!msTouchHeld)
 							{
 								msTouchHeld = true;
-								OnTouched();
+								HandleTouch(eTouchType.Held);
 							}
 						}
 						break;
 					case TouchPhase.Moved:
+						Debug.Log("MRGame TestForTouch touch moved");
 						msIsTouching = true;
 						msLastTouchPos = msTouchPos;
 						msTouchPos = msTouch.position;
 						break;
 					case TouchPhase.Ended:
-						if (msTouchDuration < 0.2f) //making sure it only check the touch once && it was a short touch/tap and not a dragging.
+						HandleRelease();
+						if (msIsTouching && msTouchDuration < 0.2f) //making sure it only check the touch once && it was a short touch/tap and not a dragging.
 						{
 							if (msTapCoroutine == null)
+							{
+								Debug.Log("MRGame TestForTouch touch ended, calling testsingleordouble");
 								msTapCoroutine = StartCoroutine(TestSingleOrDoubleTap());
+								msIsTouching = false;
+							}
 						}
 						break;
 					default:
@@ -1097,8 +1115,6 @@ public class MRGame : MonoBehaviour, MRISerializable
 			else
 			{
 				msTouchDuration = 0;
-				msSingleTapped = false;
-				msDoubleTapped = false;
 				msIsTouching = false;
 				msJustTouched = false;
 				msTouchHeld = false;
@@ -1107,8 +1123,6 @@ public class MRGame : MonoBehaviour, MRISerializable
 		else
 		{
 			bool justReleased = false;
-			msDoubleTapped = false;
-			msSingleTapped = false;
 
 			if (msIsTouching)
 				msLastTouchPos = msTouchPos;
@@ -1124,6 +1138,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 				msStartTouchPos = Input.mousePosition;
 				msTouchDuration = 0;
 				msLastTouchTime = Time.time;
+				HandleTouch(eTouchType.Touched);
 			}
 			else if (msIsTouching)
 			{
@@ -1136,7 +1151,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 					    Math.Abs(msLastTouchPos.y - msTouchPos.y) < 0.1f)
 					{
 					    msTouchHeld = true;
-						OnTouched();
+						HandleTouch(eTouchType.Held);
 					}
 				}
 			}
@@ -1150,53 +1165,72 @@ public class MRGame : MonoBehaviour, MRISerializable
 				}
 				msLastReleaseTime = Time.time;
 				msTouchHeld = false;
+				HandleRelease();
 			}
 		}
 	}
 
+	/// <summary>
+	/// Tests if the user single or double tapped on touch devices. Call this as a coroutine.
+	/// </summary>
+	/// <returns>The coroutine yield.</returns>
 	private IEnumerator TestSingleOrDoubleTap()
 	{
-		yield return new WaitForSeconds(0.3f);
+		Debug.Log("MRGame TestSingleOrDoubleTap enter");
+		yield return new WaitForSeconds(0.25f);
+		Debug.Log("MRGame TestSingleOrDoubleTap after yield");
 		msLastTouchPos = msTouch.position;
+		eTouchType touchType = eTouchType.None;
 		if (msTouch.tapCount == 1)
 		{
-			msSingleTapped = true;
+			touchType = eTouchType.Single;
 		}
 		else if (msTouch.tapCount == 2)
 		{
 			// this coroutine has been called twice. We should stop the next one here otherwise we get two double tap
-			msDoubleTapped = true;
+			touchType = eTouchType.Double;
 		}
 
 		StopCoroutine(msTapCoroutine);
 		msTapCoroutine = null;
-		if (msSingleTapped || msDoubleTapped)
+		if (touchType != eTouchType.None)
 		{
-			OnTouched();
+			HandleTouch(touchType);
 		}
+		Debug.Log("MRGame TestSingleOrDoubleTap exit");
 	}
 
+	/// <summary>
+	/// Tests if the user single or double clicked with a mouse. Call this as a coroutine.
+	/// </summary>
+	/// <returns>The coroutine yield.</returns>
 	private IEnumerator TestSingleOrDoubleClick()
 	{
-		yield return new WaitForSeconds(0.3f);
-		Debug.Log("TestSingleOrDoubleTap, msClickCount="+msClickCount);
+		System.DateTime then = System.DateTime.Now;
+		Debug.Log("MRGame TestSingleOrDoubleClick enter");
+		yield return new WaitForSeconds(0.25f);
+		System.DateTime now = System.DateTime.Now;
+		Debug.Log("MRGame TestSingleOrDoubleClick after yield, dt = " + ((now - then).Ticks / 10000f));
+//		Debug.Log("TestSingleOrDoubleTap, msClickCount="+msClickCount);
 //		msLastTouchPos = msTouch.position;
+		eTouchType touchType = eTouchType.None;
 		if (msClickCount == 1)
 		{
-			msSingleTapped = true;
+			touchType = eTouchType.Single;
 		}
 		else if (msClickCount > 1)
 		{
 			// this coroutine has been called twice. We should stop the next one here otherwise we get two double tap
-			msDoubleTapped = true;
+			touchType = eTouchType.Double;
 		}
+
 		StopCoroutine(msTapCoroutine);
 		msTapCoroutine = null;
 		msClickCount = 0;
 		msTouchDuration = 0;
-		if (msSingleTapped || msDoubleTapped)
+		if (touchType != eTouchType.None)
 		{
-			OnTouched();
+			HandleTouch(touchType);
 		}
 	}
 
@@ -1219,53 +1253,71 @@ public class MRGame : MonoBehaviour, MRISerializable
 		}
 	}
 
-	private void OnTouched()
+	/// <summary>
+	/// Determines which widget(s) were touched by a tap/click, and tells them to activate.
+	/// </summary>
+	/// <param name="touchType">Touch type.</param>
+	private void HandleTouch(eTouchType touchType)
 	{
-		if (msSingleTapped || msDoubleTapped || msTouchHeld)
+		Debug.Log("MRGame OnTouched enter");
+		// find the object touched
+		List<TouchedData> touched = new List<TouchedData>();
+		Camera[] cameras = Camera.allCameras;
+		for (int i = 0; i < cameras.Length; ++i)
 		{
-			// find the object touched
-			List<TouchedData> touched = new List<TouchedData>();
-			Camera[] cameras = Camera.allCameras;
-			for (int i = 0; i < cameras.Length; ++i)
+			Camera camera = cameras[i];
+			Vector3 worldTouch = camera.ScreenToWorldPoint(new Vector3(msStartTouchPos.x, msStartTouchPos.y, camera.nearClipPlane));
+			RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero, Mathf.Infinity, camera.cullingMask);
+			for (int j = 0; j < hits.Length; ++j)
 			{
-				Camera camera = cameras[i];
-				Vector3 worldTouch = camera.ScreenToWorldPoint(new Vector3(msStartTouchPos.x, msStartTouchPos.y, camera.nearClipPlane));
-				RaycastHit2D[] hits = Physics2D.RaycastAll(worldTouch, Vector2.zero, Mathf.Infinity, camera.cullingMask);
-				for (int j = 0; j < hits.Length; ++j)
+				if (hits[j].collider != null) 
 				{
-					if (hits[j].collider != null) 
+					GameObject hitObject = hits[j].transform.gameObject;
+					MonoBehaviour[] touchables = hitObject.GetComponentsInParent<MonoBehaviour>(false);
+					for (int k = 0; k < touchables.Length; ++k)
 					{
-						GameObject hitObject = hits[j].transform.gameObject;
-						MonoBehaviour[] touchables = hitObject.GetComponentsInParent<MonoBehaviour>(false);
-						for (int k = 0; k < touchables.Length; ++k)
+						MonoBehaviour touchable = touchables[k];
+						if (touchable != null && touchable is MRITouchable && touchable.gameObject)
 						{
-							MonoBehaviour touchable = touchables[k];
-							if (touchable != null && touchable is MRITouchable)
-							{
-								touched.Add(new TouchedData((MRITouchable)touchable, hitObject));
-								// break out of 2 inner loops
-								k = touchables.Length;
-								//j = hits.Length;
-							}
+							touched.Add(new TouchedData((MRITouchable)touchable, hitObject));
+							// break out of 2 inner loops
+							k = touchables.Length;
+							//j = hits.Length;
 						}
 					}
 				}
 			}
-			if (touched.Count > 0)
+		}
+		if (touched.Count > 0)
+		{
+			touched.Sort ();
+			bool handled = false;
+			for (int i = 0; i < touched.Count && !handled; ++i)
 			{
-				touched.Sort ();
-				bool handled = false;
-				for (int i = 0; i < touched.Count && !handled; ++i)
+				if (touchType == eTouchType.Touched)
 				{
-					if (msSingleTapped)
-						handled = touched[i].touched.OnSingleTapped(touched[i].hitObject);
-					else if (msDoubleTapped)
-						handled = touched[i].touched.OnDoubleTapped(touched[i].hitObject);
-					else if (msTouchHeld)
-						handled = touched[i].touched.OnTouchHeld(touched[i].hitObject);
+					HandleRelease();
+					mLastTouched = touched[i].touched;
+					handled = touched[i].touched.OnTouched(touched[i].hitObject);
 				}
+				if (touchType == eTouchType.Single)
+					handled = touched[i].touched.OnSingleTapped(touched[i].hitObject);
+				else if (touchType == eTouchType.Double)
+					handled = touched[i].touched.OnDoubleTapped(touched[i].hitObject);
+				else if (touchType == eTouchType.Held)
+					handled = touched[i].touched.OnTouchHeld(touched[i].hitObject);
 			}
 		}
+	}
+
+	/// <summary>
+	/// Send a message to the last button that was touched that it has been released.
+	/// </summary>
+	private void HandleRelease()
+	{
+		if (mLastTouched != null)
+			mLastTouched.OnReleased(null);
+		mLastTouched = null;
 	}
 
 	public bool Load(JSONObject root)
@@ -1503,9 +1555,8 @@ public class MRGame : MonoBehaviour, MRISerializable
 	private static int msClickCount;
 	private static bool msIsTouching;
 	private static bool msJustTouched;
-	private static bool msSingleTapped;
-	private static bool msDoubleTapped;
 	private static bool msTouchHeld;
+	private static MRITouchable mLastTouched;
 	private static bool msShowingUI;
 	private static float mDpiScale;
 

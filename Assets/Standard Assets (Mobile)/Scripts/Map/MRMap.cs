@@ -59,6 +59,24 @@ public class MRMap : MonoBehaviour, MRISerializable
 		ruins,
 	}
 
+	public static readonly MRUtility.IntVector2[] EvenTileOffsets = {
+		new MRUtility.IntVector2(0, 1),
+		new MRUtility.IntVector2(1, 0),
+		new MRUtility.IntVector2(1, -1),
+		new MRUtility.IntVector2(0, -1),
+		new MRUtility.IntVector2(-1, -1),
+		new MRUtility.IntVector2(-1, 0)
+	};
+
+	public static readonly MRUtility.IntVector2[] OddTileOffsets = {
+		new MRUtility.IntVector2(0, 1),
+		new MRUtility.IntVector2(1, 1),
+		new MRUtility.IntVector2(1, 0),
+		new MRUtility.IntVector2(0, -1),
+		new MRUtility.IntVector2(-1, 0),
+		new MRUtility.IntVector2(-1, 1)
+	};
+
 	#endregion
 
 	#region Properties
@@ -149,6 +167,13 @@ public class MRMap : MonoBehaviour, MRISerializable
 		}
 	}
 
+	public MRClearing GhostStartClearing
+	{
+		get {
+			return mGhostStartClearing;
+		}
+	}
+
 	#endregion
 
 	#region Methods
@@ -192,7 +217,7 @@ public class MRMap : MonoBehaviour, MRISerializable
 			MRTile touchedTile = null;
 			foreach (KeyValuePair<eTileNames, MRTile> pair in mMapTiles)
 			{
-				Collider2D collider = pair.Value.collider2D;
+				Collider2D collider = pair.Value.GetComponent<Collider2D>();
 				if (collider.OverlapPoint(pointTouch))
 				{
 					touchedTile = pair.Value;
@@ -262,10 +287,10 @@ public class MRMap : MonoBehaviour, MRISerializable
 	/// <summary>
 	/// Creates a random map from the tile set.
 	/// </summary>
-	/// <returns><c>true</c>, if map was built, <c>false</c> otherwise.</returns>
+	/// <returns>yield WaitForSeconds to continue, yield null when done</returns>
 	private IEnumerator BuildMap()
 	{
-		mIsValidMap = false;
+//		mIsValidMap = false;
 		foreach (MRTile tile in mMapTiles.Values)
 		{
 			Destroy(tile.gameObject);
@@ -278,6 +303,7 @@ public class MRMap : MonoBehaviour, MRISerializable
 		MRTile borderland = (MRTile)Instantiate(tilePrototype);
 		borderland.transform.parent = transform;
 		borderland.Id = eTileNames.borderland;
+		borderland.Coordinate = new MRUtility.IntVector2(0, 0);
 		mMapTiles.Add(eTileNames.borderland, borderland);
 
 		// add the 2nd tile
@@ -312,7 +338,7 @@ public class MRMap : MonoBehaviour, MRISerializable
 		{
 			--count;
 			fromSide = MRRandom.Range(0, 5);
-		} while (!newTile.Edges[fromSide] && count > 0);
+		} while (!newTile.RoadEdges[fromSide] && count > 0);
 		if (count == 0)
 		{
 			Debug.LogError("no edges for tile " + tileId);
@@ -320,6 +346,7 @@ public class MRMap : MonoBehaviour, MRISerializable
 		}
 		toSide = MRRandom.Range(0, 5);
 		Debug.Log("attach tile " + eTileNames.borderland + " side " + toSide + " to tile " + tileId + " side " + fromSide);
+		newTile.Coordinate = borderland.CoordinateForSide(toSide);
 		borderland.SetAdjacentTile(newTile, fromSide, toSide, false);
 
 		// add ledges and highpass back in
@@ -341,6 +368,11 @@ public class MRMap : MonoBehaviour, MRISerializable
 			newTile = (MRTile)Instantiate(tilePrototype);
 			newTile.transform.parent = transform;
 			newTile.Id = tileId;
+			//if (tileId == eTileNames.cliff)
+			//{
+			//	int foo = 0;
+			//	++foo;
+			//}
 			if (!newTile.Initialized)
 			{
 				Debug.LogError("tile " + tileId + " not initialized");
@@ -369,18 +401,17 @@ public class MRMap : MonoBehaviour, MRISerializable
 				IList<int> targetEdges = targetTile.GetRandomAvailableEdges();
 				foreach (int targetEdge in targetEdges)
 				{
+					MRUtility.IntVector2 testCoordinate = targetTile.CoordinateForSide(targetEdge);
 					// pick a random edge of our tile to attach
 					IList<int> roadEdges = newTile.GetRandomizedRoadEdges();
 					foreach (int testEdge in roadEdges)
 					{
-						if (targetTile.TestValidConnection(newTile, testEdge, targetEdge, true) &&
-						    targetTile.TestValidConnection(newTile, testEdge, targetEdge, false))
+						if (PlaceTile(newTile, MREdge.Normalize(targetTile.Facing - targetEdge + testEdge - 3), testCoordinate))
 						{
 							// connect the tiles
 							connected = true;
 							Debug.Log("attach tile " + targetName + " side " + targetEdge + " to tile " + tileId + " side " + testEdge);
 
-							targetTile.SetAdjacentTile(newTile, testEdge, targetEdge, false);
 							// verify that a tile clearing connects to the borderland
 							bool isConnectedToBorderland = false;
 							for (i = 0; i < 6; ++i)
@@ -449,7 +480,7 @@ public class MRMap : MonoBehaviour, MRISerializable
 			yield return null;
 		}
 
-		mIsValidMap = true;
+//		mIsValidMap = true;
 
 		PlaceMapChits();
 
@@ -551,6 +582,61 @@ public class MRMap : MonoBehaviour, MRISerializable
 		}
 		path.Add(currentNode);
 		return path;
+	}
+
+	/// <summary>
+	/// Tries to place a tile at a given coordinate with a given facing.
+	/// </summary>
+	/// <returns><c>true</c> if the tile was be placed; otherwise, <c>false</c>.</returns>
+	/// <param name="tile">Tile.</param>
+	/// <param name="facing">Facing.</param>
+	/// <param name="coordinate">Coordinate.</param>
+	private bool PlaceTile(MRTile tile, int facing, MRUtility.IntVector2 coordinate)
+	{
+		if (TileForCoordinate(coordinate) != null)
+			return false;
+
+		tile.Facing = facing;
+		tile.Coordinate = coordinate;
+
+		int matches = 0;
+		MRUtility.IntVector2[] adjacentCoordinates = tile.AdjacentCoordinates();
+		for (int i = 0; i < adjacentCoordinates.Length; ++i)
+		{
+			MRTile adjacentTile = TileForCoordinate(adjacentCoordinates[i]);
+			if (adjacentTile != null)
+			{
+				int tileTestSide = tile.SideForCoordinate(adjacentCoordinates[i]);
+				int adjacentTestSide = adjacentTile.SideForCoordinate(coordinate);
+				if (adjacentTile.TestValidConnection(adjacentTestSide, tile, tileTestSide))
+					++matches;
+				else
+				{
+					matches = 0;
+					break;
+				}
+			}
+		}
+		if (matches >= 2)
+		{
+			for (int i = 0; i < adjacentCoordinates.Length; ++i)
+			{
+				MRTile adjacentTile = TileForCoordinate(adjacentCoordinates[i]);
+				if (adjacentTile != null)
+				{
+					int tileSide = tile.SideForCoordinate(adjacentCoordinates[i]);
+					int adjacentSide = adjacentTile.SideForCoordinate(coordinate);
+					adjacentTile.SetAdjacentTile(tile, tileSide, adjacentSide, false);
+				}
+			}
+			return true;
+		}
+		else
+		{
+			tile.Facing = 0;
+			tile.Coordinate = new MRUtility.IntVector2(0, 0);
+			return false;
+		}
 	}
 
 	/// <summary>
@@ -757,7 +843,17 @@ public class MRMap : MonoBehaviour, MRISerializable
 						MRDwelling dwelling = MRDwelling.Create();
 						dwelling.Parent = clearing.gameObject.transform;
 						dwelling.Type = chit.Substitute;
-						clearing.Pieces.AddPieceToBottom(dwelling);
+						clearing.AddPieceToBottom(dwelling);
+					}
+					else
+					{
+						mGhostStartClearing = clearing;
+						for (int i = 0; i < 2; ++i)
+						{
+							MRMonster ghost = MRDenizenManager.GetMonster("ghost", i);
+							if (ghost != null)
+								ghost.Location = clearing;
+						}
 					}
 					mDwellings[chit.Substitute] = clearing;
 				}
@@ -783,6 +879,24 @@ public class MRMap : MonoBehaviour, MRISerializable
 			clearing = mDwellings[MRDwelling.eDwelling.Inn];
 		}
 		return clearing;
+	}
+
+	/// <summary>
+	/// Returns the tile for a given map coordinate.
+	/// </summary>
+	/// <returns>The tile, or null if there is no tile at the coordinate.</returns>
+	/// <param name="coordinate">The map coordinate.</param>
+	public MRTile TileForCoordinate(MRUtility.IntVector2 coordinate)
+	{
+		if (coordinate != null)
+		{
+			foreach (MRTile tile in mMapTiles.Values)
+			{
+				if (tile.Coordinate == coordinate)
+					return tile;
+			}
+		}
+		return null;
 	}
 
 	/// <summary>
@@ -904,11 +1018,12 @@ public class MRMap : MonoBehaviour, MRISerializable
 
 	#region Members
 
-	private bool mIsValidMap;
+//	private bool mIsValidMap;
 	private bool mMapCreated;
 	private Camera mMapCamera;
 	private bool mMapZoomed;
 	private bool mMoveStarted;
+	private MRClearing mGhostStartClearing;
 	private IDictionary<eTileNames, MRTile> mTilePool = new Dictionary<eTileNames, MRTile>();
 	private IDictionary<eTileNames, MRTile> mMapTiles = new Dictionary<eTileNames, MRTile>();
 	private IDictionary<string, MRRoad> mRoads = new Dictionary<string, MRRoad>();

@@ -10,6 +10,7 @@
 			"breastplate":true,
 			"armor":false,
 			"start":["inn"],
+			"abilities":["aim", "stamina"],
 			"chits":[
 				{
 					"action":"mo",
@@ -95,6 +96,7 @@
 			"breastplate":false,
 			"armor":false,
 			"start":["inn"],
+			"abilities":["robust", "berserk"],
 			"chits":[
 				{
 					"action":"mo",
@@ -180,6 +182,7 @@
 			"breastplate":false,
 			"armor":true,
 			"start":["inn"],
+			"abilities":["aim", "fear"],
 			"chits":[
 				{
 					"action":"mo",
@@ -265,6 +268,7 @@
 			"breastplate":true,
 			"armor":false,
 			"start":["inn","house","guardhouse"],
+			"abilities":["aim", "reputation"],
 			"chits":[
 				{
 					"action":"mo",
@@ -350,6 +354,7 @@
 			"breastplate":false,
 			"armor":false,
 			"start":["inn"],
+			"abilities":["concealment", "peace with nature"],
 			"chits":[
 				{
 					"action":"mo",
@@ -435,6 +440,7 @@
 			"breastplate":false,
 			"armor":false,
 			"start":["inn","guardhouse"],
+			"abilities":["short legs", "cave knowledge"],
 			"chits":[
 				{
 					"action":"d",
@@ -520,6 +526,7 @@
 			"breastplate":false,
 			"armor":false,
 			"start":["inn"],
+			"abilities":["elusiveness", "archer"],
 			"chits":[
 				{
 					"action":"ma",
@@ -605,6 +612,7 @@
 			"breastplate":false,
 			"armor":false,
 			"start":["inn"],
+			"abilities":["magical items", "knowledge"],
 			"chits":[
 				{
 					"action":"f",
@@ -690,6 +698,7 @@
 			"breastplate":false,
 			"armor":false,
 			"start":["inn","chapel"],
+			"abilities":["heavenly protection", "learning"],
 			"chits":[
 				{
 					"action":"mo",
@@ -775,6 +784,7 @@
 			"breastplate":false,
 			"armor":false,
 			"start":["inn"],
+			"abilities":["lore", "aura of power"],
 			"chits":[
 				{
 					"action":"mo",
@@ -860,6 +870,7 @@
 			"breastplate":false,
 			"armor":false,
 			"start":["inn"],
+			"abilities":["barter", "clever"],
 			"chits":[
 				{
 					"action":"mo",
@@ -945,6 +956,7 @@
 			"breastplate":false,
 			"armor":true,
 			"start":["inn","chapel"],
+			"abilities":["health", "honor"],
 			"chits":[
 				{
 					"action":"mo",
@@ -1030,6 +1042,7 @@
 			"breastplate":false,
 			"armor":false,
 			"start":["inn"],
+			"abilities":["knowledge", "familiar"],
 			"chits":[
 				{
 					"action":"mo",
@@ -1115,6 +1128,7 @@
 			"breastplate":false,
 			"armor":false,
 			"start":["inn","ghosts"],
+			"abilities":["disembodied", "aura of power"],
 			"chits":[
 				{
 					"action":"ma",
@@ -1200,6 +1214,7 @@
 			"breastplate":false,
 			"armor":false,
 			"start":["inn","house","guardhouse"],
+			"abilities":["lore", "experience"],
 			"chits":[
 				{
 					"action":"mo",
@@ -1285,6 +1300,7 @@
 			"breastplate":false,
 			"armor":false,
 			"start":["inn","house"],
+			"abilities":["tracking", "archer"],
 			"chits":[
 				{
 					"action":"mo",

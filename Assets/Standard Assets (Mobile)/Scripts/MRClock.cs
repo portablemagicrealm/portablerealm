@@ -29,6 +29,12 @@ using System.Collections;
 
 public class MRClock : MonoBehaviour, MRITouchable
 {
+	#region Constants
+
+	private const float ROTATION_SPEED_DEG_PER_SEC = 120.0f;
+
+	#endregion
+
 	#region Properties
 
 	public bool Visible
@@ -50,6 +56,7 @@ public class MRClock : MonoBehaviour, MRITouchable
 	// Use this for initialization
 	void Start ()
 	{
+		mRotatingClock = false;
 		mCamera = gameObject.GetComponentsInChildren<Camera> ()[0];
 
 		// position the clock image in he upper-right of the screen
@@ -82,11 +89,50 @@ public class MRClock : MonoBehaviour, MRITouchable
 		BoxCollider2D collider = gameObject.GetComponent<BoxCollider2D>();
 		Vector3 cameraPosScreen = mCamera.ViewportToScreenPoint(Vector3.zero);
 		Vector3 cameraPosMap = mapCamera.ScreenToWorldPoint(cameraPosScreen);
-		Vector3 colliderPosWorld = transform.TransformPoint(new Vector3(collider.center.x - collider.size.x / 2.0f, collider.center.y - collider.size.y / 2.0f, 0));
+		Vector3 colliderPosWorld = transform.TransformPoint(new Vector3(0 - collider.size.x / 2.0f, 0 - collider.size.y / 2.0f, 0));
 		transform.Translate(cameraPosMap.x - colliderPosWorld.x, cameraPosMap.y - colliderPosWorld.y, 0);
 
-		mClockImage.transform.localRotation = Quaternion.AngleAxis(30.0f + 60.0f * (int)MRGame.TimeOfDay, Vector3.forward);
+		Quaternion desiredRotation = Quaternion.AngleAxis(30.0f + 60.0f * (int)MRGame.TimeOfDay, Vector3.forward);
+		Quaternion currentRotation = mClockImage.transform.localRotation;
+		if (!mRotatingClock && Mathf.Abs(Quaternion.Angle(desiredRotation, currentRotation)) > 0.01f)
+		{
+			StartCoroutine(RotateClock(1.0f/30.0f));
+		}
+	}
+
+	/// <summary>
+	/// Handles rotating the clock when the time of day changes.
+	/// </summary>
+	/// <returns>yield WaitForSeconds to continue, yield null when done</returns>
+	/// <param name="waitTime">amount of time to wait between animation updates</param>
+	private IEnumerator RotateClock(float waitTime)
+	{
+		mRotatingClock = true;
+		float totalTime = 0;
+		Quaternion startRotation = mClockImage.transform.localRotation;
+		Quaternion desiredRotation = Quaternion.AngleAxis(30.0f + 60.0f * (int)MRGame.TimeOfDay, Vector3.forward);
+		Quaternion currentRotation = startRotation;
+		while (Mathf.Abs(Quaternion.Angle(desiredRotation, currentRotation)) > 0.01f)
+		{
+			totalTime += waitTime;
+			mClockImage.transform.localRotation = Quaternion.Lerp(startRotation, desiredRotation, (ROTATION_SPEED_DEG_PER_SEC * totalTime) / 60.0f);
+			currentRotation = mClockImage.transform.localRotation;
+			yield return new WaitForSeconds(waitTime);
+		}
+		mRotatingClock = false;
+		mClockImage.transform.localRotation = desiredRotation;
 		mDateText.text = MRGame.DayOfMonth.ToString();
+		yield return null;
+	}
+
+	public bool OnTouched(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnReleased(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	public bool OnSingleTapped(GameObject touchedObject)
@@ -115,6 +161,7 @@ public class MRClock : MonoBehaviour, MRITouchable
 	private Camera mCamera;
 	private GameObject mClockImage;
 	private TextMesh mDateText;
+	private bool mRotatingClock;
 
 	#endregion
 }

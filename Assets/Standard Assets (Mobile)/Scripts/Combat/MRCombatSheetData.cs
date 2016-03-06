@@ -104,6 +104,15 @@ public class MRCombatSheetData
 		{
 			++slots[data.defenseType];
 		}
+		if (defender is MRMonster && ((MRMonster)defender).OwnedBy != null)
+		{
+			// prevent head/club from being placed in the same slot as its owner
+			foreach (DefenderData data in Defenders)
+			{
+				if (((MRMonster)defender).OwnedBy == data.defender)
+					slots[data.defenseType] = int.MaxValue;
+			}
+		}
 		int lowestCount = int.MaxValue;
 		foreach (int value in slots.Values)
 		{
@@ -118,6 +127,12 @@ public class MRCombatSheetData
 		} while (pick == MRCombatManager.eDefenseType.None || slots[pick] != lowestCount);
 
 		AddDefender(defender, pick);
+
+		if (defender is MRMonster && ((MRMonster)defender).Owns != null)
+		{
+			// add a monster's head/club to the same sheet it's on
+			AddDefender(((MRMonster)defender).Owns);
+		}
 	}
 
 	/// <summary>

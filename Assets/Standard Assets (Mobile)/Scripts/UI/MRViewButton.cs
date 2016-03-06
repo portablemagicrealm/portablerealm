@@ -27,12 +27,12 @@ using UnityEngine;
 using System;
 using System.Collections;
 
-public class MRViewButton : MonoBehaviour, MRITouchable
+public class MRViewButton : MRButton
 {
 	#region Constants
 
-	public static Color selectedColor = new Color(255f / 255f, 203f / 255f, 15f / 255f);
-	public static Color unselectedColor = new Color(190f / 255f, 152f / 255f, 11f / 255f);
+	public static readonly Color SELECTED_COLOR = new Color(255f / 255f, 203f / 255f, 15f / 255f);
+	public static readonly Color UNSELECTED_COLOR = new Color(190f / 255f, 152f / 255f, 11f / 255f);
 
 	#endregion
 
@@ -56,8 +56,10 @@ public class MRViewButton : MonoBehaviour, MRITouchable
 	#region Methods
 
 	// Use this for initialization
-	void Start ()
+	public override void Start ()
 	{
+		base.Start();
+
 		foreach (Camera camera in Camera.allCameras)
 		{
 			if (camera.name == "Inspection Camera")
@@ -68,7 +70,6 @@ public class MRViewButton : MonoBehaviour, MRITouchable
 		}
 
 		SpriteRenderer backgroundRenderer = gameObject.GetComponentInChildren<SpriteRenderer>();
-		mBackground = backgroundRenderer.gameObject;
 		Bounds bounds = backgroundRenderer.bounds;
 
 		float screenHeight = MRGame.TheGame.InspectionArea.InspectionBoundsPixels.height;
@@ -87,16 +88,37 @@ public class MRViewButton : MonoBehaviour, MRITouchable
 	}
 
 	// Update is called once per frame
-	void Update ()
+	public override void Update ()
 	{
-		if (mSelected)
-			mBackground.GetComponent<SpriteRenderer>().color = selectedColor;
-		else
-			mBackground.GetComponent<SpriteRenderer>().color = unselectedColor;
+		if (mBackground != null)
+		{
+			if (!mTouched)
+			{
+				if (mSelected)
+					mBackground.GetComponent<SpriteRenderer>().color = SELECTED_COLOR;
+				else
+					mBackground.GetComponent<SpriteRenderer>().color = UNSELECTED_COLOR;
+			}
+			else
+				mBackground.GetComponent<SpriteRenderer>().color = COLOR_PRESSED;
+		}
 	}
 
-	public bool OnSingleTapped(GameObject touchedObject)
+	public override bool OnTouched(GameObject touchedObject)
 	{
+		base.OnTouched(touchedObject);
+		return true;
+	}
+
+	public override bool OnReleased(GameObject touchedObject)
+	{
+		base.OnReleased(touchedObject);
+		return true;
+	}
+
+	public override bool OnSingleTapped(GameObject touchedObject)
+	{
+		base.OnSingleTapped(touchedObject);
 		if (touchedObject == mBackground)
 		{
 			Debug.Log("Tab selected: " + id);
@@ -105,13 +127,15 @@ public class MRViewButton : MonoBehaviour, MRITouchable
 		return true;
 	}
 
-	public bool OnDoubleTapped(GameObject touchedObject)
+	public override bool OnDoubleTapped(GameObject touchedObject)
 	{
+		base.OnDoubleTapped(touchedObject);
 		return true;
 	}
 
-	public bool OnTouchHeld(GameObject touchedObject)
+	public override bool OnTouchHeld(GameObject touchedObject)
 	{
+		base.OnTouchHeld(touchedObject);
 		return true;
 	}
 
@@ -120,7 +144,6 @@ public class MRViewButton : MonoBehaviour, MRITouchable
 	#region Members
 
 	private bool mSelected;
-	private GameObject mBackground;
 	private Camera mCamera;
 
 	#endregion

@@ -133,27 +133,6 @@ public class MRSearchActivity : MRActivity
 		mLootTwitSelected = null;
 	}
 
-	//public override void OnGUI()
-	//{
-	//	if (!Active)
-	//		return;
-	//	
-	//	switch (mState)
-	//	{
-	//		case eState.SelectClearing:
-	//		{
-	//			GUILayout.BeginArea(new Rect(0, 0, Screen.width, 56));
-	//			GUILayout.BeginHorizontal();
-	//			GUILayout.FlexibleSpace();
-	//			GUILayout.Label("Select Clearing", "BigLabel", GUILayout.ExpandHeight(true));
-	//			GUILayout.FlexibleSpace();
-	//			GUILayout.EndHorizontal();
-	//			GUILayout.EndArea();
-	//			break;
-	//		}
-	//	}
-	//}
-
 	private void ShowSelectTable()
 	{
 		mState = eState.SelectTable;

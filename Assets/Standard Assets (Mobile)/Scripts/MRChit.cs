@@ -214,6 +214,13 @@ public class MRChit : MonoBehaviour, MRIGamePiece, MRISerializable
 		}
 	}
 
+	public virtual int SortValue
+	{
+		get{
+			return (int)MRGame.eSortValue.Chit;
+		}
+	}
+
 	#endregion
 
 	#region Methods

@@ -261,6 +261,13 @@ public class MRMonsterChart : MonoBehaviour
 					}
 				}
 			}
+			// ghosts always prowl
+			for (int i = 0; i < 2; ++i)
+			{
+				MRMonster ghost = MRDenizenManager.GetMonster("ghost", i);
+				if (ghost != null)
+					prowlers.Add(ghost);
+			}
 			return prowlers;
 		}
 	}
@@ -277,6 +284,13 @@ public class MRMonsterChart : MonoBehaviour
 					foreach (MRDenizen denizen in data.Denizens)
 						prowlers.Add(denizen);
 				}
+			}
+			// ghosts always prowl
+			for (int i = 0; i < 2; ++i)
+			{
+				MRMonster ghost = MRDenizenManager.GetMonster("ghost", i);
+				if (ghost != null)
+					prowlers.Add(ghost);
 			}
 			return prowlers;
 		}
@@ -376,6 +390,12 @@ public class MRMonsterChart : MonoBehaviour
 								if (monster != null)
 								{
 									++monsterIndex;
+									if (monster.Owns != null)
+									{
+										monster.Owns.MonsterBox = location;
+										location.Occupants.AddPieceToTop(monster.Owns);
+										data.Denizens.Add(monster.Owns);
+									}
 									monster.MonsterBox = location;
 									location.Occupants.AddPieceToTop(monster);
 									data.Denizens.Add(monster);
@@ -414,7 +434,7 @@ public class MRMonsterChart : MonoBehaviour
 		{
 			if (mMonsterRollMarkers[i] != null)
 			{
-				mMonsterRollMarkers[i].renderer.enabled = (mMonsterRoll == i + 1);
+				mMonsterRollMarkers[i].GetComponent<Renderer>().enabled = (mMonsterRoll == i + 1);
 			}
 		}
 	}
@@ -475,6 +495,7 @@ public class MRMonsterChart : MonoBehaviour
 	/// </summary>
 	public void RegenerateDenizens()
 	{
+		// regenerate normal monsters
 		IList<MRDenizen> toRemove = new List<MRDenizen>();
 		if (mMonsterRoll >= 1 && mMonsterRoll <= 6)
 		{
@@ -495,6 +516,21 @@ public class MRMonsterChart : MonoBehaviour
 				}
 			}
 		}
+
+		// regenerate ghosts
+		if (MRGame.TheGame.TheMap.GhostStartClearing != null)
+		{
+			for (int i = 0; i < 2; ++i)
+			{
+				MRMonster ghost = MRDenizenManager.GetMonster("ghost", i);
+				if (ghost != null)
+				{
+					toRemove.Add(ghost);
+					ghost.Location = MRGame.TheGame.TheMap.GhostStartClearing;
+				}
+			}
+		}
+
 
 		foreach (MRDenizen denizen in toRemove)
 		{

@@ -1,184 +1,174 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-	<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-	<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-	<ProductVersion>10.0.20506</ProductVersion>
-	<SchemaVersion>2.0</SchemaVersion>
-	<ProjectGuid>{4A966580-7A37-78EC-B742-EAA977F880CD}</ProjectGuid>
-	<OutputType>Library</OutputType>
-	<AppDesignerFolder>Properties</AppDesignerFolder>
-	<RootNamespace></RootNamespace>
-	<AssemblyName>Assembly-CSharp</AssemblyName>
-	<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-	<FileAlignment>512</FileAlignment>
-	<BaseDirectory>Assets</BaseDirectory>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{4A966580-7A37-78EC-B742-EAA977F880CD}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <AssemblyName>Assembly-CSharp</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <BaseDirectory>Assets</BaseDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-	<DebugSymbols>true</DebugSymbols>
-	<DebugType>full</DebugType>
-	<Optimize>false</Optimize>
-	<OutputPath>Temp\bin\Debug\</OutputPath>
-	<DefineConstants>DEBUG;TRACE;UNITY_4_6_9;UNITY_4_6;UNITY_ANDROID;ENABLE_MICROPHONE;ENABLE_TEXTUREID_MAP;ENABLE_UNITYEVENTS;ENABLE_NEW_HIERARCHY ;ENABLE_AUDIO_FMOD;ENABLE_TERRAIN;ENABLE_SUBSTANCE;ENABLE_GENERICS;INCLUDE_IL2CPP;INCLUDE_WP8SUPPORT;ENABLE_WWW;ENABLE_IMAGEEFFECTS;ENABLE_4_6_FEATURES;INCLUDE_WP_BLUE_SUPPORT;ENABLE_WEBCAM;INCLUDE_METROSUPPORT;RENDER_SOFTWARE_CURSOR;ENABLE_NETWORK;ENABLE_PHYSICS;UNITY5_SCRIPTING_IN_UNITY4;ENABLE_CACHING;ENABLE_CLOTH;UNITY_ANDROID_API;ENABLE_2D_PHYSICS;ENABLE_SHADOWS;ENABLE_AUDIO;ENABLE_NAVMESH_CARVING;ENABLE_SINGLE_INSTANCE_BUILD_SETTING;ENABLE_MONO;ENABLE_PROFILER;UNITY_EDITOR;UNITY_EDITOR_WIN</DefineConstants>
-	<ErrorReport>prompt</ErrorReport>
-	<WarningLevel>4</WarningLevel>
-	<NoWarn>0169</NoWarn>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>Temp\bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;UNITY_4_6_9;UNITY_4_6;UNITY_ANDROID;ENABLE_MICROPHONE;ENABLE_TEXTUREID_MAP;ENABLE_UNITYEVENTS;ENABLE_NEW_HIERARCHY ;ENABLE_AUDIO_FMOD;ENABLE_TERRAIN;ENABLE_SUBSTANCE;ENABLE_GENERICS;INCLUDE_IL2CPP;INCLUDE_WP8SUPPORT;ENABLE_WWW;ENABLE_IMAGEEFFECTS;ENABLE_4_6_FEATURES;INCLUDE_WP_BLUE_SUPPORT;ENABLE_WEBCAM;INCLUDE_METROSUPPORT;RENDER_SOFTWARE_CURSOR;ENABLE_NETWORK;ENABLE_PHYSICS;UNITY5_SCRIPTING_IN_UNITY4;ENABLE_CACHING;ENABLE_CLOTH;UNITY_ANDROID_API;ENABLE_2D_PHYSICS;ENABLE_SHADOWS;ENABLE_AUDIO;ENABLE_NAVMESH_CARVING;ENABLE_SINGLE_INSTANCE_BUILD_SETTING;ENABLE_MONO;ENABLE_PROFILER;UNITY_EDITOR;UNITY_EDITOR_WIN</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoWarn>0169</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-	<DebugType>pdbonly</DebugType>
-	<Optimize>true</Optimize>
-	<OutputPath>Temp\bin\Release\</OutputPath>
-	<DefineConstants>TRACE</DefineConstants>
-	<ErrorReport>prompt</ErrorReport>
-	<WarningLevel>4</WarningLevel>
-	<NoWarn>0169</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>Temp\bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoWarn>0169</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-	<Reference Include="System" />
-    <Reference Include="System.XML" />
-	<Reference Include="System.Core" />
-	<Reference Include="System.Xml.Linq" />
-	<Reference Include="UnityEngine">
-	  <HintPath>C:/dev/Unity/Editor/Data/Managed/UnityEngine.dll</HintPath>
-	</Reference>
-	<Reference Include="UnityEditor">
-	  <HintPath>C:/dev/Unity/Editor/Data/Managed/UnityEditor.dll</HintPath>
-	</Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Activities\MRActivity.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Activities\MRActivityList.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Activities\MRAlertActivity.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Activities\MREnchantActivity.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Activities\MRFollowActivity.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Activities\MRHideActivity.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Activities\MRHireActivity.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Activities\MRMoveActivity.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Activities\MRNoActivity.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Activities\MRRestActivity.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Activities\MRSearchActivity.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Activities\MRTradeActivity.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Chits\MRActionChit.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Chits\MRBerserkChit.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Chits\MRDuckChit.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Chits\MRFightChit.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Chits\MRMagicChit.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Chits\MRMoveChit.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRAmazon.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRBerserker.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRBlackKnight.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRCaptain.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRCharacter.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRCharacterScore.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRDruid.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRDwarf.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRElf.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRMagician.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRPilgrim.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRSorceror.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRSwordsman.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRWhiteKnight.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRWitch.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRWitchKing.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRWizard.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\Classes\MRWoodsGirl.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\MRCharacterItemsDisplay.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\MRCharacterManager.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\MRCharacterMat.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Characters\MRCharacterScoreDisplay.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatManager.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatSheet.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatSheetData.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Crc32.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Denizens\MRDenizen.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Denizens\MRDenizenManager.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Denizens\MRMonster.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Denizens\MRMonsterChart.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Denizens\MRMonsterChartLocation.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Denizens\MRNative.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MRAlertEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MRCombatEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MRCreateCharacterEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MRCreateMapEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MREndPhaseEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MREndTurnEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MRFatigueCharacterEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MRInitGameTimeEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MRMonsterRollEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MRRollForCurseEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MRSelectChitEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MRSelectClearingEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MRUpdateActivityListEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MRUpdateEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Events\MRUpdateViewEvent.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Items\MRArmor.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Items\MRHorse.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Items\MRItem.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Items\MRItemManager.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Items\MRTreasure.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Items\MRTreasureChart.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Items\MRTreasureChartLocation.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Items\MRWeapon.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\JSON\InvalidJSONException.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\JSON\JSONArray.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\JSON\JSONBoolean.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\JSON\JSONDecoder.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\JSON\JSONNull.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\JSON\JSONNumber.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\JSON\JSONObject.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\JSON\JSONString.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\JSON\JSONValue.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRActivityListWidget.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRActivityWidget.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRChit.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRClearingSelector.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRClock.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRControllable.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRDiePool.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRGame.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRGamePieceStack.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRIControllable.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRIGamePiece.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRISerializable.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRITouchable.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRInspectionArea.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRRandom.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\MRUtility.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Map\MRClearing.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Map\MRDwelling.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Map\MREdge.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Map\MRHiddenPath.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Map\MRILocation.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Map\MRMap.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Map\MRMapChit.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Map\MRRoad.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Map\MRSiteChit.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Map\MRSoundChit.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Map\MRSuperSiteChit.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Map\MRTile.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Map\MRTileSide.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\Map\MRWarningChit.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\UI\MRMain.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\UI\MRMainUI.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\UI\MRTab.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\UI\MRTabGroup.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\UI\MRTabItems.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\UI\MRVictoryPointSelectionDialog.cs" />
-     <Compile Include="Assets\Standard Assets (Mobile)\Scripts\UI\MRViewButton.cs" />
-     <None Include="Assets\Standard Assets (Mobile)\Shaders\Particle Shaders\Mobile Multiply Culled.shader" />
-     <None Include="Assets\Standard Assets (Mobile)\Shaders\Miscellaneous Shaders\Mobile Background.shader" />
-     <None Include="Assets\Standard Assets (Mobile)\Shaders\Vertex Colored Shaders\Mobile Transparent Vertex Color.shader" />
-     <None Include="Assets\Standard Assets (Mobile)\Shaders\Miscellaneous Shaders\Mobile Detail.shader" />
-     <None Include="Assets\Necromancer GUI\Kingthings.txt" />
-     <None Include="Assets\Standard Assets (Mobile)\Shaders\Lightmap Shaders (Legacy)\Mobile Lightmap Reflective.shader" />
-     <None Include="Assets\Standard Assets (Mobile)\Shaders\Particle Shaders\Mobile Particles Additive Culled.shader" />
-     <None Include="Assets\Necromancer GUI\Readme.txt" />
-     <None Include="Assets\Standard Assets (Mobile)\Shaders\Vertex Colored Shaders\Mobile Vertex Colored.shader" />
-     <None Include="Assets\Standard Assets (Mobile)\Shaders\Lightmap Shaders (Legacy)\Mobile Lightmap Only.shader" />
-     <None Include="Assets\Standard Assets (Mobile)\Shaders\Lightmap Shaders (Legacy)\Mobile Lightmap AlphaTest.shader" />
- <Reference Include="UnityEngine.UI">
- <HintPath>C:/dev/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/4.6.9/Standalone/UnityEngine.UI.dll</HintPath>
- </Reference>
+    <None Include="Assets\Necromancer GUI\Kingthings.txt" />
+    <None Include="Assets\Necromancer GUI\Readme.txt" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Activities\MRActivity.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Activities\MRActivityList.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Activities\MRAlertActivity.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Activities\MREnchantActivity.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Activities\MRFollowActivity.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Activities\MRHideActivity.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Activities\MRHireActivity.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Activities\MRMoveActivity.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Activities\MRNoActivity.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Activities\MRRestActivity.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Activities\MRSearchActivity.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Activities\MRTradeActivity.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Chits\MRActionChit.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Chits\MRBerserkChit.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Chits\MRDuckChit.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Chits\MRFightChit.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Chits\MRMagicChit.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Chits\MRMoveChit.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRAmazon.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRBerserker.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRBlackKnight.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRCaptain.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRCharacter.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRCharacterScore.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRDruid.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRDwarf.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRElf.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRMagician.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRPilgrim.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRSorceror.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRSwordsman.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRWhiteKnight.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRWitch.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRWitchKing.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRWizard.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\Classes\MRWoodsGirl.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\MRCharacterItemsDisplay.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\MRCharacterManager.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\MRCharacterMat.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Characters\MRCharacterScoreDisplay.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Combat\MRCombatManager.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Combat\MRCombatSheet.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Combat\MRCombatSheetData.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Crc32.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Denizens\MRDenizen.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Denizens\MRDenizenManager.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Denizens\MRMonster.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Denizens\MRMonsterChart.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Denizens\MRMonsterChartLocation.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Denizens\MRNative.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MRAlertEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MRCombatEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MRCreateCharacterEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MRCreateMapEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MREndPhaseEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MREndTurnEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MRFatigueCharacterEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MRInitGameTimeEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MRMonsterRollEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MRRollForCurseEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MRSelectChitEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MRSelectClearingEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MRUpdateActivityListEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MRUpdateEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Events\MRUpdateViewEvent.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Items\MRArmor.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Items\MRHorse.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Items\MRItem.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Items\MRItemManager.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Items\MRTreasure.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Items\MRTreasureChart.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Items\MRTreasureChartLocation.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Items\MRWeapon.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\JSON\InvalidJSONException.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\JSON\JSONArray.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\JSON\JSONBoolean.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\JSON\JSONDecoder.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\JSON\JSONNull.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\JSON\JSONNumber.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\JSON\JSONObject.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\JSON\JSONString.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\JSON\JSONValue.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRActivityListWidget.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRActivityWidget.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRChit.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRClearingSelector.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRClock.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRControllable.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRDiePool.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRGame.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRGamePieceStack.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRIControllable.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRIGamePiece.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRISerializable.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRITouchable.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRInspectionArea.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRRandom.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRUtility.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Map\MRClearing.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Map\MRDwelling.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Map\MREdge.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Map\MRHiddenPath.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Map\MRILocation.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Map\MRMap.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Map\MRMapChit.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Map\MRRoad.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Map\MRSiteChit.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Map\MRSoundChit.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Map\MRSuperSiteChit.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Map\MRTile.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Map\MRTileSide.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\Map\MRWarningChit.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\UI\MRMain.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\UI\MRMainUI.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\UI\MRTab.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\UI\MRTabGroup.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\UI\MRTabItems.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\UI\MRVictoryPointSelectionDialog.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\UI\MRViewButton.cs" />
+    <None Include="Assets\Standard Assets %28Mobile%29\Shaders\Particle Shaders\Mobile Multiply Culled.shader" />
+    <None Include="Assets\Standard Assets %28Mobile%29\Shaders\Miscellaneous Shaders\Mobile Background.shader" />
+    <None Include="Assets\Standard Assets %28Mobile%29\Shaders\Vertex Colored Shaders\Mobile Transparent Vertex Color.shader" />
+    <None Include="Assets\Standard Assets %28Mobile%29\Shaders\Miscellaneous Shaders\Mobile Detail.shader" />
+    <None Include="Assets\Standard Assets %28Mobile%29\Shaders\Lightmap Shaders %28Legacy%29\Mobile Lightmap Reflective.shader" />
+    <None Include="Assets\Standard Assets %28Mobile%29\Shaders\Particle Shaders\Mobile Particles Additive Culled.shader" />
+    <None Include="Assets\Standard Assets %28Mobile%29\Shaders\Vertex Colored Shaders\Mobile Vertex Colored.shader" />
+    <None Include="Assets\Standard Assets %28Mobile%29\Shaders\Lightmap Shaders %28Legacy%29\Mobile Lightmap Only.shader" />
+    <None Include="Assets\Standard Assets %28Mobile%29\Shaders\Lightmap Shaders %28Legacy%29\Mobile Lightmap AlphaTest.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -188,5 +178,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  
 </Project>

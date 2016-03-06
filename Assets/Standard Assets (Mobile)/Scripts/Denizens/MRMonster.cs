@@ -42,6 +42,27 @@ public class MRMonster : MRDenizen
 		}
 	}
 
+	public MRMonster OwnedBy
+	{
+		get{
+			return mOwnedBy;
+		}
+	}
+
+	public MRMonster Owns
+	{
+		get {
+			return mOwns;
+		}
+	}
+
+	public override int SortValue
+	{
+		get{
+			return mOwnedBy == null ? (int)MRGame.eSortValue.Monster : (int)MRGame.eSortValue.MonsterHead;
+		}
+	}
+
 	#endregion
 
 	#region Methods
@@ -53,6 +74,26 @@ public class MRMonster : MRDenizen
 	public MRMonster(JSONObject jsonData, int index) :
 		base((JSONObject)jsonData["MRDenizen"], index)
 	{
+		mFlies = ((JSONBoolean)jsonData["flies"]).Value;
+		mOwnedByName = ((JSONString)jsonData["owned_by"]).Value;
+		mOwnedBy = null;
+		mOwns = null;
+	}
+
+	public void SetOwnership()
+	{
+		if (mOwnedByName != null && mOwnedByName.Length > 0)
+		{
+			mOwnedBy = MRDenizenManager.GetMonster(mOwnedByName, mIndex);
+			if (mOwnedBy != null)
+			{
+				mOwnedBy.mOwns = this;
+			}
+			else
+			{
+				Debug.LogError("Unable to find monster owner " + mOwnedByName);
+			}
+		}
 	}
 
 	protected override void CreateCounter()
@@ -81,7 +122,7 @@ public class MRMonster : MRDenizen
 	}
 
 	// Called when the controllable hits its target
-	public override void HitTarget(MRIControllable attacker, bool targetDead)
+	public override void HitTarget(MRIControllable target, bool targetDead)
 	{
 		if (BaseWeight == MRGame.eStrength.Tremendous)
 		{
@@ -91,7 +132,21 @@ public class MRMonster : MRDenizen
 			else
 				Side = MRDenizen.eSide.Dark;
 		}
+		else if (mOwnedBy != null)
+		{
+			// a hit by a head/club counts as a hit by its owner
+			mOwnedBy.HitTarget(target, targetDead);
+		}
 	}
+
+	#endregion
+
+	#region Members
+
+	private bool mFlies;
+	private string mOwnedByName;
+	private MRMonster mOwnedBy;
+	private MRMonster mOwns;
 
 	#endregion
 }

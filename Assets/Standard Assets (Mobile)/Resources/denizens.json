@@ -38,12 +38,12 @@
 		},
 		{
 			"class":"MRMonster",
-			"amount":0,
+			"amount":1,
 			"flies":false,
 			"owned_by":"tremendous flying dragon",
 			"MRDenizen":
 			{
-				"image":"",
+				"image":"t_flying_dragon_head",
 				"fame":0,
 				"notoriety":0,
 				"gold":0,
@@ -110,12 +110,12 @@
 		},
 		{
 			"class":"MRMonster",
-			"amount":0,
+			"amount":2,
 			"flies":false,
 			"owned_by":"tremendous dragon",
 			"MRDenizen":
 			{
-				"image":"",
+				"image":"t_dragon_head",
 				"fame":0,
 				"notoriety":0,
 				"gold":0,
@@ -182,12 +182,12 @@
 		},
 		{
 			"class":"MRMonster",
-			"amount":0,
+			"amount":2,
 			"flies":false,
 			"owned_by":"giant",
 			"MRDenizen":
 			{
-				"image":"",
+				"image":"t_giant_club",
 				"fame":0,
 				"notoriety":0,
 				"gold":0,
@@ -722,7 +722,7 @@
 		},
 		{
 			"class":"MRMonster",
-			"amount":0,
+			"amount":2,
 			"flies":false,
 			"owned_by":"",
 			"MRDenizen":

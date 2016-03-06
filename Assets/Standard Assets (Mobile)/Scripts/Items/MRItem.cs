@@ -231,7 +231,14 @@ public class MRItem : MRIGamePiece, MRISerializable
 		}
 		
 		set{
-			mCounter.SetActive(value);
+			MRUtility.SetObjectVisibility(mCounter, value);
+		}
+	}
+
+	public virtual int SortValue
+	{
+		get{
+			return (int)MRGame.eSortValue.Item;
 		}
 	}
 

@@ -98,8 +98,8 @@ public class MRActivityListWidget : MonoBehaviour, MRITouchable
 			Debug.LogError("No border for current activity");
 			Application.Quit();
 		}
-		float borderSize = ((SpriteRenderer)border.renderer).sprite.bounds.extents.y;
-		mBorderPixelSize = ((SpriteRenderer)border.renderer).sprite.rect.height;
+		float borderSize = ((SpriteRenderer)border.GetComponent<Renderer>()).sprite.bounds.extents.y;
+		mBorderPixelSize = ((SpriteRenderer)border.GetComponent<Renderer>()).sprite.rect.height;
 		mCamera = gameObject.GetComponentsInChildren<Camera> ()[0];
 		mCamera.orthographicSize = borderSize;
 		mCamera.aspect = 1;
@@ -117,7 +117,7 @@ public class MRActivityListWidget : MonoBehaviour, MRITouchable
 
 		if (mActivityList != null)
 		{
-			if (mCurrentActivity != null && MRGame.TimeOfDay == MRGame.eTimeOfDay.Birdsong)
+			if (mCurrentActivity != null && MRGame.TimeOfDay == MRGame.eTimeOfDay.Birdsong && MRGame.TheGame.CurrentView == MRGame.eViews.Map)
 			{
 				// adjust the activity list so that our current activity is always the next to last one
 				for (int i = 0; i < mActivityWidgets.Count; ++i)
@@ -243,7 +243,7 @@ public class MRActivityListWidget : MonoBehaviour, MRITouchable
 				// toggle if we're changing the current activity based on the touch state
 				if (!mChangingCurrentActivity)
 				{
-					if (MRGame.JustTouched)
+					if (MRGame.JustTouched && MRGame.TheGame.CurrentView == MRGame.eViews.Map)
 					{
 						// if the user starts a touch in our area, let them change the action
 						Vector3 viewportTouch = mCamera.ScreenToViewportPoint(new Vector3(MRGame.LastTouchPos.x, MRGame.LastTouchPos.y, mCamera.nearClipPlane));
@@ -344,6 +344,16 @@ public class MRActivityListWidget : MonoBehaviour, MRITouchable
 			// turn off the camera
 			mCamera.enabled = false;
 		}
+	}
+
+	public bool OnTouched(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnReleased(GameObject touchedObject)
+	{
+		return true;
 	}
 
 	public bool OnSingleTapped(GameObject touchedObject)

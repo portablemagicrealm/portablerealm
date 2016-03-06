@@ -3,3 +3,5 @@ Library/ScriptAssemblies
 bin/
 iosBin/
 Library/metadata/
+Library/ShaderCache/
+Library/UnityAssemblies/

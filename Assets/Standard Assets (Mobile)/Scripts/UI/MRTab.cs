@@ -26,12 +26,12 @@
 using UnityEngine;
 using System.Collections;
 
-public class MRTab : MonoBehaviour, MRITouchable
+public class MRTab : MRButton
 {
 	#region Constants
 	
-	public static Color selectedColor = new Color(255f / 255f, 203f / 255f, 15f / 255f);
-	public static Color unselectedColor = new Color(190f / 255f, 152f / 255f, 11f / 255f);
+	public static readonly Color SELECTED_COLOR = new Color(255f / 255f, 203f / 255f, 15f / 255f);
+	public static readonly Color UNSELECTED_COLOR = new Color(190f / 255f, 152f / 255f, 11f / 255f);
 	
 	#endregion
 
@@ -62,8 +62,10 @@ public class MRTab : MonoBehaviour, MRITouchable
 	#region Methods
 
 	// Use this for initialization
-	void Start ()
+	public override void Start ()
 	{
+		base.Start();
+
 		if (Items != null)
 		{
 			Items.TabParent = this;
@@ -81,16 +83,37 @@ public class MRTab : MonoBehaviour, MRITouchable
 	}
 
 	// Update is called once per frame
-	void Update ()
+	public override void Update ()
 	{
-		if (Selected)
-			Image.GetComponent<SpriteRenderer>().color = selectedColor;
-		else
-			Image.GetComponent<SpriteRenderer>().color = unselectedColor;
+		if (mBackground != null)
+		{
+			if (!mTouched)
+			{
+				if (Selected)
+					Image.GetComponent<SpriteRenderer>().color = SELECTED_COLOR;
+				else
+					Image.GetComponent<SpriteRenderer>().color = UNSELECTED_COLOR;
+			}
+			else
+				mBackground.GetComponent<SpriteRenderer>().color = COLOR_PRESSED;
+		}
 	}
 
-	public bool OnSingleTapped(GameObject touchedObject)
+	public override bool OnTouched(GameObject touchedObject)
 	{
+		base.OnTouched(touchedObject);
+		return true;
+	}
+
+	public override bool OnReleased(GameObject touchedObject)
+	{
+		base.OnReleased(touchedObject);
+		return true;
+	}
+
+	public override bool OnSingleTapped(GameObject touchedObject)
+	{
+		base.OnSingleTapped(touchedObject);
 		if (touchedObject == gameObject)
 		{
 			Debug.Log("Tab selected: " + gameObject.name);
@@ -99,13 +122,15 @@ public class MRTab : MonoBehaviour, MRITouchable
 		return true;
 	}
 
-	public bool OnDoubleTapped(GameObject touchedObject)
+	public override bool OnDoubleTapped(GameObject touchedObject)
 	{
+		base.OnDoubleTapped(touchedObject);
 		return true;
 	}
 
-	public bool OnTouchHeld(GameObject touchedObject)
+	public override bool OnTouchHeld(GameObject touchedObject)
 	{
+		base.OnTouchHeld(touchedObject);
 		return true;
 	}
 
