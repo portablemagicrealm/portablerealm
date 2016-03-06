@@ -213,6 +213,7 @@ public class MRMain : MonoBehaviour, MRITouchable
 			case OptionsState.GameStarted:
 				MRUtility.SetObjectVisibility(mStartScreen, true);
 				MRUtility.SetObjectVisibility(mSelectCharacter, false);
+				mSaveGameButton.Visible = true;
 				mNewGameButton.Visible = false;
 				mLoadGameButton.Visible = false;
 				break;
