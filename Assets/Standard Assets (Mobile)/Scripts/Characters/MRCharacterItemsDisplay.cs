@@ -510,6 +510,11 @@ public class MRCharacterItemsDisplay : MRTabItems, MRITouchable
 		return true;
 	}
 
+	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	{
+		return true;
+	}
+
 	private void SetupTreasureStack(GameObject locationObj, MRGamePieceStack stack)
 	{
 		stack.Layer = LayerMask.NameToLayer("CharacterMat");

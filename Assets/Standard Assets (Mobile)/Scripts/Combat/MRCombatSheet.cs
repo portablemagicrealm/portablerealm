@@ -517,6 +517,11 @@ public class MRCombatSheet : MonoBehaviour, MRITouchable
 		return true;
 	}
 
+	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	{
+		return true;
+	}
+
 	/// <summary>
 	/// Called when a game piece has been selected.
 	/// </summary>

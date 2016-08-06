@@ -37,6 +37,12 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
+    <Reference Include="UnityEngine">
+      <HintPath>C:\dev\Unity5\Editor\Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>C:\dev\Unity5\Editor\Data\UnityExtensions\Unity\GUISystem\UnityEngine.UI.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Necromancer GUI\Kingthings.txt" />
@@ -123,8 +129,6 @@
     <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\JSON\JSONObject.cs" />
     <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\JSON\JSONString.cs" />
     <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\JSON\JSONValue.cs" />
-    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRActivityListWidget.cs" />
-    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRActivityWidget.cs" />
     <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRChit.cs" />
     <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRClearingSelector.cs" />
     <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\MRClock.cs" />
@@ -169,6 +173,10 @@
     <None Include="Assets\Standard Assets %28Mobile%29\Shaders\Vertex Colored Shaders\Mobile Vertex Colored.shader" />
     <None Include="Assets\Standard Assets %28Mobile%29\Shaders\Lightmap Shaders %28Legacy%29\Mobile Lightmap Only.shader" />
     <None Include="Assets\Standard Assets %28Mobile%29\Shaders\Lightmap Shaders %28Legacy%29\Mobile Lightmap AlphaTest.shader" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\UI\MRButton.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\UI\MRLoadSaveGameSelectDialog.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\UI\MRActivityListWidget.cs" />
+    <Compile Include="Assets\Standard Assets %28Mobile%29\Scripts\UI\MRActivityWidget.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -78,8 +78,7 @@ public class MRClearingSelector : MonoBehaviour
 		mVisible = true;
 
 		mWorldSize = ((SpriteRenderer)GetComponent<Renderer>()).sprite.bounds.extents.y;
-		mPixelSize = ((SpriteRenderer)GetComponent<Renderer>()).sprite.rect.height;
-		
+
 		// adjust the camera so it just shows the border area
 		mCamera = gameObject.GetComponentsInChildren<Camera> ()[0];
 		mCamera.orthographicSize = mWorldSize;
@@ -114,8 +113,8 @@ public class MRClearingSelector : MonoBehaviour
 			Rect myPos = new Rect();
 			myPos.x = parentPos.x + parentPos.width;
 			myPos.y = parentPos.y;
-			myPos.width = (mPixelSize / Screen.width) * MRGame.DpiScale;
-			myPos.height = (mPixelSize / Screen.height) * MRGame.DpiScale;
+			myPos.width = MRGame.TheGame.InspectionArea.ClearingWidthPixels / Screen.width;
+			myPos.height = MRGame.TheGame.InspectionArea.ClearingWidthPixels / Screen.height;
 			mCamera.rect = myPos;
 
 			gameObject.transform.position = mActivity.gameObject.transform.position;
@@ -150,7 +149,6 @@ public class MRClearingSelector : MonoBehaviour
 	private MRActivityWidget mActivity;
 	private MRClearing mClearing;
 	private float mWorldSize;
-	private float mPixelSize;
 	private Camera mCamera;
 	private bool mVisible;
 	private TextMesh mTextWidget;

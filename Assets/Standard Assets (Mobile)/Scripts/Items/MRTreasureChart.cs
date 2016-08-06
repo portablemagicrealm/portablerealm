@@ -68,11 +68,48 @@ public class MRTreasureChart : MonoBehaviour
 			}
 		}
 
+		// initialize the stacks
+		MRGamePieceStack stack;
+		foreach (MRMapChit.eSiteChitType site in Enum.GetValues(typeof(MRMapChit.eSiteChitType)))
+		{
+			stack = MRGame.TheGame.NewGamePieceStack();
+			stack.Layer = gameObject.layer;
+			stack.transform.parent = transform;
+			mSiteTreasures.Add(site, stack);
+		}
+		foreach (MRNative.eGroup native in Enum.GetValues(typeof(MRNative.eGroup)))
+		{
+			stack = MRGame.TheGame.NewGamePieceStack();
+			stack.Layer = gameObject.layer;
+			stack.transform.parent = transform;
+			mNativeTreasures.Add(native, stack);
+		}
+		IList<MRItem> twits = new List<MRItem>();
+		foreach (MRTreasure treasure in MRItemManager.Treasure.Values)
+		{
+			if (treasure.IsTwiT)
+				twits.Add(treasure);
+		}
+		foreach (MRTreasure twit in twits)
+		{
+			stack = MRGame.TheGame.NewGamePieceStack();
+			stack.Layer = gameObject.layer;
+			stack.transform.parent = transform;
+			mTwitTreasures.Add(twit.Id, stack);
+		}
+		twits = null;
 		mDestroyedItems = MRGame.TheGame.NewGamePieceStack();
 		mDestroyedItems.Layer = LayerMask.NameToLayer("Dummy");
 
+		CreateTreasures();
+	}
+
+	/// <summary>
+	/// Randomizes the treasures and assigns them to their initial locations.
+	/// </summary>
+	public void CreateTreasures()
+	{
 		// separate the treasures into large, small, and treasures within treasues
-		MRGamePieceStack stack;
 		IList<MRItem> twits = new List<MRItem>();
 		IList<MRItem> largeTreasures = new List<MRItem>();
 		IList<MRItem> smallTreasures = new List<MRItem>();
@@ -93,29 +130,6 @@ public class MRTreasureChart : MonoBehaviour
 		MRUtility.Shuffle(smallTreasures);
 		MRUtility.Shuffle(largeTreasures);
 		MRUtility.Shuffle(largeTreasures);
-
-		// initialize the stacks
-		foreach (MRMapChit.eSiteChitType site in Enum.GetValues(typeof(MRMapChit.eSiteChitType)))
-		{
-			stack = MRGame.TheGame.NewGamePieceStack();
-			stack.Layer = gameObject.layer;
-			stack.transform.parent = transform;
-			mSiteTreasures.Add(site, stack);
-		}
-		foreach (MRNative.eGroup native in Enum.GetValues(typeof(MRNative.eGroup)))
-		{
-			stack = MRGame.TheGame.NewGamePieceStack();
-			stack.Layer = gameObject.layer;
-			stack.transform.parent = transform;
-			mNativeTreasures.Add(native, stack);
-		}
-		foreach (MRTreasure twit in twits)
-		{
-			stack = MRGame.TheGame.NewGamePieceStack();
-			stack.Layer = gameObject.layer;
-			stack.transform.parent = transform;
-			mTwitTreasures.Add(twit.Id, stack);
-		}
 
 		// get the treasure chart json data
 		TextAsset itemsList = (TextAsset)Resources.Load("treasurechart");

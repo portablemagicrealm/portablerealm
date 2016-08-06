@@ -385,7 +385,6 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 			mCounter.transform.position = value;
 			UpdateAttackerPositions();
 		}
-
 	}
 
 	public virtual Vector3 LocalScale
@@ -537,6 +536,8 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 	/// </summary>
 	public virtual void Destroy()
 	{
+		MRGame.TheGame.RemoveGamePiece(this);
+
 		// remove ourself from the board
 		if (Stack != null)
 			Stack.RemovePiece(this);

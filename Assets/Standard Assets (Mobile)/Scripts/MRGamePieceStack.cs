@@ -266,6 +266,11 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable, MRITouchable
 		return true;
 	}
 
+	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	{
+		return true;
+	}
+
 	/// <summary>
 	/// Adds a piece to the top of the stack.
 	/// </summary>

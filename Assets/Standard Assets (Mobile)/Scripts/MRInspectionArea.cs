@@ -28,6 +28,15 @@ using System.Collections;
 
 public class MRInspectionArea : MonoBehaviour, MRITouchable
 {
+	#region Constants
+
+	// proportion of the inspection area taken up by items
+	public const float TAB_RATIO = 0.15f;
+	public const float ACTIVITY_RATIO = 0.45f;
+	public const float CLEARING_RATIO = 0.40f;
+
+	#endregion
+
 	#region Properties
 
 	/// <summary>
@@ -56,6 +65,27 @@ public class MRInspectionArea : MonoBehaviour, MRITouchable
 	{
 		get{
 			return mCamera;
+		}
+	}
+
+	public float TabWidthPixels
+	{
+		get{
+			return mTabWidth;
+		}
+	}
+
+	public float ActivityWidthPixels
+	{
+		get{
+			return mActivityWidth;
+		}
+	}
+
+	public float ClearingWidthPixels
+	{
+		get{
+			return mClearingWidth;
 		}
 	}
 
@@ -126,6 +156,11 @@ public class MRInspectionArea : MonoBehaviour, MRITouchable
 		mInspectionBoundsPixels.xMax = upperRight.x;
 		mInspectionBoundsPixels.yMin = lowerLeft.y;
 		mInspectionBoundsPixels.yMax = upperRight.y;
+
+		// comput the item widths
+		mTabWidth = mInspectionBoundsPixels.width * TAB_RATIO;
+		mActivityWidth = mInspectionBoundsPixels.width * ACTIVITY_RATIO;
+		mClearingWidth = mInspectionBoundsPixels.width * CLEARING_RATIO;
 
 		// adjust the header
 		Bounds headerBounds = mHeaderBackground.GetComponentInChildren<SpriteRenderer>().bounds;
@@ -237,6 +272,11 @@ public class MRInspectionArea : MonoBehaviour, MRITouchable
 		return false;
 	}
 
+	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	{
+		return false;
+	}
+
 	/// <summary>
 	/// Handles when the inspection area header image is tapped (or double-tapped).
 	/// </summary>
@@ -275,6 +315,9 @@ public class MRInspectionArea : MonoBehaviour, MRITouchable
 	private GameObject mHeaderBackground;
 	private GameObject mHeaderBack;
 	private TextMesh mHeaderText;
+	private float mTabWidth;
+	private float mActivityWidth;
+	private float mClearingWidth;
 
 	#endregion
 }

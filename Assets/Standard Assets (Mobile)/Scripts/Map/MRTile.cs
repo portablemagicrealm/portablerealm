@@ -242,6 +242,15 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 		return true;
 	}
 
+	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	{
+		if (touchedObject == gameObject)
+		{
+			SendMessageUpwards("OnPinchZoomGame", pinchDelta, SendMessageOptions.DontRequireReceiver);
+		}
+		return true;
+	}
+
 	/// <summary>
 	/// Return the tile next to a given side.
 	/// </summary>

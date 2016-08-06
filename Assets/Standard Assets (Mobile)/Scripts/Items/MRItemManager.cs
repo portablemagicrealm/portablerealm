@@ -162,6 +162,19 @@ namespace AssemblyCSharp
 		}
 
 		/// <summary>
+		/// Removes all items from their current stacks and set their start stack to null.
+		/// </summary>
+		public static void ResetItems()
+		{
+			foreach(MRItem item in msItems.Values)
+			{
+				if (item.Stack != null)
+					item.Stack.RemovePiece(item);
+				item.StartStack = null;
+			}
+		}
+
+		/// <summary>
 		/// Returns the item with a given id.
 		/// </summary>
 		/// <returns>The item.</returns>

@@ -267,8 +267,9 @@ public class MRChit : MonoBehaviour, MRIGamePiece, MRISerializable
 		}
 	}
 
-	void OnDestroy()
+	public virtual void OnDestroy()
 	{
+		MRGame.TheGame.RemoveGamePiece(this);
 		if (mCounter != null)
 		{
 			DestroyObject(mCounter);

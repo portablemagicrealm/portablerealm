@@ -52,10 +52,14 @@ public class MRCreateMapEvent : MRUpdateEvent
 	public override bool Update ()
 	{
 		// create the map
+#if UNITY_ANDROID || UNITY_IOS
 		Handheld.StartActivityIndicator();
+#endif
 		MRGame.TheGame.TheMap.CreateMap();
 		MRGame.TheGame.RemoveUpdateEvent(this);
+#if UNITY_ANDROID || UNITY_IOS
 		Handheld.StopActivityIndicator();
+#endif
 		return false;
 	}
 

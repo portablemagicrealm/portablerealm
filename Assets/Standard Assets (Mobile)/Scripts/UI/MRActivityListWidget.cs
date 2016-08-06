@@ -70,13 +70,6 @@ public class MRActivityListWidget : MonoBehaviour, MRITouchable
 		}
 	}
 
-	public float BorderPixelSize
-	{
-		get{
-			return mBorderPixelSize;
-		}
-	}
-
 	#endregion
 
 	#region Methods
@@ -99,7 +92,6 @@ public class MRActivityListWidget : MonoBehaviour, MRITouchable
 			Application.Quit();
 		}
 		float borderSize = ((SpriteRenderer)border.GetComponent<Renderer>()).sprite.bounds.extents.y;
-		mBorderPixelSize = ((SpriteRenderer)border.GetComponent<Renderer>()).sprite.rect.height;
 		mCamera = gameObject.GetComponentsInChildren<Camera> ()[0];
 		mCamera.orthographicSize = borderSize;
 		mCamera.aspect = 1;
@@ -202,7 +194,6 @@ public class MRActivityListWidget : MonoBehaviour, MRITouchable
 						}
 					}
 					widget.ListPosition = i;
-					widget.ParentSize = mBorderPixelSize;
 					widget.Activity = activity;
 					mActivityWidgets.Add(widget);
 				}
@@ -269,7 +260,7 @@ public class MRActivityListWidget : MonoBehaviour, MRITouchable
 
 			float activitySize = mActivityWidgets[0].ActivityPixelSize;
 			if (activitySize == 0)
-				activitySize = mBorderPixelSize;
+				activitySize = MRGame.TheGame.InspectionArea.ActivityWidthPixels;
 
 			if (mChangingCurrentActivity)
 			{
@@ -319,10 +310,10 @@ public class MRActivityListWidget : MonoBehaviour, MRITouchable
 				}
 
 				Rect newPos = new Rect();
-				newPos.x = MRGame.TheGame.InspectionArea.InspectionBoundsPixels.xMin / Screen.width;
-				newPos.y = (MRGame.TheGame.InspectionArea.InspectionBoundsPixels.yMax / Screen.height) - (((activitySize * (currentActivityIndex + 1))+ (mBorderPixelSize - activitySize) + mCurrentWidgetOffset) / Screen.height) * MRGame.DpiScale;
-				newPos.width = (mBorderPixelSize / Screen.width) * MRGame.DpiScale;
-				newPos.height = (mBorderPixelSize / Screen.height) * MRGame.DpiScale;
+				newPos.x = MRGame.TheGame.InspectionArea.TabWidthPixels / Screen.width;
+				newPos.y = (MRGame.TheGame.InspectionArea.InspectionBoundsPixels.yMax - (activitySize * currentActivityIndex) - MRGame.TheGame.InspectionArea.ActivityWidthPixels - mCurrentWidgetOffset) / Screen.height;
+				newPos.width = (MRGame.TheGame.InspectionArea.ActivityWidthPixels / Screen.width);
+				newPos.height = (MRGame.TheGame.InspectionArea.ActivityWidthPixels / Screen.height);
 				mCamera.rect = newPos;
 			}
 			else
@@ -331,10 +322,10 @@ public class MRActivityListWidget : MonoBehaviour, MRITouchable
 
 				// adjust the camera for the list position
 				Rect newPos = new Rect();
-				newPos.x = MRGame.TheGame.InspectionArea.InspectionBoundsPixels.xMin / Screen.width;
-				newPos.y = (MRGame.TheGame.InspectionArea.InspectionBoundsPixels.yMax / Screen.height) - (((activitySize * (currentActivityIndex + 1)) + (mBorderPixelSize - activitySize)) / Screen.height) * MRGame.DpiScale;
-				newPos.width = (mBorderPixelSize / Screen.width) * MRGame.DpiScale;
-				newPos.height = (mBorderPixelSize / Screen.height) * MRGame.DpiScale;
+				newPos.x = MRGame.TheGame.InspectionArea.TabWidthPixels / Screen.width;
+				newPos.y = (MRGame.TheGame.InspectionArea.InspectionBoundsPixels.yMax - (activitySize * currentActivityIndex) - MRGame.TheGame.InspectionArea.ActivityWidthPixels) / Screen.height;
+				newPos.width = (MRGame.TheGame.InspectionArea.ActivityWidthPixels / Screen.width);
+				newPos.height = (MRGame.TheGame.InspectionArea.ActivityWidthPixels / Screen.height);
 				mCamera.rect = newPos;
 			}
 			mCamera.enabled = true;
@@ -375,6 +366,11 @@ public class MRActivityListWidget : MonoBehaviour, MRITouchable
 		return true;
 	}
 
+	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	{
+		return true;
+	}
+
 	#endregion
 
 	#region Members
@@ -385,7 +381,6 @@ public class MRActivityListWidget : MonoBehaviour, MRITouchable
 	private Camera mCamera;
 	private bool mVisible;
 	private bool mInitializeActivityList;
-	private float mBorderPixelSize;
 	private bool mChangingCurrentActivity;
 	private float mCurrentWidgetOffset;
 

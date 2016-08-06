@@ -84,6 +84,7 @@ public class MRMainUI : MonoBehaviour
 	public GameObject AttackManeuverDialogPrototype;
 	public GameObject CombatActionDialogPrototype;
 	public GameObject VictoryPointsSelectionDialogPrototype;
+	public GameObject SaveLoadSelectDialogPrototype;
 	public GameObject InstructionsDialogPrototype;
 	public GameObject CreditsDialogPrototype;
 
@@ -394,9 +395,13 @@ public class MRMainUI : MonoBehaviour
 		}
 	}
 
+	/// <summary>
+	/// Displays the victory points selection dialog.
+	/// </summary>
+	/// <param name="character">Character to choose victory points for.</param>
 	public void DisplayVictoryPointsSelectionDialog(MRCharacter character)
 	{
-		if (mVictoryPointsSelectionDialog == null)
+		if (mVictoryPointsSelectionDialog == null && character != null)
 		{
 			mVictoryPointsSelectionDialog = (GameObject)Instantiate(VictoryPointsSelectionDialogPrototype);
 			mVictoryPointsSelectionDialog.transform.SetParent(transform, false);
@@ -409,6 +414,56 @@ public class MRMainUI : MonoBehaviour
 					MRVictoryPointSelectionDialog dialogScript = (MRVictoryPointSelectionDialog)scripts[i];
 					dialogScript.Character = character;
 					dialogScript.Callback = OnVictoryPointsSelected;
+					MRGame.ShowingUI = true;
+					break;
+				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Displays the save/new game select dialog.
+	/// </summary>
+	public void DisplaySaveGameSelectDialog()
+	{
+		if (mLoadSaveGameSelectDialog == null)
+		{
+			mLoadSaveGameSelectDialog = (GameObject)Instantiate(SaveLoadSelectDialogPrototype);
+			mLoadSaveGameSelectDialog.transform.SetParent(transform, false);
+			MonoBehaviour[] scripts = mLoadSaveGameSelectDialog.GetComponents<MonoBehaviour>();
+			for (int i = 0; i < scripts.Length; ++i)
+			{
+				if (scripts[i] is MRLoadSaveGameSelectDialog)
+				{
+					MRLoadSaveGameSelectDialog dialogScript = (MRLoadSaveGameSelectDialog)scripts[i];
+					dialogScript.DialogMode = MRLoadSaveGameSelectDialog.Mode.Save;
+					dialogScript.Callback = OnSaveSlotSelected;
+					MRGame.ShowingUI = true;
+					break;
+				}
+			}
+
+			MRGame.ShowingUI = true;
+		}
+	}
+
+	/// <summary>
+	/// Displays the load game select dialog.
+	/// </summary>
+	public void DisplayLoadGameSelectDialog()
+	{
+		if (mLoadSaveGameSelectDialog == null)
+		{
+			mLoadSaveGameSelectDialog = (GameObject)Instantiate(SaveLoadSelectDialogPrototype);
+			mLoadSaveGameSelectDialog.transform.SetParent(transform, false);
+			MonoBehaviour[] scripts = mLoadSaveGameSelectDialog.GetComponents<MonoBehaviour>();
+			for (int i = 0; i < scripts.Length; ++i)
+			{
+				if (scripts[i] is MRLoadSaveGameSelectDialog)
+				{
+					MRLoadSaveGameSelectDialog dialogScript = (MRLoadSaveGameSelectDialog)scripts[i];
+					dialogScript.DialogMode = MRLoadSaveGameSelectDialog.Mode.Load;
+					dialogScript.Callback = OnLoadSlotSelected;
 					MRGame.ShowingUI = true;
 					break;
 				}
@@ -532,8 +587,80 @@ public class MRMainUI : MonoBehaviour
 	{
 		MRGame.ShowingUI = false;
 		
-		Destroy (mVictoryPointsSelectionDialog);
+		Destroy(mVictoryPointsSelectionDialog);
 		mVictoryPointsSelectionDialog = null;
+	}
+
+	/// <summary>
+	/// Called when the player selected which game to load.
+	/// </summary>
+	/// <param name="buttonId">Button identifier, 0 = ok.</param>
+	private void OnLoadSlotSelected(int buttonId)
+	{
+		int selected = -1;
+		String selectedName = "";
+		if (buttonId == 0)
+		{
+			// ok selected
+			MonoBehaviour[] scripts = mLoadSaveGameSelectDialog.GetComponents<MonoBehaviour>();
+			for (int i = 0; i < scripts.Length; ++i)
+			{
+				if (scripts[i] is MRLoadSaveGameSelectDialog)
+				{
+					MRLoadSaveGameSelectDialog dialogScript = (MRLoadSaveGameSelectDialog)scripts[i];
+					selected = dialogScript.Selected;
+					selectedName = dialogScript.SelectedGameName;
+					break;
+				}
+			}
+		}
+
+		MRGame.ShowingUI = false;
+		Destroy(mLoadSaveGameSelectDialog);
+		mLoadSaveGameSelectDialog = null;
+
+		if (selected >= 0 && !String.IsNullOrEmpty(selectedName))
+		{
+			MRGame.TheGame.Main.CurrentSaveGameSlot = selected;
+			MRGame.TheGame.Main.CurrentSaveGameName = selectedName;
+			StartCoroutine(MRGame.TheGame.Main.LoadGame());
+		}
+	}
+
+	/// <summary>
+	/// Called when the player selected which game to save.
+	/// </summary>
+	/// <param name="buttonId">Button identifier, 0 = ok.</param>
+	private void OnSaveSlotSelected(int buttonId)
+	{
+		int selected = -1;
+		String selectedName = "";
+		if (buttonId == 0)
+		{
+			// ok selected
+			MonoBehaviour[] scripts = mLoadSaveGameSelectDialog.GetComponents<MonoBehaviour>();
+			for (int i = 0; i < scripts.Length; ++i)
+			{
+				if (scripts[i] is MRLoadSaveGameSelectDialog)
+				{
+					MRLoadSaveGameSelectDialog dialogScript = (MRLoadSaveGameSelectDialog)scripts[i];
+					selected = dialogScript.Selected;
+					selectedName = dialogScript.SelectedGameName;
+					break;
+				}
+			}
+		}
+
+		MRGame.ShowingUI = false;
+		Destroy(mLoadSaveGameSelectDialog);
+		mLoadSaveGameSelectDialog = null;
+
+		if (selected >= 0 && !String.IsNullOrEmpty(selectedName))
+		{
+			MRGame.TheGame.Main.CurrentSaveGameSlot = selected;
+			MRGame.TheGame.Main.CurrentSaveGameName = selectedName;
+			MRGame.TheGame.Main.SaveGame();
+		}
 	}
 
 	private void OnInstructionsBackClicked()
@@ -564,6 +691,7 @@ public class MRMainUI : MonoBehaviour
 	private GameObject mAttackManeuverDialog;
 	private GameObject mCombatActionDialog;
 	private GameObject mVictoryPointsSelectionDialog;
+	private GameObject mLoadSaveGameSelectDialog;
 	private GameObject mInstructionsDialog;
 	private GameObject mCreditsDialog;
 	private Button[] mDialogButtons;

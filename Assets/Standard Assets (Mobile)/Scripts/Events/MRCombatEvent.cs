@@ -73,7 +73,13 @@ public class MRCombatEvent : MRUpdateEvent
 				// run the combat until it is over
 				if (!MRGame.TheGame.CombatManager.Update())
 				{
-					mPhase = ePhase.NextClearing;
+					if (MRGame.TheGame.InCombat)
+						mPhase = ePhase.NextClearing;
+					else
+					{
+						// premature end of combat, exit out
+						MRGame.TheGame.RemoveUpdateEvent(this);
+					}
 				}
 				return false;
 			case ePhase.AllCombatDone:

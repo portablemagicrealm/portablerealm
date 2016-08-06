@@ -80,6 +80,20 @@ namespace AssemblyCSharp
 			}
 		}
 
+		/// <summary>
+		/// Removes all denizens from their current stacks.
+		/// </summary>
+		public static void ResetDenizens()
+		{
+			foreach(MRMonster monster in msMonsters.Values)
+			{
+				if (monster.Stack != null)
+				{
+					monster.Stack.RemovePiece(monster);
+				}
+			}
+		}
+
 		public static MRMonster GetMonster(string name, int index)
 		{
 			return GetMonster(MRUtility.IdForName(name, index));

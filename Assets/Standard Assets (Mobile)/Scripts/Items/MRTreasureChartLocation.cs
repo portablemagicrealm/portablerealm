@@ -124,6 +124,11 @@ public class MRTreasureChartLocation : MonoBehaviour, MRITouchable
 		return true;
 	}
 
+	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	{
+		return true;
+	}
+
 	#endregion
 
 	#region Members

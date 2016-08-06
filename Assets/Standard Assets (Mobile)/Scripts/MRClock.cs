@@ -154,6 +154,11 @@ public class MRClock : MonoBehaviour, MRITouchable
 		return true;
 	}
 
+	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	{
+		return true;
+	}
+
 	#endregion
 
 	#region Members

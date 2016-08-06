@@ -69,6 +69,28 @@ public class MRMain : MonoBehaviour, MRITouchable
 		}
 	}
 
+	public int CurrentSaveGameSlot
+	{
+		get{
+			return mCurrentSaveGameSlot;
+		}
+
+		set{
+			mCurrentSaveGameSlot = value;
+		}
+	}
+
+	public string CurrentSaveGameName
+	{
+		get{
+			return mCurrentSaveGameName;
+		}
+
+		set{
+			mCurrentSaveGameName = value;
+		}
+	}
+
 	#endregion
 
 	#region Methods
@@ -77,6 +99,8 @@ public class MRMain : MonoBehaviour, MRITouchable
 	void Start ()
 	{
 		mState = OptionsState.NoGame;
+		mCurrentSaveGameSlot = -1;
+		mCurrentSaveGameName = "";
 
 		mAvailableCharactersStack = MRGame.TheGame.NewGamePieceStack();
 		mAvailableCharactersStack.Layer = LayerMask.NameToLayer("Dummy");
@@ -141,6 +165,12 @@ public class MRMain : MonoBehaviour, MRITouchable
 					break;
 				case "Seed":
 					mRandomSeed = obj.GetComponent<TextMesh>();
+					break;
+				case "Version":
+					{
+						TextMesh versionText = obj.GetComponent<TextMesh>();
+						versionText.text = "V" + Application.version;
+					}
 					break;
 				case "name":
 					if (obj.transform.parent.name == "ownerName")
@@ -214,8 +244,6 @@ public class MRMain : MonoBehaviour, MRITouchable
 				MRUtility.SetObjectVisibility(mStartScreen, true);
 				MRUtility.SetObjectVisibility(mSelectCharacter, false);
 				mSaveGameButton.Visible = true;
-				mNewGameButton.Visible = false;
-				mLoadGameButton.Visible = false;
 				break;
 		}
 
@@ -288,11 +316,16 @@ public class MRMain : MonoBehaviour, MRITouchable
 		}
 	}
 
+	/// <summary>
+	/// Creates a new game.
+	/// </summary>
 	private void CreateNewGame()
 	{
 		if (mState == OptionsState.NoGame)
 		{
 			mState = OptionsState.NewGame;
+			mCurrentSaveGameSlot = -1;
+			mCurrentSaveGameName = "";
 
 			// create the map
 			MRGame.TheGame.TheMap.CreateMap();
@@ -437,12 +470,11 @@ public class MRMain : MonoBehaviour, MRITouchable
 		// characters that only have one start will be put there automatically, others will be asked where they want to start
 		foreach (MRCharacter character in mSelectedCharacters)
 		{
-			if (character.StartingLocation == null)
+			if (character.StartingLocationIndex < 0)
 			{
-				MRClearing clearing = null;
 				if (character.StartingLocations.Length == 1)
 				{
-					clearing = MRGame.TheGame.TheMap.ClearingForDwelling(character.StartingLocations[0].Dwelling());
+					character.StartingLocationIndex = 0;
 				}
 				else if (character.StartingLocations.Length > 1)
 				{
@@ -450,30 +482,37 @@ public class MRMain : MonoBehaviour, MRITouchable
 						delegate (int selected) {
 							if (selected >= 0 && selected < character.StartingLocations.Length)
 							{
-								clearing = MRGame.TheGame.TheMap.ClearingForDwelling(character.StartingLocations[selected].Dwelling());
-								if (clearing != null)
-								{
-									character.StartingLocation = clearing;
-								}
+								character.StartingLocationIndex = selected;
 							}
 					    });
-					return;
 				}
-				else
-				{
-					Debug.LogError("No starting location for character " + character.Name);
-					clearing = MRGame.TheGame.TheMap.ClearingForDwelling(MRDwelling.eDwelling.Inn);
-				}
-				if (clearing != null)
-				{
-					character.StartingLocation = clearing;
-					return;
-				}
+				return;
 			}
 			else if (!character.Score.VictoryPointsValid)
 			{
 				MRMainUI.TheUI.DisplayVictoryPointsSelectionDialog(character);
 				return;
+			}
+		}
+
+		// set up the map chits and place the characters
+		MRGame.TheGame.TheMap.PlaceMapChits();
+		foreach (MRCharacter character in mSelectedCharacters)
+		{
+			if (character.StartingLocation == null)
+			{
+				MRClearing clearing = null;
+				if (character.StartingLocationIndex >= 0 && character.StartingLocationIndex < character.StartingLocations.Length)
+					clearing = MRGame.TheGame.TheMap.ClearingForDwelling(character.StartingLocations[character.StartingLocationIndex].Dwelling());
+				if (clearing != null)
+				{
+					character.StartingLocation = clearing;
+				}
+				else
+				{
+					Debug.LogError("No starting location for character " + character.Name);
+					character.StartingLocation = MRGame.TheGame.TheMap.ClearingForDwelling(MRDwelling.eDwelling.Inn);
+				}
 			}
 		}
 
@@ -527,7 +566,7 @@ public class MRMain : MonoBehaviour, MRITouchable
 	{
 		if (touchedObject == mNewGameButton.gameObject && mNewGameButton.Visible)
 		{
-			CreateNewGame();
+			StartCoroutine(NewGame());
 		}
 		else if (touchedObject == mAddCharacterButton.gameObject && mAddCharacterButton.Visible)
 		{
@@ -547,10 +586,10 @@ public class MRMain : MonoBehaviour, MRITouchable
 		}
 		else if (touchedObject == mLoadGameButton.gameObject && mLoadGameButton.Visible)
 		{
-			LoadGame();
+			MRMainUI.TheUI.DisplayLoadGameSelectDialog();
 		}
 		else if (touchedObject == mSaveGameButton.gameObject && mSaveGameButton.Visible)
-		{
+		{			
 			SaveGame();
 		}
 		else if (touchedObject == mInstructionsButton.gameObject && mInstructionsButton.Visible)
@@ -582,26 +621,43 @@ public class MRMain : MonoBehaviour, MRITouchable
 		return true;
 	}
 
-	private void LoadGame()
+	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
 	{
-		// todo: save game name/save slot
+		return true;
+	}
+
+	public IEnumerator LoadGame()
+	{
+		if (mState == OptionsState.GameStarted)
+		{
+			yield return StartCoroutine(MRGame.TheGame.Reset());
+			mState = OptionsState.NoGame;
+		}
 
 		try
 		{
 			string path = Application.persistentDataPath;
-			if (File.Exists(Path.Combine(path, "game.json")))
+			String filename = Path.Combine(path, "game_" + CurrentSaveGameSlot + ".json");
+			if (!File.Exists(filename))
 			{
-				StringBuilder dataBuffer = new StringBuilder(File.ReadAllText(Path.Combine(path, "game.json")));
+				// try the old save game name
+				filename = Path.Combine(path, "game.json");
+				mCurrentSaveGameSlot = -1;
+				mCurrentSaveGameName = "";
+			}
+			if (File.Exists(filename))
+			{
+				StringBuilder dataBuffer = new StringBuilder(File.ReadAllText(filename));
 				JSONObject gameData = new JSONObject(dataBuffer);
 				MRGame.TheGame.Load(gameData);
 			}
 			else
-				return;
+				yield break;
 		}
 		catch (Exception err)
 		{
 			Debug.LogError("Error loading game: " + err);
-			return;
+			yield break;
 		}
 
 		// start the game proper 
@@ -609,8 +665,15 @@ public class MRMain : MonoBehaviour, MRITouchable
 		MRGame.TheGame.StartGame();
 	}
 
-	private void SaveGame()
+	public void SaveGame()
 	{
+		if (CurrentSaveGameSlot < 0)
+		{
+			// request a save game slot for the game
+			MRMainUI.TheUI.DisplaySaveGameSelectDialog();
+			return;
+		}
+
 		// todo: save game name/save slot
 		JSONObject gameData = new JSONObject();
 		MRGame.TheGame.Save(gameData);
@@ -620,13 +683,27 @@ public class MRMain : MonoBehaviour, MRITouchable
 		try
 		{
 			string path = Application.persistentDataPath;
-			File.WriteAllText(Path.Combine(path, "game.json"), dataBuffer.ToString());
+			File.WriteAllText(Path.Combine(path, "game_" + CurrentSaveGameSlot + ".json"), dataBuffer.ToString());
 			MRMainUI.TheUI.DisplayMessageDialog("Game Saved");
 		}
 		catch (Exception err)
 		{
 			Debug.LogError("Error saving game: " + err);
 		}
+	}
+
+	/// <summary>
+	/// Starts a new game. Run as a coroutine so we can clear out the current game before creating a new one.
+	/// </summary>
+	/// <returns>yield enumerator</returns>
+	private IEnumerator NewGame()
+	{
+		if (mState == OptionsState.GameStarted)
+		{
+			yield return StartCoroutine(MRGame.TheGame.Reset());
+			mState = OptionsState.NoGame;
+		}
+		CreateNewGame();
 	}
 
 	private void ShowInstructions()
@@ -676,6 +753,8 @@ public class MRMain : MonoBehaviour, MRITouchable
 	private IList<MRCharacter> mSelectedCharacters = new List<MRCharacter>();
 	private MRGamePieceStack mAvailableCharactersStack;
 	private MRGamePieceStack mSelectedCharactersStack;
+	private int mCurrentSaveGameSlot;
+	private string mCurrentSaveGameName;
 
 	#endregion
 }

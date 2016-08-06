@@ -95,6 +95,10 @@ public class MRItem : MRIGamePiece, MRISerializable
 		get{
 			return mStartStack;
 		}
+
+		set{
+			mStartStack = value;
+		}
 	}
 
 	/**********************/

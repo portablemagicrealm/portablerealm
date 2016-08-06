@@ -40,7 +40,8 @@ public class MRGame : MonoBehaviour, MRISerializable
 		Touched,
 		Single,
 		Double,
-		Held
+		Held,
+		PinchZoom
 	}
 
 	public enum eGameState
@@ -218,6 +219,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 
 	public const float MAP_CAMERA_FAR_SIZE = 5.0f;
 	public const float MAP_CAMERA_NEAR_SIZE = 2.2f;
+	public const float MAP_CAMERA_PINCH_ZOOM_SPEED = 0.1f;
 
 	private const float DOUBLE_CLICK_TIME = 0.3f;
 	private const float TOUCH_HELD_TIME = 0.75f;
@@ -291,13 +293,6 @@ public class MRGame : MonoBehaviour, MRISerializable
 	{
 		get{
 			return msLastTouchPos;
-		}
-	}
-
-	public static float DpiScale
-	{
-		get{
-			return mDpiScale;
 		}
 	}
 
@@ -505,11 +500,11 @@ public class MRGame : MonoBehaviour, MRISerializable
 		Screen.autorotateToPortraitUpsideDown = false;
 		Screen.orientation = ScreenOrientation.AutoRotation;
 
-		#if UNITY_IPHONE
+#if UNITY_IPHONE
 		Handheld.SetActivityIndicatorStyle(UnityEngine.iOS.ActivityIndicatorStyle.Gray);
-		#elif UNITY_ANDROID
+#elif UNITY_ANDROID
 		Handheld.SetActivityIndicatorStyle(AndroidActivityIndicatorStyle.Small);
-		#endif
+#endif
 
 		msGameTime = eTimeOfDay.Birdsong;
 		msGameDay = 1;
@@ -517,8 +512,6 @@ public class MRGame : MonoBehaviour, MRISerializable
 		mActiveControllableIndex = 0;
 		mInCombat = false;
 		mGameState = eGameState.NoGame;
-		// dpi scale will get set in the 1st update loop
-		mDpiScale = 0;
 
 		// static class initialization
 		MRSiteChit.Init();
@@ -569,23 +562,6 @@ public class MRGame : MonoBehaviour, MRISerializable
 	// Update is called once per frame
 	void Update ()
 	{
-		if (mDpiScale == 0)
-		{
-			Rect inspectionArea = InspectionArea.InspectionBoundsPixels;
-			Debug.Log("DPI setup, inspection width = " + inspectionArea.width);
-			float activitySize = ActivityList.BorderPixelSize;
-			Debug.Log("DPI setup, activity size = " + activitySize);
-			if (activitySize > 0)
-			{
-				float ratio = inspectionArea.width / activitySize;
-				// divide by 2 because we need room for the activity and the clearing selection
-				mDpiScale = (float)Math.Floor(ratio / 2.0);
-			}
-			if (mDpiScale <= 0)
-				mDpiScale = 1.0f;
-			Debug.Log("Set dpi scale to " + mDpiScale);
-		}
-
 		mClearingSelectedThisFrame = false;
 		mTileSelectedThisFrame = false;
 
@@ -699,6 +675,11 @@ public class MRGame : MonoBehaviour, MRISerializable
 		mGamePieces[piece.Id] = piece;
 	}
 
+	public void RemoveGamePiece(MRIGamePiece piece)
+	{
+		mGamePieces.Remove(piece.Id);
+	}
+
 	/// <summary>
 	/// Returns the clearing with a given name.
 	/// </summary>
@@ -770,7 +751,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 	}
 	
 	/// <summary>
-	/// Adds a clearing to the clearing map. If the map contains a clearing with the same name, the new clearing will be used.
+	/// Adds a road to the road map. If the map contains a road with the same name, the new road will be used.
 	/// </summary>
 	/// <param name="clearing">Clearing.</param>
 	public void AddRoad(MRRoad road)
@@ -784,7 +765,11 @@ public class MRGame : MonoBehaviour, MRISerializable
 			mRoads[id] = road;
 		}
 	}
-	
+
+	/// <summary>
+	/// Removes a road from the road map.
+	/// </summary>
+	/// <param name="road">Road.</param>
 	public void RemoveRoad(MRRoad road)
 	{
 		MRRoad test;
@@ -922,7 +907,8 @@ public class MRGame : MonoBehaviour, MRISerializable
 			view = eViews.Combat;
 		PopView();
 		PushView(view);
-		AddUpdateEvent(new MRUpdateViewEvent());
+		// we've got one more update view event on the event list than we need, so remove it
+		mEventsToAdd.RemoveAt(mEventsToAdd.Count - 1);
 	}
 
 	/// <summary>
@@ -971,6 +957,11 @@ public class MRGame : MonoBehaviour, MRISerializable
 			mTileSelectedThisFrame = true;
 			BroadcastMessage("OnTileSelected", tile, SendMessageOptions.DontRequireReceiver);
 		}
+	}
+
+	public void OnPinchZoomGame(float pinchDelta)
+	{
+		BroadcastMessage("OnPinchZoom", pinchDelta, SendMessageOptions.DontRequireReceiver);
 	}
 
 	/// <summary>
@@ -1064,7 +1055,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 				return;
 			}
 
-			if (Input.touchCount > 0)
+			if (Input.touchCount == 1)
 			{
 				msTouchDuration += Time.deltaTime;
 				msTouch = Input.GetTouch(0);
@@ -1111,6 +1102,18 @@ public class MRGame : MonoBehaviour, MRISerializable
 					default:
 						break;
 				}
+			}
+			else if (Input.touchCount == 2)
+			{
+				// test for pinch zoom
+				Touch touch0 = Input.GetTouch(0);
+				Touch touch1 = Input.GetTouch(1);
+				Vector2 touch0PrevPos = touch0.position - touch0.deltaPosition;
+				Vector2 touch1PrevPos = touch1.position - touch1.deltaPosition;
+				float prevTouchDelta = (touch0PrevPos - touch1PrevPos).magnitude;
+				float touchDelta = (touch0.position - touch1.position).magnitude;
+				float pinchDelta = prevTouchDelta - touchDelta;
+				HandleTouch(eTouchType.PinchZoom, pinchDelta);
 			}
 			else
 			{
@@ -1259,6 +1262,16 @@ public class MRGame : MonoBehaviour, MRISerializable
 	/// <param name="touchType">Touch type.</param>
 	private void HandleTouch(eTouchType touchType)
 	{
+		HandleTouch(touchType, 0);
+	}
+
+	/// <summary>
+	/// Determines which widget(s) were touched by a tap/click, and tells them to activate.
+	/// </summary>
+	/// <param name="touchType">Touch type.</param>
+	/// <param name="pinchZoomDelta">Amount to zoom if touch type is pinch zoom</param>
+	private void HandleTouch(eTouchType touchType, float pinchZoomDelta)
+	{
 		Debug.Log("MRGame OnTouched enter");
 		// find the object touched
 		List<TouchedData> touched = new List<TouchedData>();
@@ -1306,6 +1319,8 @@ public class MRGame : MonoBehaviour, MRISerializable
 					handled = touched[i].touched.OnDoubleTapped(touched[i].hitObject);
 				else if (touchType == eTouchType.Held)
 					handled = touched[i].touched.OnTouchHeld(touched[i].hitObject);
+				else if (touchType == eTouchType.PinchZoom)
+					handled = touched[i].touched.OnPinchZoom(touched[i].hitObject, pinchZoomDelta);
 			}
 		}
 	}
@@ -1320,15 +1335,66 @@ public class MRGame : MonoBehaviour, MRISerializable
 		mLastTouched = null;
 	}
 
+	/// <summary>
+	/// Resets the game to its initial state for a new game.
+	/// </summary>
+	public IEnumerator Reset()
+	{
+		// force end of combat
+		CombatManager.CombatPhase = MRCombatManager.eCombatPhase.CombatDone;
+		CombatManager.Clearing = null;
+		mInCombat = false;
+
+		// remove the characters
+		foreach (MRIControllable controllable in mControllables)
+		{
+			if (controllable is MRCharacter)
+			{
+				((MRCharacter)controllable).Destroy();
+			}
+		}
+		mControllables.Clear();
+
+		// reset the denizens
+		MRDenizenManager.ResetDenizens();
+		mMonsterChart.ResetMonsters();
+
+		// reset the treasures
+		MRItemManager.ResetItems();
+		mTreasureChart.CreateTreasures();
+
+		// clear the map
+		mTheMap.ClearMap();
+		yield return new WaitForSeconds(0.1f);
+
+		// reset the game state
+		msGameTime = eTimeOfDay.Birdsong;
+		msGameDay = 1;
+		msShowingUI = false;
+		mActiveControllableIndex = 0;
+		mGameState = eGameState.NoGame;
+	}
+
+	/// <summary>
+	/// Load the game from json data.
+	/// </summary>
+	/// <param name="root">The root json structure</param>
 	public bool Load(JSONObject root)
 	{
 		Debug.Log("Load game start");
-
+#if UNITY_ANDROID || UNITY_IOS
 		Handheld.StartActivityIndicator();
-
+#endif
 		// load global data
 		msGameTime = (eTimeOfDay)((JSONNumber)root["time"]).IntValue;
 		msGameDay = ((JSONNumber)root["day"]).IntValue;
+
+		// load the game name
+		if (root["gameName"] != null)
+		{
+			JSONString gameName = (JSONString)root["gameName"];
+			MRGame.TheGame.Main.CurrentSaveGameName = gameName.Value;
+		}
 
 		// load the random number generator
 		if (root["random"] != null)
@@ -1336,7 +1402,9 @@ public class MRGame : MonoBehaviour, MRISerializable
 			JSONObject randomData = (JSONObject)root["random"];
 			if (!MRRandom.Load(randomData))
 			{
+#if UNITY_ANDROID || UNITY_IOS
 				Handheld.StopActivityIndicator();
+#endif
 				Debug.LogError("Load random number generator error");
 				return false;
 			}
@@ -1346,7 +1414,9 @@ public class MRGame : MonoBehaviour, MRISerializable
 		JSONObject mapData = (JSONObject)root["map"];
 		if (!mTheMap.Load(mapData))
 		{
+#if UNITY_ANDROID || UNITY_IOS
 			Handheld.StopActivityIndicator();
+#endif
 			Debug.LogError("Load game map error");
 			return false;
 		}
@@ -1362,13 +1432,17 @@ public class MRGame : MonoBehaviour, MRISerializable
 			MRCharacter character = CharacterManager.CreateCharacter(characterName.Value);
 			if (character == null)
 			{
+#if UNITY_ANDROID || UNITY_IOS
 				Handheld.StopActivityIndicator();
+#endif
 				Debug.LogError("Load game character create error");
 				return false;
 			}
 			if (!character.Load(characterData))
 			{
+#if UNITY_ANDROID || UNITY_IOS
 				Handheld.StopActivityIndicator();
+#endif
 				Debug.LogError("Load game character error");
 				return false;
 			}
@@ -1418,7 +1492,9 @@ public class MRGame : MonoBehaviour, MRISerializable
 		if (root["monsterRoll"] != null)
 			mMonsterChart.MonsterRoll = ((JSONNumber)root["monsterRoll"]).IntValue;
 
+#if UNITY_ANDROID || UNITY_IOS
 		Handheld.StopActivityIndicator();
+#endif
 		Debug.Log("Load game end");
 		return true;
 	}
@@ -1426,9 +1502,11 @@ public class MRGame : MonoBehaviour, MRISerializable
 	public void Save(JSONObject root)
 	{
 		Debug.Log("Save game start");
+#if UNITY_ANDROID || UNITY_IOS
 		Handheld.StartActivityIndicator();
-
+#endif
 		// save global data
+		root["gameName"] = new JSONString(MRGame.TheGame.Main.CurrentSaveGameName);
 		root["time"] = new JSONNumber((int)msGameTime);
 		root["day"] = new JSONNumber(msGameDay);
 		root["vault"] = new JSONBoolean(MRSiteChit.VaultOpened);
@@ -1500,8 +1578,9 @@ public class MRGame : MonoBehaviour, MRISerializable
 			}
 			root["roads"] = roads;
 		}
-
+#if UNITY_ANDROID || UNITY_IOS
 		Handheld.StopActivityIndicator();
+#endif
 		Debug.Log("Save game end");
 	}
 
@@ -1558,7 +1637,6 @@ public class MRGame : MonoBehaviour, MRISerializable
 	private static bool msTouchHeld;
 	private static MRITouchable mLastTouched;
 	private static bool msShowingUI;
-	private static float mDpiScale;
 
 	private static eTimeOfDay msGameTime;
 	private static int msGameDay;

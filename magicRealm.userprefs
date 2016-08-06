@@ -1,15 +1,17 @@
-﻿<Properties StartupItem="Assembly-CSharp.csproj">
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatSheet.cs">
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Standard Assets (Mobile)\Scripts\MRGame.cs">
     <Files>
       <File FileName="Assets\Standard Assets (Mobile)\Scripts\MRGame.cs" Line="1" Column="1" />
-      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Combat\MRCombatSheet.cs" Line="447" Column="1" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\UI\MRMain.cs" Line="1" Column="1" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Map\MRDwelling.cs" Line="1" Column="1" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\MRUtility.cs" Line="30" Column="34" />
+      <File FileName="Assets\Standard Assets (Mobile)\Scripts\Map\MRWarningChit.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
-      <Breakpoint enabled="false" file="D:\Projects\magicRealm\Assets\Standard Assets (Mobile)\Scripts\UI\MRMain.cs" line="527" column="1" />
-      <Breakpoint file="D:\Projects\magicRealm\Assets\Standard Assets (Mobile)\Scripts\UI\MRViewButton.cs" line="103" column="1" />
+      <Breakpoint file="D:\Projects\magicRealm\Assets\Standard Assets (Mobile)\Scripts\Map\MRDwelling.cs" line="57" column="1" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />

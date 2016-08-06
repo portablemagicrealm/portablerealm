@@ -244,6 +244,31 @@ public class MRMap : MonoBehaviour, MRISerializable
 	}
 
 	/// <summary>
+	/// Removes the current map.
+	/// </summary>
+	public void ClearMap()
+	{
+		if (!mMapCreated)
+			return;
+
+		foreach (MRTile tile in mMapTiles.Values)
+		{
+			Destroy(tile.gameObject);
+		}
+		mMapTiles.Clear();
+		mRoads.Clear();
+		mDwellings.Clear();
+		foreach (MRMapChit chit in mMapChits)
+		{
+			Destroy(chit.gameObject);
+		}
+		mMapChits.Clear();
+		mMapChitsByType.Clear();
+
+		mMapCreated = false;
+	}
+
+	/// <summary>
 	/// Creates a new random map.
 	/// </summary>
 	public void CreateMap()
@@ -262,26 +287,29 @@ public class MRMap : MonoBehaviour, MRISerializable
 
 	private void CreateTilePool()
 	{
-		mTilePool.Add(eTileNames.awfulvalley, AwfulValley);
-		mTilePool.Add(eTileNames.badvalley, BadValley);
-		mTilePool.Add(eTileNames.borderland, Borderland);
-		mTilePool.Add(eTileNames.cavern, Cavern);
-		mTilePool.Add(eTileNames.caves, Caves);
-		mTilePool.Add(eTileNames.cliff, Cliff);
-		mTilePool.Add(eTileNames.crag, Crag);
-		mTilePool.Add(eTileNames.curstvalley, CurstValley);
-		mTilePool.Add(eTileNames.darkvalley, DarkValley);
-		mTilePool.Add(eTileNames.deepwoods, DeepWoods);
-		mTilePool.Add(eTileNames.evilvalley, EvilValley);
-		mTilePool.Add(eTileNames.highpass, HighPass);
-		mTilePool.Add(eTileNames.ledges, Ledges);
-		mTilePool.Add(eTileNames.lindenwoods, LindenWoods);
-		mTilePool.Add(eTileNames.maplewoods, MapleWoods);
-		mTilePool.Add(eTileNames.mountain, Mountain);
-		mTilePool.Add(eTileNames.nutwoods, NutWoods);
-		mTilePool.Add(eTileNames.oakwoods, OakWoods);
-		mTilePool.Add(eTileNames.pinewoods, PineWoods);
-		mTilePool.Add(eTileNames.ruins, Ruins);
+		if (mTilePool.Count == 0)
+		{
+			mTilePool.Add(eTileNames.awfulvalley, AwfulValley);
+			mTilePool.Add(eTileNames.badvalley, BadValley);
+			mTilePool.Add(eTileNames.borderland, Borderland);
+			mTilePool.Add(eTileNames.cavern, Cavern);
+			mTilePool.Add(eTileNames.caves, Caves);
+			mTilePool.Add(eTileNames.cliff, Cliff);
+			mTilePool.Add(eTileNames.crag, Crag);
+			mTilePool.Add(eTileNames.curstvalley, CurstValley);
+			mTilePool.Add(eTileNames.darkvalley, DarkValley);
+			mTilePool.Add(eTileNames.deepwoods, DeepWoods);
+			mTilePool.Add(eTileNames.evilvalley, EvilValley);
+			mTilePool.Add(eTileNames.highpass, HighPass);
+			mTilePool.Add(eTileNames.ledges, Ledges);
+			mTilePool.Add(eTileNames.lindenwoods, LindenWoods);
+			mTilePool.Add(eTileNames.maplewoods, MapleWoods);
+			mTilePool.Add(eTileNames.mountain, Mountain);
+			mTilePool.Add(eTileNames.nutwoods, NutWoods);
+			mTilePool.Add(eTileNames.oakwoods, OakWoods);
+			mTilePool.Add(eTileNames.pinewoods, PineWoods);
+			mTilePool.Add(eTileNames.ruins, Ruins);
+		}
 	}
 
 	/// <summary>
@@ -290,7 +318,6 @@ public class MRMap : MonoBehaviour, MRISerializable
 	/// <returns>yield WaitForSeconds to continue, yield null when done</returns>
 	private IEnumerator BuildMap()
 	{
-//		mIsValidMap = false;
 		foreach (MRTile tile in mMapTiles.Values)
 		{
 			Destroy(tile.gameObject);
@@ -480,11 +507,153 @@ public class MRMap : MonoBehaviour, MRISerializable
 			yield return null;
 		}
 
-//		mIsValidMap = true;
-
-		PlaceMapChits();
-
 		mMapCreated = true;
+	}
+
+	/// <summary>
+	/// Assigns the map chits to their initial map locations.
+	/// </summary>
+	public void PlaceMapChits()
+	{
+		CreateMapChits();
+
+		// create a group of site and sound chits
+		IList<MRMapChit> chitList = new List<MRMapChit>();
+		foreach (MRMapChit chit in GetMapChitsForType(MRMapChit.eMapChitType.Site))
+		{
+//			chit.SideUp = MRChit.eSide.Back;
+			chitList.Add(chit);
+		}
+		foreach (MRMapChit chit in GetMapChitsForType(MRMapChit.eMapChitType.Sound))
+		{
+//			chit.SideUp = MRChit.eSide.Back;
+			chitList.Add(chit);
+		}
+		chitList.Shuffle();
+		chitList.Shuffle();
+
+		// put 5 of the mixed chits into each of the lost castle and lost city
+		IList<MRMapChit> lostCityList = new List<MRMapChit>();
+		IList<MRMapChit> lostCastleList = new List<MRMapChit>();
+		foreach (MRMapChit superChit in GetMapChitsForType(MRMapChit.eMapChitType.SuperSite))
+		{
+//			superChit.SideUp = MRChit.eSide.Back;
+			if (((MRSuperSiteChit)superChit).SiteType == MRMapChit.eSuperSiteChitType.LostCastle)
+				lostCastleList.Add(superChit);
+			else
+				lostCityList.Add(superChit);
+			for (int i = 0; i < 5; ++i)
+			{
+				((MRSuperSiteChit)superChit).ContainedChits.Add(chitList[0]);
+				chitList[0].Layer = LayerMask.NameToLayer("Dummy");
+				chitList.RemoveAt(0);
+			}
+		}
+
+		// split the remaining sound and site chits into the lost castle and lost city lists
+		while (chitList.Count > 0)
+		{
+			lostCastleList.Add(chitList[0]);
+			lostCityList.Add(chitList[1]);
+			chitList.RemoveAt(0);
+			chitList.RemoveAt(0);
+		}
+		chitList = null;
+		lostCastleList.Shuffle();
+		lostCastleList.Shuffle();
+		lostCityList.Shuffle();
+		lostCityList.Shuffle();
+
+		// assign the lost castle chits to the mountain tiles, and the lost city chits to the cave tiles
+		ICollection<MRTile> tiles = mMapTiles.Values;
+		foreach (MRTile tile in tiles)
+		{
+			if (tile.type == MRTile.eTileType.Cave)
+			{
+				tile.AddMapChit(lostCityList[0]);
+				lostCityList.RemoveAt(0);
+			}
+			else if (tile.type == MRTile.eTileType.Mountain)
+			{
+				tile.AddMapChit(lostCastleList[0]);
+				lostCastleList.RemoveAt(0);
+			}
+		}
+		if (lostCityList.Count > 0)
+		{
+			Debug.LogError("Not all lost city chits assigned");
+		}
+		if (lostCastleList.Count > 0)
+		{
+			Debug.LogError("Not all lost castle chits assigned");
+		}
+		lostCityList = null;
+		lostCastleList = null;
+
+		// assign the warning chits to their tiles
+		IDictionary<MRTile.eTileType, IList<MRMapChit>> warningChits = new Dictionary<MRTile.eTileType, IList<MRMapChit>>();
+		warningChits.Add(MRTile.eTileType.Cave, new List<MRMapChit>());
+		warningChits.Add(MRTile.eTileType.Mountain, new List<MRMapChit>());
+		warningChits.Add(MRTile.eTileType.Valley, new List<MRMapChit>());
+		warningChits.Add(MRTile.eTileType.Woods, new List<MRMapChit>());
+		foreach (MRMapChit chit in GetMapChitsForType(MRMapChit.eMapChitType.Warning))
+		{
+//			chit.SideUp = MRChit.eSide.Back;
+			warningChits[((MRWarningChit)chit).TileType].Add(chit);
+		}
+		foreach (IList<MRMapChit> chits in warningChits.Values)
+		{
+			chits.Shuffle();
+			chits.Shuffle();
+		}
+
+		MRTile borderland;
+		mMapTiles.TryGetValue(eTileNames.borderland, out borderland);
+		MRClearing borderlandClearing = borderland.FrontSide.GetClearing(1);
+		foreach (MRTile tile in tiles)
+		{
+			MRWarningChit chit = (MRWarningChit)warningChits[tile.type][0];
+			warningChits[tile.type].RemoveAt(0);
+			if (chit.Substitute == MRDwelling.eDwelling.None ||
+			    chit.Substitute == MRDwelling.eDwelling.LargeFire ||
+			    chit.Substitute == MRDwelling.eDwelling.SmallFire)
+			{
+				tile.AddMapChit(chit);
+			}
+			else
+			{
+				// replace the warning with its dwelling in clearing 5 or 4
+				MRClearing clearing = tile.FrontSide.GetClearing(5);
+				// if clearing 5 doesn't connect to the borderland, use clearing 4
+				if (Path(clearing, borderlandClearing) == null)
+					clearing = tile.FrontSide.GetClearing(4);
+				if (clearing != null)
+				{
+					if (chit.Substitute != MRDwelling.eDwelling.Ghosts)
+					{
+						MRDwelling dwelling = MRDwelling.Create();
+						dwelling.Parent = clearing.gameObject.transform;
+						dwelling.Type = chit.Substitute;
+						clearing.AddPieceToBottom(dwelling);
+					}
+					else
+					{
+						mGhostStartClearing = clearing;
+						for (int i = 0; i < 2; ++i)
+						{
+							MRMonster ghost = MRDenizenManager.GetMonster("ghost", i);
+							if (ghost != null)
+								ghost.Location = clearing;
+						}
+					}
+					mDwellings[chit.Substitute] = clearing;
+				}
+				DestroyObject(chit.gameObject);
+			}
+		}
+
+		mMapChits.Clear();
+		mMapChitsByType.Clear();
 	}
 
 	/// <summary>
@@ -719,153 +888,6 @@ public class MRMap : MonoBehaviour, MRISerializable
 	}
 
 	/// <summary>
-	/// Assigns the map chits to their initial map locations.
-	/// </summary>
-	private void PlaceMapChits()
-	{
-		CreateMapChits();
-
-		// create a group of site and sound chits
-		IList<MRMapChit> chitList = new List<MRMapChit>();
-		foreach (MRMapChit chit in GetMapChitsForType(MRMapChit.eMapChitType.Site))
-		{
-//			chit.SideUp = MRChit.eSide.Back;
-			chitList.Add(chit);
-		}
-		foreach (MRMapChit chit in GetMapChitsForType(MRMapChit.eMapChitType.Sound))
-		{
-//			chit.SideUp = MRChit.eSide.Back;
-			chitList.Add(chit);
-		}
-		chitList.Shuffle();
-		chitList.Shuffle();
-
-		// put 5 of the mixed chits into each of the lost castle and lost city
-		IList<MRMapChit> lostCityList = new List<MRMapChit>();
-		IList<MRMapChit> lostCastleList = new List<MRMapChit>();
-		foreach (MRMapChit superChit in GetMapChitsForType(MRMapChit.eMapChitType.SuperSite))
-		{
-//			superChit.SideUp = MRChit.eSide.Back;
-			if (((MRSuperSiteChit)superChit).SiteType == MRMapChit.eSuperSiteChitType.LostCastle)
-				lostCastleList.Add(superChit);
-			else
-				lostCityList.Add(superChit);
-			for (int i = 0; i < 5; ++i)
-			{
-				((MRSuperSiteChit)superChit).ContainedChits.Add(chitList[0]);
-				chitList[0].Layer = LayerMask.NameToLayer("Dummy");
-				chitList.RemoveAt(0);
-			}
-		}
-
-		// split the remaining sound and site chits into the lost castle and lost city lists
-		while (chitList.Count > 0)
-		{
-			lostCastleList.Add(chitList[0]);
-			lostCityList.Add(chitList[1]);
-			chitList.RemoveAt(0);
-			chitList.RemoveAt(0);
-		}
-		chitList = null;
-		lostCastleList.Shuffle();
-		lostCastleList.Shuffle();
-		lostCityList.Shuffle();
-		lostCityList.Shuffle();
-
-		// assign the lost castle chits to the mountain tiles, and the lost city chits to the cave tiles
-		ICollection<MRTile> tiles = mMapTiles.Values;
-		foreach (MRTile tile in tiles)
-		{
-			if (tile.type == MRTile.eTileType.Cave)
-			{
-				tile.AddMapChit(lostCityList[0]);
-				lostCityList.RemoveAt(0);
-			}
-			else if (tile.type == MRTile.eTileType.Mountain)
-			{
-				tile.AddMapChit(lostCastleList[0]);
-				lostCastleList.RemoveAt(0);
-			}
-		}
-		if (lostCityList.Count > 0)
-		{
-			Debug.LogError("Not all lost city chits assigned");
-		}
-		if (lostCastleList.Count > 0)
-		{
-			Debug.LogError("Not all lost castle chits assigned");
-		}
-		lostCityList = null;
-		lostCastleList = null;
-
-		// assign the warning chits to their tiles
-		IDictionary<MRTile.eTileType, IList<MRMapChit>> warningChits = new Dictionary<MRTile.eTileType, IList<MRMapChit>>();
-		warningChits.Add(MRTile.eTileType.Cave, new List<MRMapChit>());
-		warningChits.Add(MRTile.eTileType.Mountain, new List<MRMapChit>());
-		warningChits.Add(MRTile.eTileType.Valley, new List<MRMapChit>());
-		warningChits.Add(MRTile.eTileType.Woods, new List<MRMapChit>());
-		foreach (MRMapChit chit in GetMapChitsForType(MRMapChit.eMapChitType.Warning))
-		{
-//			chit.SideUp = MRChit.eSide.Back;
-			warningChits[((MRWarningChit)chit).TileType].Add(chit);
-		}
-		foreach (IList<MRMapChit> chits in warningChits.Values)
-		{
-			chits.Shuffle();
-			chits.Shuffle();
-		}
-
-		MRTile borderland;
-		mMapTiles.TryGetValue(eTileNames.borderland, out borderland);
-		MRClearing borderlandClearing = borderland.FrontSide.GetClearing(1);
-		foreach (MRTile tile in tiles)
-		{
-			MRWarningChit chit = (MRWarningChit)warningChits[tile.type][0];
-			warningChits[tile.type].RemoveAt(0);
-			if (chit.Substitute == MRDwelling.eDwelling.None ||
-			    chit.Substitute == MRDwelling.eDwelling.LargeFire ||
-			    chit.Substitute == MRDwelling.eDwelling.SmallFire)
-			{
-				tile.AddMapChit(chit);
-			}
-			else
-			{
-				// replace the warning with its dwelling in clearing 5 or 4
-				MRClearing clearing = tile.FrontSide.GetClearing(5);
-				// if clearing 5 doesn't connect to the borderland, use clearing 4
-				if (Path(clearing, borderlandClearing) == null)
-					clearing = tile.FrontSide.GetClearing(4);
-				if (clearing != null)
-				{
-					if (chit.Substitute != MRDwelling.eDwelling.Ghosts)
-					{
-						//MRDwelling dwelling = clearing.gameObject.AddComponent<MRDwelling>();
-						MRDwelling dwelling = MRDwelling.Create();
-						dwelling.Parent = clearing.gameObject.transform;
-						dwelling.Type = chit.Substitute;
-						clearing.AddPieceToBottom(dwelling);
-					}
-					else
-					{
-						mGhostStartClearing = clearing;
-						for (int i = 0; i < 2; ++i)
-						{
-							MRMonster ghost = MRDenizenManager.GetMonster("ghost", i);
-							if (ghost != null)
-								ghost.Location = clearing;
-						}
-					}
-					mDwellings[chit.Substitute] = clearing;
-				}
-				DestroyObject(chit);
-			}
-		}
-
-		mMapChits.Clear();
-		mMapChitsByType.Clear();
-	}
-
-	/// <summary>
 	/// Returns the clearing that contains a given dwelling.
 	/// </summary>
 	/// <returns>The clearing for dwelling.</returns>
@@ -919,6 +941,24 @@ public class MRMap : MonoBehaviour, MRISerializable
 			mMapCamera.orthographicSize = MRGame.MAP_CAMERA_FAR_SIZE;
 			mMapZoomed = false;
 			Debug.Log("Zoom out");
+		}
+	}
+
+	/// <summary>
+	/// Called when a user pinch-zooms on mobile. Zooms in or out of the map.
+	/// </summary>
+	/// <param name="pinchDelta">Pinch delta.</param>
+	public void OnPinchZoom(float pinchDelta)
+	{
+		mMapCamera.orthographicSize += pinchDelta * MRGame.MAP_CAMERA_PINCH_ZOOM_SPEED;
+		mMapCamera.orthographicSize = Mathf.Clamp(mMapCamera.orthographicSize, MRGame.MAP_CAMERA_NEAR_SIZE, MRGame.MAP_CAMERA_FAR_SIZE);
+		if (mMapCamera.orthographicSize - MRGame.MAP_CAMERA_NEAR_SIZE <= MRGame.MAP_CAMERA_PINCH_ZOOM_SPEED)
+		{
+			mMapZoomed = true;
+		}
+		else
+		{
+			mMapZoomed = false;
 		}
 	}
 

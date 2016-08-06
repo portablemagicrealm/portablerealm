@@ -135,7 +135,7 @@ public class MRClearing : MonoBehaviour, MRILocation, MRITouchable
 
 	void OnDestroy()
 	{
-		Debug.LogWarning("Destroy clearing " + Name);
+//		Debug.LogWarning("Destroy clearing " + Name);
 		MRGame.TheGame.RemoveClearing(this);
 	}
 
@@ -177,6 +177,15 @@ public class MRClearing : MonoBehaviour, MRILocation, MRITouchable
 				MRGame.TheGame.InspectStack(mPieces);
 			else
 				MRGame.TheGame.InspectStack(null);
+		}
+		return true;
+	}
+
+	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	{
+		if (touchedObject == gameObject)
+		{
+			SendMessageUpwards("OnPinchZoomGame", pinchDelta, SendMessageOptions.DontRequireReceiver);
 		}
 		return true;
 	}

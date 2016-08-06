@@ -52,6 +52,17 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		}
 	}
 
+	public int StartingLocationIndex
+	{
+		get{
+			return mStartingLocationIndex;
+		}
+
+		set{
+			mStartingLocationIndex = value;
+		}
+	}
+
 	public MRILocation StartingLocation
 	{
 		get{
@@ -573,6 +584,8 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		{
 			mStartingLocations[i] = ((JSONString)startingLocations[i]).Value;
 		}
+		mStartingLocationIndex = -1;
+		mStartingLocation = null;
 
 		JSONArray abilities = (JSONArray)jsonData["abilities"];
 		mAbilities = new string[abilities.Count];
@@ -2254,6 +2267,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 
 	protected string[] mAbilities;
 	protected string[] mStartingLocations;
+	protected int mStartingLocationIndex;
 	protected MRILocation mStartingLocation;
 
 	#endregion

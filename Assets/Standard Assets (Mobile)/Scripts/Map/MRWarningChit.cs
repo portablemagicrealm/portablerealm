@@ -96,7 +96,7 @@ public class MRWarningChit : MRMapChit
 							mSubstitute = MRDwelling.eDwelling.Chapel;
 							break;
 						case eWarningChitType.Ruins:
-							mSubstitute = MRDwelling.eDwelling.Guard;
+							mSubstitute = MRDwelling.eDwelling.GuardHouse;
 							break;
 						case eWarningChitType.Smoke:
 							mSubstitute = MRDwelling.eDwelling.House;

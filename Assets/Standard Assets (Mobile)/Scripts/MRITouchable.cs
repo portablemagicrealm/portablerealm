@@ -62,5 +62,13 @@ public interface MRITouchable
 	/// <param name="touchedObject">Touched object.</param>
 	/// <returns>true if the event was handled, false if not</returns>
 	bool OnTouchHeld(GameObject touchedObject);
+
+	/// <summary>
+	/// Called for a pinch-zoom on mobile devices.
+	/// </summary>
+	/// <param name="touchedObject">Touched object.</param>
+	/// <param name="pinchDelta">Amount to zoom</param>
+	/// <returns>true if the event was handled, false if not</returns>
+	bool OnPinchZoom(GameObject touchedObject, float pinchDelta);
 }
 

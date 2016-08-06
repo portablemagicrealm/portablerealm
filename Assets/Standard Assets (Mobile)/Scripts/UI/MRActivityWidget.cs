@@ -132,17 +132,10 @@ public class MRActivityWidget : MonoBehaviour, MRITouchable
 		}
 	}
 
-	public float ParentSize
-	{
-		set{
-			mParentSize = value;
-		}
-	}
-
 	public float ActivityPixelSize
 	{
 		get{
-			return mPixelSize;
+			return MRGame.TheGame.InspectionArea.ActivityWidthPixels;
 		}
 	}
 
@@ -195,8 +188,8 @@ public class MRActivityWidget : MonoBehaviour, MRITouchable
 		}
 		mBorder.GetComponent<Renderer>().enabled = true;
 		mCanceledBorder.GetComponent<Renderer>().enabled = false;
-		mBorderSize = ((SpriteRenderer)mBorder.GetComponent<Renderer>()).sprite.bounds.extents.y;
-		mPixelSize = ((SpriteRenderer)mBorder.GetComponent<Renderer>()).sprite.rect.height;
+		Sprite sprite = ((SpriteRenderer)mBorder.GetComponent<Renderer>()).sprite;
+		mBorderSize = sprite.bounds.extents.y;
 
 		// adjust the camera so it just shows the border area
 		mCamera = gameObject.GetComponentsInChildren<Camera> ()[0];
@@ -319,6 +312,11 @@ public class MRActivityWidget : MonoBehaviour, MRITouchable
 		return true;
 	}
 
+	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	{
+		return true;
+	}
+
 	//
 	// Change our action for whichever icon is showing the most on screen.
 	//
@@ -345,13 +343,12 @@ public class MRActivityWidget : MonoBehaviour, MRITouchable
 		gameObject.transform.position = new Vector3(0, mListPosition * mBorderSize * 2.0f, 0);
 
 		// adjust the camera for the list position
-		float aspect = Screen.width / Screen.height;
 		Rect newPos = new Rect();
-		float parentOffset = (mParentSize - mPixelSize) / 2.0f;
-		newPos.x = (parentOffset * MRGame.DpiScale + MRGame.TheGame.InspectionArea.InspectionBoundsPixels.xMin) / Screen.width;
-		newPos.y = (MRGame.TheGame.InspectionArea.InspectionBoundsPixels.yMax / Screen.height) - (((mPixelSize * (mListPosition + 1)) + parentOffset) / Screen.height) * MRGame.DpiScale;
-		newPos.width = (mPixelSize / Screen.width) * MRGame.DpiScale;
-		newPos.height = (mPixelSize / Screen.height) * MRGame.DpiScale;
+		float parentOffset = 0;
+		newPos.x = (parentOffset + MRGame.TheGame.InspectionArea.TabWidthPixels) / Screen.width;
+		newPos.y = (MRGame.TheGame.InspectionArea.InspectionBoundsPixels.yMax - (MRGame.TheGame.InspectionArea.ActivityWidthPixels * mListPosition) - MRGame.TheGame.InspectionArea.ActivityWidthPixels) / Screen.height;
+		newPos.width = MRGame.TheGame.InspectionArea.ActivityWidthPixels / Screen.width;
+		newPos.height = MRGame.TheGame.InspectionArea.ActivityWidthPixels / Screen.height;
 		mCamera.rect = newPos;
 
 		// if we're not enabled, don't show the activity strip
@@ -368,8 +365,6 @@ public class MRActivityWidget : MonoBehaviour, MRITouchable
 	private GameObject mCanceledBorder = null;
 	private bool mVisible;
 	private float mBorderSize;
-	private float mPixelSize;
-	private float mParentSize;
 	private float mActivityStripWidth;
 	private float mActivityWidth;
 	private float mMinActivityListPos;

@@ -76,11 +76,14 @@ public class MRViewButton : MRButton
 		float wantedButtonHeight = screenHeight / MRGame.ViewTabCount;
 		float boundsHeight = mCamera.WorldToScreenPoint(new Vector3(0, bounds.max.y, 0)).y -
 			mCamera.WorldToScreenPoint(new Vector3(0, bounds.min.y, 0)).y;
+		float boundsWidth = mCamera.WorldToScreenPoint(new Vector3(bounds.max.x, 0, 0)).x -
+			mCamera.WorldToScreenPoint(new Vector3(bounds.min.x, 0, 0)).x;
 		float yScale = wantedButtonHeight / boundsHeight;
-		mBackground.transform.localScale = new Vector3(1f, yScale, 1f);
+		float xScale = MRGame.TheGame.InspectionArea.TabWidthPixels / boundsWidth;
+		gameObject.transform.localScale = new Vector3(xScale, yScale, 1f);
 
 		Vector3 desiredWorldPos = mCamera.ScreenToWorldPoint(new Vector3(0, wantedButtonHeight * (int)id, 0));
-		gameObject.transform.position = new Vector3(desiredWorldPos.x + bounds.extents.x, 
+		gameObject.transform.position = new Vector3(desiredWorldPos.x + bounds.extents.x * xScale, 
 		                                            desiredWorldPos.y + bounds.extents.y * yScale, 
 		                                            gameObject.transform.position.z);
 

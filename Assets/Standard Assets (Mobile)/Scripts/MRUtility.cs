@@ -212,7 +212,8 @@ public static class MRUtility
 			case "chapel":
 				return MRDwelling.eDwelling.Chapel;
 			case "guard":
-				return MRDwelling.eDwelling.Guard;
+			case "guardhouse":
+				return MRDwelling.eDwelling.GuardHouse;
 			case "house":
 				return MRDwelling.eDwelling.House;
 			case "inn":

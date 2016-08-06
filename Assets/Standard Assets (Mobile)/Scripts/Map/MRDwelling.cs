@@ -34,7 +34,7 @@ public class MRDwelling : MRChit
 	{
 		None,
 		Chapel,
-		Guard,
+		GuardHouse,
 		House,
 		Inn,
 		LargeFire,
@@ -101,7 +101,7 @@ public class MRDwelling : MRChit
 				case eDwelling.Chapel:
 					iconName = "Textures/chapel";
 					break;
-				case eDwelling.Guard:
+				case eDwelling.GuardHouse:
 					iconName = "Textures/guard";
 					break;
 				case eDwelling.House:

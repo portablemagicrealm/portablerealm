@@ -133,6 +133,11 @@ public class MRButton : MonoBehaviour, MRITouchable
 		return false;
 	}
 
+	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	{
+		return true;
+	}
+
 	private MRITouchable GetParentHandler()
 	{
 		MRITouchable touchable = gameObject.transform.parent.GetComponentInParent<MRITouchable>();

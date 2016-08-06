@@ -217,7 +217,9 @@ public class MRMonsterChart : MonoBehaviour
 	#endregion
 
 	#region Properties
-	
+
+	public MRGamePieceStack holdingArea;
+
 	public bool Visible
 	{
 		get{
@@ -347,7 +349,32 @@ public class MRMonsterChart : MonoBehaviour
 			}
 		}
 
-		// add the monsters to the locations
+		holdingArea.Layer = LayerMask.NameToLayer("Dummy");
+
+		ResetMonsters();
+	}
+
+	/// <summary>
+	/// Resets the monsters to their start locations.
+	/// </summary>
+	public void ResetMonsters()
+	{
+		// clear out old data
+		mDeadPool.Clear();
+		for (int i = 0; i < mSummonsData.Length; ++i)
+			mSummonsData[i].Clear();
+
+		// hold the ghosts for later
+		for (int i = 0; i < 2; ++i)
+		{
+			MRMonster ghost = MRDenizenManager.GetMonster("ghost", i);
+			if (ghost != null)
+			{
+				holdingArea.AddPieceToBottom(ghost);
+			}
+		}
+
+		// assign the monsters to their start locations
 		IDictionary<string, int> monsterIndexes = new Dictionary<string, int>();
 		TextAsset monstersList = (TextAsset)Resources.Load("monsterchart");
 		StringBuilder jsonText = new StringBuilder(monstersList.text);
@@ -530,7 +557,6 @@ public class MRMonsterChart : MonoBehaviour
 				}
 			}
 		}
-
 
 		foreach (MRDenizen denizen in toRemove)
 		{

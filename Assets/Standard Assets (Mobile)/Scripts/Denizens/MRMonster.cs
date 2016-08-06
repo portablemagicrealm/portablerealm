@@ -94,6 +94,10 @@ public class MRMonster : MRDenizen
 				Debug.LogError("Unable to find monster owner " + mOwnedByName);
 			}
 		}
+		else
+		{
+			mOwnedBy = null;
+		}
 	}
 
 	protected override void CreateCounter()
@@ -113,12 +117,6 @@ public class MRMonster : MRDenizen
 				Debug.LogError("Unexpected denizen weight " + mWeight);
 				break;
 		}
-	}
-
-	// Update is called once per frame
-	public override void Update ()
-	{
-		base.Update();
 	}
 
 	// Called when the controllable hits its target

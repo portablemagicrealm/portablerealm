@@ -112,6 +112,16 @@ public class MRSuperSiteChit : MRMapChit
 		base.Update();
 	}
 
+	public override void OnDestroy()
+	{
+		base.OnDestroy();
+
+		foreach (MRMapChit chit in mContainedChits)
+		{
+			DestroyObject(chit.gameObject);
+		}
+	}
+
 	public override bool Load(JSONObject root)
 	{
 		if (!base.Load(root))
