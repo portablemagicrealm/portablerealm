@@ -242,12 +242,14 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 		return true;
 	}
 
-	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	public virtual bool OnButtonActivate(GameObject touchedObject)
 	{
-		if (touchedObject == gameObject)
-		{
-			SendMessageUpwards("OnPinchZoomGame", pinchDelta, SendMessageOptions.DontRequireReceiver);
-		}
+		return true;
+	}
+
+	public bool OnPinchZoom(float pinchDelta)
+	{
+		MRGame.TheGame.TheMap.OnPinchZoom(pinchDelta);
 		return true;
 	}
 

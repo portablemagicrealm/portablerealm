@@ -79,21 +79,28 @@ public class MRButton : MonoBehaviour, MRITouchable
 		if (Visible)
 		{
 			mTouched = true;
-			MRITouchable parentHandler = GetParentHandler();
-			if (parentHandler != null)
-				return parentHandler.OnTouched(touchedObject);
 		}
-		return false;
+		return true;
 	}
 
 	public virtual bool OnReleased(GameObject touchedObject)
 	{
 		if (Visible)
 		{
+			bool wasTouched = mTouched;
 			mTouched = false;
-			MRITouchable parentHandler = GetParentHandler();
-			if (parentHandler != null)
-				return parentHandler.OnReleased(touchedObject);
+			if (wasTouched)
+			{
+				return OnButtonActivate(gameObject);
+			}
+			else
+			{
+				MRITouchable parentHandler = GetParentHandler();
+				if (parentHandler != null)
+				{
+					return parentHandler.OnReleased(gameObject);
+				}
+			}
 		}
 		return false;
 	}
@@ -103,9 +110,7 @@ public class MRButton : MonoBehaviour, MRITouchable
 		if (Visible)
 		{
 			mTouched = false;
-			MRITouchable parentHandler = GetParentHandler();
-			if (parentHandler != null)
-				return parentHandler.OnSingleTapped(touchedObject);
+			return OnButtonActivate(gameObject);
 		}
 		return false;
 	}
@@ -115,25 +120,28 @@ public class MRButton : MonoBehaviour, MRITouchable
 		if (Visible)
 		{
 			mTouched = false;
-			MRITouchable parentHandler = GetParentHandler();
-			if (parentHandler != null)
-				return parentHandler.OnDoubleTapped(touchedObject);
+			return true;
 		}
 		return false;
+
 	}
 
 	public virtual bool OnTouchHeld(GameObject touchedObject)
 	{
-		if (Visible)
+		return true;
+	}
+
+	public virtual bool OnButtonActivate(GameObject touchedObject)
+	{
+		MRITouchable parentHandler = GetParentHandler();
+		if (parentHandler != null)
 		{
-			MRITouchable parentHandler = GetParentHandler();
-			if (parentHandler != null)
-				return parentHandler.OnTouchHeld(touchedObject);
+			return parentHandler.OnButtonActivate(gameObject);
 		}
 		return false;
 	}
 
-	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	public virtual bool OnPinchZoom(float pinchDelta)
 	{
 		return true;
 	}

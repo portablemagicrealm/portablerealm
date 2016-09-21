@@ -1198,6 +1198,14 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	{
 		bool isValid = false;
 
+		// a chit can be wounded if it is active, or if there are no active chits and it is fatigued
+		MRActionChit action = chit as MRActionChit;
+		if (action.State == MRActionChit.eState.Active ||
+			(mActiveChits.Count == 0 && action.State == MRActionChit.eState.Fatigued))
+		{
+			isValid = true;
+		}
+
 		return isValid;
 	}
 
@@ -2055,7 +2063,13 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 			if (target != null)
 			{
 				mAttentionChit.transform.parent = target.transform;
+				// adjust the attention chit position so it's on top
+				if (position.x > 0)
+					position.z = -0.2f;
+				else
+					position.z = 0.2f;
 				mAttentionChit.transform.localPosition = position;
+				mAttentionChit.transform.rotation = Quaternion.identity;
 				mAttentionChit.layer = target.layer;
 			}
 			else

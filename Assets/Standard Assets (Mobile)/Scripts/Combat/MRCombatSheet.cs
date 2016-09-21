@@ -362,6 +362,143 @@ public class MRCombatSheet : MonoBehaviour, MRITouchable
 
 	public bool OnSingleTapped(GameObject touchedObject)
 	{
+/*
+		if (mCombatData.SheetOwner is MRCharacter)
+		{
+			MRCharacter character = mCombatData.SheetOwner as MRCharacter;
+
+			if (mCombat.CombatPhase == MRCombatManager.eCombatPhase.SelectAttackAndManeuver)
+			{
+				// test shield interaction
+				foreach (MRCombatManager.eAttackType attackType in Enum.GetValues(typeof(MRCombatManager.eAttackType)))
+				{
+					if (mAttackerShields.ContainsKey(attackType) && touchedObject == mAttackerShields[attackType])
+					{
+						mCombatData.CharacterData.shieldType = attackType;
+						break;
+					}
+				}
+				// test weapon interaction
+				foreach (MRCombatManager.eAttackType attackType in Enum.GetValues(typeof(MRCombatManager.eAttackType)))
+				{
+					if (mAttackerAttacks.ContainsKey(attackType) && touchedObject == mAttackerAttacks[attackType])
+					{
+						if (mCombatData.CharacterData.attackChit == null || mCombatData.CharacterData.attackType == attackType)
+						{
+							// select fight chit
+							MRGame.TheGame.CharacterMat.Controllable = character;
+							MRActionChit.eAction actionType = MRActionChit.eAction.Attack;
+							switch (attackType)
+							{
+								case MRCombatManager.eAttackType.Smash:
+									actionType = MRActionChit.eAction.Smash;
+									break;
+								case MRCombatManager.eAttackType.Swing:
+									actionType = MRActionChit.eAction.Swing;
+									break;
+								case MRCombatManager.eAttackType.Thrust:
+									actionType = MRActionChit.eAction.Thrust;
+									break;
+								default:
+									break;
+							}
+							character.SelectChitFilter = new MRSelectChitEvent.MRSelectChitFilter(actionType);
+							MRGame.TheGame.CombatManager.LastSelectedAttackType = attackType;
+							MRGame.TheGame.PushView(MRGame.eViews.SelectAttack);
+						}
+						else
+						{
+							// change attack type
+							mCombatData.CharacterData.attackType = attackType;
+						}
+						break;
+					}
+				}
+				// test maneuver interaction
+				foreach (MRCombatManager.eDefenseType defenseType in Enum.GetValues(typeof(MRCombatManager.eDefenseType)))
+				{
+					if (mAttackerManeuvers.ContainsKey(defenseType) && touchedObject == mAttackerManeuvers[defenseType])
+					{
+						if (mCombatData.CharacterData.maneuverChit == null || mCombatData.CharacterData.maneuverType == defenseType)
+						{
+							// select maneuver chit
+							MRGame.TheGame.CharacterMat.Controllable = character;
+							MRActionChit.eAction actionType = MRActionChit.eAction.Move;
+							switch (defenseType)
+							{
+								case MRCombatManager.eDefenseType.Charge:
+									actionType = MRActionChit.eAction.Charge;
+									break;
+								case MRCombatManager.eDefenseType.Dodge:
+									actionType = MRActionChit.eAction.Dodge;
+									break;
+								case MRCombatManager.eDefenseType.Duck:
+									actionType = MRActionChit.eAction.Duck;
+									break;
+								default:
+									break;
+							}
+							character.SelectChitFilter = new MRSelectChitEvent.MRSelectChitFilter(actionType);
+							MRGame.TheGame.CombatManager.LastSelectedDefenseType = defenseType;
+							MRGame.TheGame.PushView(MRGame.eViews.SelectManeuver);
+						}
+						else
+						{
+							// change attack type
+							mCombatData.CharacterData.maneuverType = defenseType;
+						}
+						break;
+					}
+				}
+			}
+		}
+*/
+		return true;
+	}
+
+	public bool OnDoubleTapped(GameObject touchedObject)
+	{
+		if (mCombatData.SheetOwner is MRCharacter)
+		{
+			MRCharacter character = mCombatData.SheetOwner as MRCharacter;
+
+			if (mCombat.CombatPhase == MRCombatManager.eCombatPhase.SelectTarget)
+			{
+				MRCombatManager.eDefenseType defenseType;
+				if (mDefenderDefense.TryGetValue(touchedObject.name, out defenseType))
+				{
+					MRGamePieceStack defenseStack = mDefenderPositions[defenseType];
+					if (!defenseStack.Inspecting && defenseStack.Count == 1)
+					{
+						MRIGamePiece piece = defenseStack.Pieces[0];
+						MRGame.TheGame.CombatManager.OnControllableSelected(mCombatData.SheetOwner, (MRIControllable)piece);
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		MRCombatManager.eDefenseType defenseType;
+		if (mDefenderDefense.TryGetValue(touchedObject.name, out defenseType))
+		{
+			MRGamePieceStack defenseStack = mDefenderPositions[defenseType];
+			if (!defenseStack.Inspecting)
+			{
+				MRGame.TheGame.InspectStack(defenseStack);
+			}
+			else
+			{
+				MRGame.TheGame.InspectStack(null);
+			}
+		}
+		return true;
+	}
+
+	public virtual bool OnButtonActivate(GameObject touchedObject)
+	{
 		// test for changing character sheets
 		if (mCombat.CombatSheets.Count > 1)
 		{
@@ -379,7 +516,7 @@ public class MRCombatSheet : MonoBehaviour, MRITouchable
 			if (mCombat.AllowEndCombat)
 				MRGame.TheGame.CombatManager.CombatPhase = MRCombatManager.eCombatPhase.CombatDone;
 		}
-		if (touchedObject.name == "endPhase")
+		else if (touchedObject.name == "endPhase")
 		{
 			MRGame.TheGame.CombatManager.EndPhase();
 		}
@@ -476,48 +613,7 @@ public class MRCombatSheet : MonoBehaviour, MRITouchable
 		return true;
 	}
 
-	public bool OnDoubleTapped(GameObject touchedObject)
-	{
-		if (mCombatData.SheetOwner is MRCharacter)
-		{
-			MRCharacter character = mCombatData.SheetOwner as MRCharacter;
-
-			if (mCombat.CombatPhase == MRCombatManager.eCombatPhase.SelectTarget)
-			{
-				MRCombatManager.eDefenseType defenseType;
-				if (mDefenderDefense.TryGetValue(touchedObject.name, out defenseType))
-				{
-					MRGamePieceStack defenseStack = mDefenderPositions[defenseType];
-					if (!defenseStack.Inspecting && defenseStack.Count == 1)
-					{
-						MRIGamePiece piece = defenseStack.Pieces[0];
-						MRGame.TheGame.CombatManager.OnControllableSelected(mCombatData.SheetOwner, (MRIControllable)piece);
-					}
-				}
-			}
-		}
-		return true;
-	}
-
-	public bool OnTouchHeld(GameObject touchedObject)
-	{
-		MRCombatManager.eDefenseType defenseType;
-		if (mDefenderDefense.TryGetValue(touchedObject.name, out defenseType))
-		{
-			MRGamePieceStack defenseStack = mDefenderPositions[defenseType];
-			if (!defenseStack.Inspecting)
-			{
-				MRGame.TheGame.InspectStack(defenseStack);
-			}
-			else
-			{
-				MRGame.TheGame.InspectStack(null);
-			}
-		}
-		return true;
-	}
-
-	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	public bool OnPinchZoom(float pinchDelta)
 	{
 		return true;
 	}

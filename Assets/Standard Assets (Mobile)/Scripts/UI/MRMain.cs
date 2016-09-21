@@ -564,6 +564,22 @@ public class MRMain : MonoBehaviour, MRITouchable
 
 	public virtual bool OnSingleTapped(GameObject touchedObject)
 	{
+		return true;
+	}
+	
+	public virtual bool OnDoubleTapped(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public virtual bool OnTouchHeld(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public virtual bool OnButtonActivate(GameObject touchedObject)
+	{
+		Debug.LogWarning("MRMain OnButtonActivate");
 		if (touchedObject == mNewGameButton.gameObject && mNewGameButton.Visible)
 		{
 			StartCoroutine(NewGame());
@@ -608,20 +624,18 @@ public class MRMain : MonoBehaviour, MRITouchable
 		{
 			ChangeDisplayedCharacter(mDisplayedCharacterIndex + 1);
 		}
-		return true;
-	}
-	
-	public virtual bool OnDoubleTapped(GameObject touchedObject)
-	{
+		else if (touchedObject == mCharacterLeftArrow.gameObject)
+		{
+			ChangeDisplayedCharacter(mDisplayedCharacterIndex - 1);
+		}
+		else if (touchedObject == mCharacterRightArrow.gameObject)
+		{
+			ChangeDisplayedCharacter(mDisplayedCharacterIndex + 1);
+		}
 		return true;
 	}
 
-	public virtual bool OnTouchHeld(GameObject touchedObject)
-	{
-		return true;
-	}
-
-	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	public bool OnPinchZoom(float pinchDelta)
 	{
 		return true;
 	}

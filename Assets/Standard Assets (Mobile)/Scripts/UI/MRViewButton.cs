@@ -107,38 +107,11 @@ public class MRViewButton : MRButton
 		}
 	}
 
-	public override bool OnTouched(GameObject touchedObject)
+	public override bool OnButtonActivate(GameObject touchedObject)
 	{
-		base.OnTouched(touchedObject);
-		return true;
-	}
-
-	public override bool OnReleased(GameObject touchedObject)
-	{
-		base.OnReleased(touchedObject);
-		return true;
-	}
-
-	public override bool OnSingleTapped(GameObject touchedObject)
-	{
-		base.OnSingleTapped(touchedObject);
-		if (touchedObject == mBackground)
-		{
-			Debug.Log("Tab selected: " + id);
-			SendMessageUpwards("OnViewButtonSelectedGame", this, SendMessageOptions.DontRequireReceiver);
-		}
-		return true;
-	}
-
-	public override bool OnDoubleTapped(GameObject touchedObject)
-	{
-		base.OnDoubleTapped(touchedObject);
-		return true;
-	}
-
-	public override bool OnTouchHeld(GameObject touchedObject)
-	{
-		base.OnTouchHeld(touchedObject);
+		base.OnButtonActivate(touchedObject);
+		Debug.Log("Tab selected: " + id);
+		SendMessageUpwards("OnViewButtonSelectedGame", this, SendMessageOptions.DontRequireReceiver);
 		return true;
 	}
 

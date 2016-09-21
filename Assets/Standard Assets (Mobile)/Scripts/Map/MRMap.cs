@@ -952,7 +952,7 @@ public class MRMap : MonoBehaviour, MRISerializable
 	{
 		mMapCamera.orthographicSize += pinchDelta * MRGame.MAP_CAMERA_PINCH_ZOOM_SPEED;
 		mMapCamera.orthographicSize = Mathf.Clamp(mMapCamera.orthographicSize, MRGame.MAP_CAMERA_NEAR_SIZE, MRGame.MAP_CAMERA_FAR_SIZE);
-		if (mMapCamera.orthographicSize - MRGame.MAP_CAMERA_NEAR_SIZE <= MRGame.MAP_CAMERA_PINCH_ZOOM_SPEED)
+		if (mMapCamera.orthographicSize - MRGame.MAP_CAMERA_NEAR_SIZE <= 0.2)
 		{
 			mMapZoomed = true;
 		}

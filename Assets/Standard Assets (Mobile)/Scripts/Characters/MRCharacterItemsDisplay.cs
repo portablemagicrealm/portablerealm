@@ -325,6 +325,7 @@ public class MRCharacterItemsDisplay : MRTabItems, MRITouchable
 				{
 					if (chit.Stack != null)
 						chit.Stack.RemovePiece(chit);
+					chit.Visible = true;
 					if (character.CanSelectChit(chit))
 						chit.FrontColor = MRGame.offWhite;
 					else
@@ -510,7 +511,12 @@ public class MRCharacterItemsDisplay : MRTabItems, MRITouchable
 		return true;
 	}
 
-	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	public virtual bool OnButtonActivate(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnPinchZoom(float pinchDelta)
 	{
 		return true;
 	}

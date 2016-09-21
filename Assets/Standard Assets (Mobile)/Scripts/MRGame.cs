@@ -219,7 +219,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 
 	public const float MAP_CAMERA_FAR_SIZE = 5.0f;
 	public const float MAP_CAMERA_NEAR_SIZE = 2.2f;
-	public const float MAP_CAMERA_PINCH_ZOOM_SPEED = 0.1f;
+	public const float MAP_CAMERA_PINCH_ZOOM_SPEED = 5.0f;
 
 	private const float DOUBLE_CLICK_TIME = 0.3f;
 	private const float TOUCH_HELD_TIME = 0.75f;
@@ -483,7 +483,8 @@ public class MRGame : MonoBehaviour, MRISerializable
 	{
 #if DEBUG
 		// set random seed for debugging here
-		MRRandom.seed = 15675905594576123712;
+		//MRRandom.seed = 15675905594576123712;
+		MRRandom.seed = 1463927239610160118;
 #endif
 	}
 
@@ -959,11 +960,6 @@ public class MRGame : MonoBehaviour, MRISerializable
 		}
 	}
 
-	public void OnPinchZoomGame(float pinchDelta)
-	{
-		BroadcastMessage("OnPinchZoom", pinchDelta, SendMessageOptions.DontRequireReceiver);
-	}
-
 	/// <summary>
 	/// Called when a game piece has been selected.
 	/// </summary>
@@ -1062,7 +1058,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 				switch (msTouch.phase)
 				{
 					case TouchPhase.Began:
-						Debug.Log("MRGame TestForTouch touch began");
+//						Debug.Log("MRGame TestForTouch touch began");
 						msIsTouching = true;
 						msJustTouched = true;
 						msStartTouchPos = msTouch.position;
@@ -1071,7 +1067,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 						HandleTouch(eTouchType.Touched);
 						break;
 					case TouchPhase.Stationary:
-						Debug.Log("MRGame TestForTouch touch stationary");
+//						Debug.Log("MRGame TestForTouch touch stationary");
 						if (msTouchDuration >= TOUCH_HELD_TIME)
 						{
 							if (!msTouchHeld)
@@ -1082,36 +1078,44 @@ public class MRGame : MonoBehaviour, MRISerializable
 						}
 						break;
 					case TouchPhase.Moved:
-						Debug.Log("MRGame TestForTouch touch moved");
+//						Debug.Log("MRGame TestForTouch touch moved");
 						msIsTouching = true;
 						msLastTouchPos = msTouchPos;
 						msTouchPos = msTouch.position;
 						break;
 					case TouchPhase.Ended:
-						HandleRelease();
+//						HandleRelease();
 						if (msIsTouching && msTouchDuration < 0.2f) //making sure it only check the touch once && it was a short touch/tap and not a dragging.
 						{
 							if (msTapCoroutine == null)
 							{
-								Debug.Log("MRGame TestForTouch touch ended, calling testsingleordouble");
+//								Debug.Log("MRGame TestForTouch touch ended, calling testsingleordouble");
 								msTapCoroutine = StartCoroutine(TestSingleOrDoubleTap());
 								msIsTouching = false;
 							}
+						}
+						else
+						{
+							HandleRelease();
 						}
 						break;
 					default:
 						break;
 				}
 			}
-			else if (Input.touchCount == 2)
+			else if (Input.touchCount == 2 && TheMap != null)
 			{
 				// test for pinch zoom
 				Touch touch0 = Input.GetTouch(0);
 				Touch touch1 = Input.GetTouch(1);
+				Vector2 touch0Pos = TheMap.MapCamera.ScreenToViewportPoint(touch0.position); 
+				Vector2 touch1Pos = TheMap.MapCamera.ScreenToViewportPoint(touch1.position); 
 				Vector2 touch0PrevPos = touch0.position - touch0.deltaPosition;
 				Vector2 touch1PrevPos = touch1.position - touch1.deltaPosition;
+				touch0PrevPos = TheMap.MapCamera.ScreenToViewportPoint(touch0PrevPos); 
+				touch1PrevPos = TheMap.MapCamera.ScreenToViewportPoint(touch1PrevPos);
 				float prevTouchDelta = (touch0PrevPos - touch1PrevPos).magnitude;
-				float touchDelta = (touch0.position - touch1.position).magnitude;
+				float touchDelta = (touch0Pos - touch1Pos).magnitude;
 				float pinchDelta = prevTouchDelta - touchDelta;
 				HandleTouch(eTouchType.PinchZoom, pinchDelta);
 			}
@@ -1125,6 +1129,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 		}
 		else
 		{
+			// PC - mouse handling
 			bool justReleased = false;
 
 			if (msIsTouching)
@@ -1166,9 +1171,12 @@ public class MRGame : MonoBehaviour, MRISerializable
 					if (msTapCoroutine == null)
 						msTapCoroutine = StartCoroutine(TestSingleOrDoubleClick());
 				}
+				else
+				{
+					HandleRelease();
+				}
 				msLastReleaseTime = Time.time;
 				msTouchHeld = false;
-				HandleRelease();
 			}
 		}
 	}
@@ -1179,9 +1187,9 @@ public class MRGame : MonoBehaviour, MRISerializable
 	/// <returns>The coroutine yield.</returns>
 	private IEnumerator TestSingleOrDoubleTap()
 	{
-		Debug.Log("MRGame TestSingleOrDoubleTap enter");
+//		Debug.Log("MRGame TestSingleOrDoubleTap enter");
 		yield return new WaitForSeconds(0.25f);
-		Debug.Log("MRGame TestSingleOrDoubleTap after yield");
+//		Debug.Log("MRGame TestSingleOrDoubleTap after yield");
 		msLastTouchPos = msTouch.position;
 		eTouchType touchType = eTouchType.None;
 		if (msTouch.tapCount == 1)
@@ -1200,7 +1208,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 		{
 			HandleTouch(touchType);
 		}
-		Debug.Log("MRGame TestSingleOrDoubleTap exit");
+//		Debug.Log("MRGame TestSingleOrDoubleTap exit");
 	}
 
 	/// <summary>
@@ -1210,10 +1218,10 @@ public class MRGame : MonoBehaviour, MRISerializable
 	private IEnumerator TestSingleOrDoubleClick()
 	{
 		System.DateTime then = System.DateTime.Now;
-		Debug.Log("MRGame TestSingleOrDoubleClick enter");
+//		Debug.Log("MRGame TestSingleOrDoubleClick enter");
 		yield return new WaitForSeconds(0.25f);
 		System.DateTime now = System.DateTime.Now;
-		Debug.Log("MRGame TestSingleOrDoubleClick after yield, dt = " + ((now - then).Ticks / 10000f));
+//		Debug.Log("MRGame TestSingleOrDoubleClick after yield, dt = " + ((now - then).Ticks / 10000f));
 //		Debug.Log("TestSingleOrDoubleTap, msClickCount="+msClickCount);
 //		msLastTouchPos = msTouch.position;
 		eTouchType touchType = eTouchType.None;
@@ -1272,7 +1280,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 	/// <param name="pinchZoomDelta">Amount to zoom if touch type is pinch zoom</param>
 	private void HandleTouch(eTouchType touchType, float pinchZoomDelta)
 	{
-		Debug.Log("MRGame OnTouched enter");
+//		Debug.Log("MRGame OnTouched enter");
 		// find the object touched
 		List<TouchedData> touched = new List<TouchedData>();
 		Camera[] cameras = Camera.allCameras;
@@ -1309,18 +1317,24 @@ public class MRGame : MonoBehaviour, MRISerializable
 			{
 				if (touchType == eTouchType.Touched)
 				{
-					HandleRelease();
+//					HandleRelease();
 					mLastTouched = touched[i].touched;
 					handled = touched[i].touched.OnTouched(touched[i].hitObject);
 				}
 				if (touchType == eTouchType.Single)
+				{
 					handled = touched[i].touched.OnSingleTapped(touched[i].hitObject);
+					HandleRelease();
+				}
 				else if (touchType == eTouchType.Double)
+				{
 					handled = touched[i].touched.OnDoubleTapped(touched[i].hitObject);
+					HandleRelease();
+				}
 				else if (touchType == eTouchType.Held)
 					handled = touched[i].touched.OnTouchHeld(touched[i].hitObject);
 				else if (touchType == eTouchType.PinchZoom)
-					handled = touched[i].touched.OnPinchZoom(touched[i].hitObject, pinchZoomDelta);
+					handled = touched[i].touched.OnPinchZoom(pinchZoomDelta);
 			}
 		}
 	}

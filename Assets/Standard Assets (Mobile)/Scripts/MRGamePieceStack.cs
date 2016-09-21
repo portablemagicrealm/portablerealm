@@ -266,7 +266,12 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable, MRITouchable
 		return true;
 	}
 
-	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	public virtual bool OnButtonActivate(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnPinchZoom(float pinchDelta)
 	{
 		return true;
 	}

@@ -414,8 +414,19 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 		
 		set {
 			mCounter.transform.rotation = value;
-//			Vector3 orientation = mCounter.transform.eulerAngles;
-//			Debug.Log("rotation = " + orientation.ToString());
+			UpdateAttackerPositions();
+		}
+	}
+
+	public virtual Vector3 EulerAngles
+	{ 
+		get {
+			return mCounter.transform.localEulerAngles;
+		}
+		
+		set {
+			mCounter.transform.localEulerAngles = value;
+			UpdateAttackerPositions();
 		}
 	}
 
@@ -702,19 +713,15 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 		if (mAttackers.Count > 0)
 		{
 			Vector3 cornerPosition = new Vector3();
-			foreach (SpriteRenderer sprite in mCounter.GetComponentsInChildren<SpriteRenderer>())
-			{
-				if (cornerPosition.x == 0)
-				{
-					Bounds bounds = mCounter.GetComponentInChildren<SpriteRenderer>().bounds;
-					Vector3 scale1 = mCounter.transform.localScale;
-					Vector3 scale2 = mCounter.transform.lossyScale;
-					cornerPosition.x = bounds.extents.x / scale1.x;
-					cornerPosition.y = bounds.extents.y / scale1.y;
-				}
-				if (sprite.gameObject.transform.localPosition.z < cornerPosition.z)
-					cornerPosition.z = sprite.gameObject.transform.localPosition.z;
-			}
+			SpriteRenderer sprite = mCounter.GetComponentInChildren<SpriteRenderer>();
+			Bounds bounds = mCounter.GetComponentInChildren<SpriteRenderer>().bounds;
+			Vector3 scale1 = mCounter.transform.localScale;
+//			Vector3 scale2 = mCounter.transform.lossyScale;
+			cornerPosition.x = bounds.extents.x / scale1.x;
+			cornerPosition.y = bounds.extents.y / scale1.y;
+			float angle = mCounter.transform.localEulerAngles.y;
+			if (angle > 100.0f)
+				cornerPosition.x = -cornerPosition.x;
 
 			foreach (MRIControllable attacker in mAttackers)
 			{

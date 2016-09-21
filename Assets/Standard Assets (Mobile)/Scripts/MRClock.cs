@@ -94,7 +94,7 @@ public class MRClock : MonoBehaviour, MRITouchable
 
 		Quaternion desiredRotation = Quaternion.AngleAxis(30.0f + 60.0f * (int)MRGame.TimeOfDay, Vector3.forward);
 		Quaternion currentRotation = mClockImage.transform.localRotation;
-		if (!mRotatingClock && Mathf.Abs(Quaternion.Angle(desiredRotation, currentRotation)) > 0.01f)
+		if (!mRotatingClock && Mathf.Abs(Quaternion.Angle(desiredRotation, currentRotation)) > 1.0f)
 		{
 			StartCoroutine(RotateClock(1.0f/30.0f));
 		}
@@ -107,21 +107,25 @@ public class MRClock : MonoBehaviour, MRITouchable
 	/// <param name="waitTime">amount of time to wait between animation updates</param>
 	private IEnumerator RotateClock(float waitTime)
 	{
+//		Debug.Log("rotate clock enter, sr = " + mClockImage.transform.localRotation.eulerAngles.z + ", dr = " + (30.0f + 60.0f * (int)MRGame.TimeOfDay));
 		mRotatingClock = true;
 		float totalTime = 0;
 		Quaternion startRotation = mClockImage.transform.localRotation;
 		Quaternion desiredRotation = Quaternion.AngleAxis(30.0f + 60.0f * (int)MRGame.TimeOfDay, Vector3.forward);
 		Quaternion currentRotation = startRotation;
-		while (Mathf.Abs(Quaternion.Angle(desiredRotation, currentRotation)) > 0.01f)
+//		Debug.Log("rotate clock enter, dq = " + Quaternion.Angle(desiredRotation, currentRotation));
+		while (Quaternion.Angle(desiredRotation, currentRotation) > 1.0f)
 		{
 			totalTime += waitTime;
 			mClockImage.transform.localRotation = Quaternion.Lerp(startRotation, desiredRotation, (ROTATION_SPEED_DEG_PER_SEC * totalTime) / 60.0f);
 			currentRotation = mClockImage.transform.localRotation;
+//			Debug.Log("rotate clock dr = " + Quaternion.Angle(desiredRotation, currentRotation));
 			yield return new WaitForSeconds(waitTime);
 		}
 		mRotatingClock = false;
 		mClockImage.transform.localRotation = desiredRotation;
 		mDateText.text = MRGame.DayOfMonth.ToString();
+//		Debug.Log("rotate clock exit");
 		yield return null;
 	}
 
@@ -154,7 +158,12 @@ public class MRClock : MonoBehaviour, MRITouchable
 		return true;
 	}
 
-	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	public virtual bool OnButtonActivate(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnPinchZoom(float pinchDelta)
 	{
 		return true;
 	}

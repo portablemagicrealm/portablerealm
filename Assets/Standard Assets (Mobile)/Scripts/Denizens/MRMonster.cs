@@ -42,6 +42,10 @@ public class MRMonster : MRDenizen
 		}
 	}
 
+	/// <summary>
+	/// If this "monster" is a head/club, returns the monster that owns it
+	/// </summary>
+	/// <value>The owning monster.</value>
 	public MRMonster OwnedBy
 	{
 		get{
@@ -49,6 +53,10 @@ public class MRMonster : MRDenizen
 		}
 	}
 
+	/// <summary>
+	/// If this is a tremendous monster, returns its head/club.
+	/// </summary>
+	/// <value>The head/club "monster".</value>
 	public MRMonster Owns
 	{
 		get {
@@ -119,7 +127,11 @@ public class MRMonster : MRDenizen
 		}
 	}
 
-	// Called when the controllable hits its target
+	/// <summary>
+	/// Called when the monster hits its target 
+	/// </summary>
+	/// <param name="target">Target.</param>
+	/// <param name="targetDead">If set to <c>true</c> target dead.</param>
 	public override void HitTarget(MRIControllable target, bool targetDead)
 	{
 		if (BaseWeight == MRGame.eStrength.Tremendous)

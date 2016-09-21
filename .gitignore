@@ -2,6 +2,15 @@ Temp/
 Library/ScriptAssemblies
 bin/
 iosBin/
+androidProject/
+iosProject/
+ioProject.zip
 Library/metadata/
 Library/ShaderCache/
 Library/UnityAssemblies/
+*.log
+obj/
+webGLProject/
+magicRealm_Data/
+*.meta
+Library/il2cpp_cache/

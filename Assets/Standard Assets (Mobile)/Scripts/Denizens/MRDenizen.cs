@@ -483,12 +483,12 @@ public abstract class MRDenizen : MRControllable
 	{
 		if (mCounter != null)
 		{
-			Vector3 orientation = mCounter.transform.localEulerAngles;
+			Vector3 orientation = EulerAngles;
 			if (Side == eSide.Light)
 				orientation.y = 0;
 			else
 				orientation.y = 180f;
-			mCounter.transform.localEulerAngles = orientation;
+			EulerAngles = orientation;
 		}
 	}
 

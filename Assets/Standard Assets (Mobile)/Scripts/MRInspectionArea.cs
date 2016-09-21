@@ -244,10 +244,6 @@ public class MRInspectionArea : MonoBehaviour, MRITouchable
 
 	public bool OnSingleTapped(GameObject touchedObject)
 	{
-		if (touchedObject == mHeader)
-		{
-			return HeaderTapped();
-		}
 		return false;
 	}
 
@@ -272,7 +268,16 @@ public class MRInspectionArea : MonoBehaviour, MRITouchable
 		return false;
 	}
 
-	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	public virtual bool OnButtonActivate(GameObject touchedObject)
+	{
+		if (touchedObject == mHeader)
+		{
+			return HeaderTapped();
+		}
+		return false;
+	}
+
+	public bool OnPinchZoom(float pinchDelta)
 	{
 		return false;
 	}

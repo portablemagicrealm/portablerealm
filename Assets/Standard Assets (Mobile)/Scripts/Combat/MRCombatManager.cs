@@ -1233,6 +1233,19 @@ public class MRCombatManager
 	}
 
 	/// <summary>
+	/// Flips a denizen during repositioning, unless it is a tremendous monster or horse.
+	/// </summary>
+	/// <param name="denizen">Denizen.</param>
+	private void FlipDenizen(MRDenizen denizen)
+	{
+		// todo: filter native horses
+		if (!(denizen is MRMonster) || denizen.BaseWeight < MRGame.eStrength.Tremendous)
+		{
+			denizen.Flip();
+		}
+	}
+
+	/// <summary>
 	/// Randomizes uncontrolled denizens .
 	/// </summary>
 	private void RandomizeEnemies()
@@ -1278,10 +1291,16 @@ public class MRCombatManager
 					MRDiePool repositionRoll = MRDiePool.NewDiePool;
 					repositionRoll.RollDiceNow();
 					IDictionary<eDefenseType, eDefenseType> repositionTable = DefenderReposition[repositionRoll.Roll];
-					// randomize the defender (there should be only 1)
-					if (combatSheet.Defenders.Count != 1)
+					// randomize the defender (there should be only 1, unless the other is a head/club)
+					if (combatSheet.Defenders.Count > 1)
 					{
-						Debug.LogError("Combat sheet with own defender has not 1 defender");
+						if (combatSheet.Defenders.Count > 2 || 
+							(combatSheet.Defenders[0].defender is MRMonster && combatSheet.Defenders[1].defender is MRMonster &&
+							(((MRMonster)combatSheet.Defenders[0].defender).Owns == (MRMonster)combatSheet.Defenders[1].defender ||
+							((MRMonster)combatSheet.Defenders[1].defender).Owns == (MRMonster)combatSheet.Defenders[0].defender)))
+						{
+							Debug.LogError("Combat sheet with own defender has more than 1 defender");
+						}
 					}
 					foreach (MRCombatSheetData.DefenderData defender in combatSheet.Defenders)
 					{
@@ -1289,7 +1308,7 @@ public class MRCombatManager
 					}
 				}
 			}
-			// See if denizens change tactics. Tremendous monsters, native horses, and hirelings on their own sheet never change tactics.
+			// See if denizens change tactics. Tremendous monsters (and their head/club), native horses, and hirelings on their own sheet never change tactics.
 			foreach (eAttackType attack in Enum.GetValues(typeof(eAttackType)))
 			{
 				if (attack == eAttackType.None)
@@ -1300,14 +1319,9 @@ public class MRCombatManager
 				{
 					foreach (MRCombatSheetData.AttackerData attacker in combatSheet.Attackers)
 					{
-						if (attacker.attackType == attack && attacker.attacker is MRDenizen)
+						if (attacker.attackType == attack)
 						{
-							// todo: filter native horses
-							if ((attacker.attacker is MRMonster && attacker.attacker.BaseWeight == MRGame.eStrength.Tremendous))
-							{
-								continue;
-							}
-							((MRDenizen)(attacker.attacker)).Flip();
+							FlipDenizen(attacker.attacker);
 						}
 					}
 				}
@@ -1322,35 +1336,21 @@ public class MRCombatManager
 				{
 					foreach (MRCombatSheetData.DefenderData defender in combatSheet.Defenders)
 					{
-						if (defender.defenseType == defense && defender.defender is MRDenizen)
+						if (defender.defenseType == defense)
 						{
-							// todo: filter native horses
-							if ((defender.defender is MRMonster && defender.defender.BaseWeight == MRGame.eStrength.Tremendous) ||
-							    (((MRDenizen)(defender.defender)).IsControlled && defender.defender.CombatSheet == combatSheet))
-							{
-								continue;
-							}
-							((MRDenizen)(defender.defender)).Flip();
+							FlipDenizen(defender.defender);
 						}
 					}
 				}
 			}
 			if (combatSheet.DefenderTarget != null)
 			{
-				MRIControllable defender = combatSheet.DefenderTarget.defender;
-				if (defender is MRDenizen)
+				MRDenizen denizen = combatSheet.DefenderTarget.defender;
+				MRDiePool changeTacticsRoll = MRDiePool.NewDicePool;
+				changeTacticsRoll.RollDiceNow();
+				if (changeTacticsRoll.Roll == 6)
 				{
-					MRDiePool changeTacticsRoll = MRDiePool.NewDicePool;
-					changeTacticsRoll.RollDiceNow();
-					if (changeTacticsRoll.Roll == 6)
-					{
-						// todo: filter native horses
-						if ((defender is MRMonster && defender.BaseWeight == MRGame.eStrength.Tremendous))
-						{
-							continue;
-						}
-						((MRDenizen)defender).Flip();
-					}
+					FlipDenizen(denizen);
 				}
 			}
 		}

@@ -360,13 +360,18 @@ public class MRActivityListWidget : MonoBehaviour, MRITouchable
 		}
 		return true;
 	}
-	
+
 	public bool OnTouchHeld(GameObject touchedObject)
 	{
 		return true;
 	}
 
-	public bool OnPinchZoom(GameObject touchedObject, float pinchDelta)
+	public virtual bool OnButtonActivate(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public bool OnPinchZoom(float pinchDelta)
 	{
 		return true;
 	}
