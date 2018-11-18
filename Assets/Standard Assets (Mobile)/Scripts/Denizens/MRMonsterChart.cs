@@ -30,12 +30,26 @@ using System.Collections.Generic;
 using System.Text;
 using AssemblyCSharp;
 
-public class MRMonsterChart : MonoBehaviour
+namespace PortableRealm
+{
+	
+public class MRMonsterChart : MonoBehaviour, MRISerializable
 {
 	#region Internal Classes
 
 	private class SummonTrigger
 	{
+		public SummonTrigger()
+		{
+			Type = MRMapChit.eMapChitType.Site;
+			Sound = MRMapChit.eSoundChitType.Flutter;
+			Warning = MRMapChit.eWarningChitType.Bones;
+			Site = MRMapChit.eSiteChitType.Altar;
+			Tile = MRTile.eTileType.Cave;
+			Dwelling = MRDwelling.eDwelling.Chapel;
+			UseClearing = false;
+		}
+
 		public SummonTrigger(string type, string subtype, string location)
 		{
 			switch (type)
@@ -121,6 +135,10 @@ public class MRMonsterChart : MonoBehaviour
 							break;
 					}
 					break;
+				case "dwelling":
+					Type = MRMapChit.eMapChitType.Dwelling;
+					Dwelling = subtype.Dwelling();
+					break;
 				default:
 					Debug.LogError("Monster chart unknown type " + type);
 					break;
@@ -142,6 +160,10 @@ public class MRMonsterChart : MonoBehaviour
 						Tile = MRTile.eTileType.Cave;
 						UseClearing = true;
 						break;
+					case "v":
+						Tile = MRTile.eTileType.Valley;
+						UseClearing = true;
+						break;
 					default:
 						Debug.LogError("Monster chart unknown location " + location);
 						break;
@@ -154,9 +176,9 @@ public class MRMonsterChart : MonoBehaviour
 		/// </summary>
 		/// <param name="chit">Chit.</param>
 		/// <param name="tileType">Tile type.</param>
-		public bool Match(MRMapChit chit, MRTile.eTileType tileType)
+		public bool Match(MRChit chit, MRTile.eTileType tileType)
 		{
-			if (chit.ChitType == Type && (!UseClearing || tileType == Tile))
+			if (chit is MRMapChit && ((MRMapChit)chit).ChitType == Type && (!UseClearing || tileType == Tile))
 			{
 				switch (Type)
 				{
@@ -172,7 +194,13 @@ public class MRMonsterChart : MonoBehaviour
 						if (((MRWarningChit)chit).WarningType == Warning)
 							return true;
 						break;
+					default:
+						break;
 				}
+			}
+			else if (chit is MRDwelling && ((MRDwelling)chit).Type == Dwelling)
+			{
+				return true;
 			}
 			return false;
 		}
@@ -182,6 +210,7 @@ public class MRMonsterChart : MonoBehaviour
 		public MRMapChit.eWarningChitType Warning;
 		public MRMapChit.eSiteChitType Site;
 		public MRTile.eTileType Tile;
+		public MRDwelling.eDwelling Dwelling;
 		public bool UseClearing;
 	}
 
@@ -203,7 +232,7 @@ public class MRMonsterChart : MonoBehaviour
 		/// </summary>
 		/// <param name="chit">Chit.</param>
 		/// <param name="tileType">Tile type.</param>
-		public bool Match(MRMapChit chit, MRTile.eTileType tileType)
+		public bool Match(MRChit chit, MRTile.eTileType tileType)
 		{
 			foreach (SummonTrigger trigger in Triggers)
 			{
@@ -211,6 +240,29 @@ public class MRMonsterChart : MonoBehaviour
 					return true;
 			}
 			return false;
+		}
+	}
+
+	private class OnBoardData
+	{
+		public IList<MRDenizen> Denizens;
+		public SummonTrigger Trigger;
+		public MRILocation StartLocation;
+		public int RegenNumber;
+
+		public OnBoardData()
+		{
+			Denizens = new List<MRDenizen>();
+		}
+
+		/// <summary>
+		/// Returns if a given chit/tile matches a trigger for the summon data.
+		/// </summary>
+		/// <param name="chit">Chit.</param>
+		/// <param name="tileType">Tile type.</param>
+		public bool Match(MRMapChit chit, MRTile.eTileType tileType)
+		{
+			return Trigger.Match(chit, tileType);
 		}
 	}
 
@@ -273,7 +325,7 @@ public class MRMonsterChart : MonoBehaviour
 			return prowlers;
 		}
 	}
-
+/*
 	public IList<MRDenizen> ProwlingDenizens
 	{
 		get{
@@ -297,7 +349,7 @@ public class MRMonsterChart : MonoBehaviour
 			return prowlers;
 		}
 	}
-
+*/
 	#endregion
 
 	#region Methods
@@ -331,6 +383,7 @@ public class MRMonsterChart : MonoBehaviour
 			}
 		}
 
+		mOnBoardData = new List<OnBoardData>();
 		mSummonsData = new List<SummonData>[6];
 		for (int i = 0; i < mSummonsData.Length; ++i)
 			mSummonsData[i] = new List<SummonData>();
@@ -359,20 +412,12 @@ public class MRMonsterChart : MonoBehaviour
 	/// </summary>
 	public void ResetMonsters()
 	{
+		Debug.LogWarning("reset monster chart");
 		// clear out old data
 		mDeadPool.Clear();
+		mOnBoardData.Clear();
 		for (int i = 0; i < mSummonsData.Length; ++i)
 			mSummonsData[i].Clear();
-
-		// hold the ghosts for later
-		for (int i = 0; i < 2; ++i)
-		{
-			MRMonster ghost = MRDenizenManager.GetMonster("ghost", i);
-			if (ghost != null)
-			{
-				holdingArea.AddPieceToBottom(ghost);
-			}
-		}
 
 		// assign the monsters to their start locations
 		IDictionary<string, int> monsterIndexes = new Dictionary<string, int>();
@@ -395,42 +440,13 @@ public class MRMonsterChart : MonoBehaviour
 				for (int j = 0; j < boxesData.Count; ++j)
 				{
 					JSONObject monsterData = (JSONObject)boxesData[j];
-					string locationName = ((JSONString)monsterData["name"]).Value;
-					string monsterName = ((JSONString)monsterData["monster"]).Value;
-					int amount = ((JSONNumber)monsterData["amount"]).IntValue;
-					foreach (MRMonsterChartLocation location in mLocations[row - 1])
+					if (monsterData["monster"] != null)
 					{
-						if (location.stackName == locationName)
-						{
-							data.Boxes.Add(location);
-							if (location.Occupants == null)
-							{
-								MRGamePieceStack stack = MRGame.TheGame.NewGamePieceStack();
-								location.Occupants = stack;
-							}
-							// add the monsters to the boxes
-							int monsterIndex = 0;
-							monsterIndexes.TryGetValue(monsterName, out monsterIndex);
-							for (int k = 0; k < amount; ++k)
-							{
-								MRMonster monster = MRDenizenManager.GetMonster(monsterName, monsterIndex);
-								if (monster != null)
-								{
-									++monsterIndex;
-									if (monster.Owns != null)
-									{
-										monster.Owns.MonsterBox = location;
-										location.Occupants.AddPieceToTop(monster.Owns);
-										data.Denizens.Add(monster.Owns);
-									}
-									monster.MonsterBox = location;
-									location.Occupants.AddPieceToTop(monster);
-									data.Denizens.Add(monster);
-								}
-							}
-							monsterIndexes[monsterName] = monsterIndex;
-							break;
-						}
+						LoadMonster(monsterData, row, data, monsterIndexes);
+					}
+					else if (monsterData["natives"] != null)
+					{
+						LoadNative(monsterData, row, data);
 					}
 				}
 
@@ -448,6 +464,49 @@ public class MRMonsterChart : MonoBehaviour
 					data.Triggers.Add(trigger);
 				}
 			}
+		}
+
+		// get the monsters that start on-board and put them in a holding area
+		JSONArray onBoardData = (JSONArray)jsonData["startonboard"];
+		for (int i = 0; i < onBoardData.Count; ++i)
+		{
+			OnBoardData data = new OnBoardData();
+			JSONObject denizenData = (JSONObject)onBoardData[i];
+			int amount = ((JSONNumber)denizenData["amount"]).IntValue;
+			if (denizenData["monster"] != null)
+			{
+				for (int j = 0; j < amount; ++j)
+				{
+					string monsterName = ((JSONString)denizenData["monster"]).Value;
+					MRMonster monster = MRDenizenManager.GetMonster(monsterName, j);
+					if (monster != null)
+					{
+						data.Denizens.Add(monster);
+						holdingArea.AddPieceToBottom(monster);
+					}
+				}
+			}
+			else if (denizenData["native"] != null)
+			{
+				for (int j = 0; j < amount; ++j)
+				{
+					string nativeName = ((JSONString)denizenData["native"]).Value;
+					MRNative native = MRDenizenManager.GetNative(nativeName, j);
+					if (native != null)
+					{
+						data.Denizens.Add(native);
+						holdingArea.AddPieceToBottom(native);
+					}
+				}
+			}
+			data.RegenNumber = ((JSONNumber)denizenData["regen"]).IntValue;
+			JSONObject summonChitData = (JSONObject)denizenData["chit"];
+			data.Trigger = new SummonTrigger(
+				((JSONString)summonChitData["type"]).Value,
+				((JSONString)summonChitData["subtype"]).Value,
+				((JSONString)summonChitData["location"]).Value
+			);
+			mOnBoardData.Add(data);
 		}
 	}
 
@@ -467,14 +526,14 @@ public class MRMonsterChart : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Returns a list of prowling denizens summoned by a given chit/tile.
+	/// Returns a list of prowling monsters summoned by a given chit/tile.
 	/// </summary>
-	/// <returns>The summoned denizens.</returns>
-	/// <param name="chit">Chit summoning the denizens.</param>
+	/// <returns>The summoned monsters.</returns>
+	/// <param name="chit">Chit summoning the monsters.</param>
 	/// <param name="tileType">Tile type.</param>
-	public IList<MRDenizen> GetSummonedDenizens(MRMapChit chit, MRTile.eTileType tileType)
+	public IList<MRMonster> GetSummonedMonsters(MRMapChit chit, MRTile.eTileType tileType)
 	{
-		IList<MRDenizen> summoned = new List<MRDenizen>();
+		IList<MRMonster> summoned = new List<MRMonster>();
 
 		if (mMonsterRoll >= 1 && mMonsterRoll <= 6)
 		{
@@ -490,13 +549,73 @@ public class MRMonsterChart : MonoBehaviour
 						{
 							foreach (MRIGamePiece piece in box.Occupants.Pieces)
 							{
-								if (piece is MRDenizen)
-									summoned.Add((MRDenizen)piece);
+								if (piece is MRMonster)
+									summoned.Add((MRMonster)piece);
 							}
 							break;
 						}
 					}
 					break;
+				}
+			}
+		}
+		return summoned;
+	}
+
+	/// <summary>
+	/// Returns a list of prowling natives summoned by a given dwelling.
+	/// </summary>
+	/// <returns>The summoned natives.</returns>
+	/// <param name="dwelling">Dwelling summoning the natives.</param>
+	public IList<MRNative> GetSummonedNatives(MRDwelling dwelling)
+	{
+		IList<MRNative> summoned = new List<MRNative>();
+
+		if (mMonsterRoll >= 1 && mMonsterRoll <= 6)
+		{
+			IList<SummonData> row = mSummonsData[mMonsterRoll - 1];
+			foreach (SummonData data in row)
+			{
+				if (data.Match(dwelling, MRTile.eTileType.Valley))
+				{
+					foreach (MRMonsterChartLocation box in data.Boxes)
+					{
+						if (box.Occupants.Count > 0)
+						{
+							foreach (MRIGamePiece piece in box.Occupants.Pieces)
+							{
+								if (piece is MRNative)
+									summoned.Add((MRNative)piece);
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		return summoned;
+	}
+
+	/// <summary>
+	/// Returns a list of denizens that start on-board from a given chit/tile.
+	/// </summary>
+	/// <returns>The summoned denizens.</returns>
+	/// <param name="chit">Chit summoning the denizens.</param>
+	/// <param name="tileType">Tile type.</param>
+	/// <param name="start">Location the denizens will start on.</param>
+	public IList<MRDenizen> GetOnBoardDenizens(MRMapChit chit, MRTile.eTileType tileType, MRILocation start)
+	{
+		IList<MRDenizen> summoned = new List<MRDenizen>();
+
+		foreach (OnBoardData data in mOnBoardData)
+		{
+			if (data.Match(chit, tileType))
+			{
+				data.StartLocation = start;
+				foreach (MRDenizen denizen in data.Denizens)
+				{
+					summoned.Add(denizen);
 				}
 			}
 		}
@@ -544,16 +663,15 @@ public class MRMonsterChart : MonoBehaviour
 			}
 		}
 
-		// regenerate ghosts
-		if (MRGame.TheGame.TheMap.GhostStartClearing != null)
+		// regenerate the on-board denizens
+		foreach (OnBoardData data in mOnBoardData)
 		{
-			for (int i = 0; i < 2; ++i)
+			if (data.RegenNumber == 0 || data.RegenNumber == mMonsterRoll)
 			{
-				MRMonster ghost = MRDenizenManager.GetMonster("ghost", i);
-				if (ghost != null)
+				foreach (MRDenizen denizen in data.Denizens)
 				{
-					toRemove.Add(ghost);
-					ghost.Location = MRGame.TheGame.TheMap.GhostStartClearing;
+					toRemove.Add(denizen);
+					denizen.Location = data.StartLocation;
 				}
 			}
 		}
@@ -562,6 +680,234 @@ public class MRMonsterChart : MonoBehaviour
 		{
 			mDeadPool.Remove(denizen);
 		}
+	}
+
+	/// <summary>
+	/// Reads in info about where a monster should be placed on the chart, add adds the appropriate monster chits to it.
+	/// </summary>
+	/// <param name="monsterData">Monster data to read.</param>
+	/// <param name="row">Which summon row the monster is on</param>
+	/// <param name="data">To be filled in with info about what summons the monster</param>
+	/// <param name="monsterIndexes">Which monsters have already been added to the chart.</param>
+	private void LoadMonster(JSONObject monsterData, int row, SummonData data, IDictionary<string, int> monsterIndexes)
+	{
+		string locationName = ((JSONString)monsterData["name"]).Value;
+		string monsterName = ((JSONString)monsterData["monster"]).Value;
+		int amount = ((JSONNumber)monsterData["amount"]).IntValue;
+		foreach (MRMonsterChartLocation location in mLocations[row - 1])
+		{
+			if (location.stackName == locationName)
+			{
+				data.Boxes.Add(location);
+				if (location.Occupants == null)
+				{
+					MRGamePieceStack stack = MRGame.TheGame.NewGamePieceStack();
+					location.Occupants = stack;
+				}
+				// add the monsters to the boxes
+				int monsterIndex = 0;
+				monsterIndexes.TryGetValue(monsterName, out monsterIndex);
+				for (int i = 0; i < amount; ++i)
+				{
+					MRMonster monster = MRDenizenManager.GetMonster(monsterName, monsterIndex);
+					if (monster != null)
+					{
+						++monsterIndex;
+						if (monster.Owns != null)
+						{
+							monster.Owns.MonsterBox = location;
+							location.Occupants.AddPieceToTop(monster.Owns);
+							data.Denizens.Add(monster.Owns);
+						}
+						monster.MonsterBox = location;
+						location.Occupants.AddPieceToTop(monster);
+						data.Denizens.Add(monster);
+					}
+				}
+				monsterIndexes[monsterName] = monsterIndex;
+				break;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Reads in info about where a native should be placed on the chart, add adds the appropriate native chits to it.
+	/// </summary>
+	/// <param name="nativeData">Native data to read.</param>
+	/// <param name="row">Which summon row the native is on.</param>
+	/// <param name="data">To be filled in with info about what summons the native</param>
+	private void LoadNative(JSONObject nativeData, int row, SummonData data)
+	{
+		string locationName = ((JSONString)nativeData["name"]).Value;
+		string nativeName = ((JSONString)nativeData["natives"]).Value;
+		int amount = ((JSONNumber)nativeData["amount"]).IntValue;
+		foreach (MRMonsterChartLocation location in mLocations[row - 1])
+		{
+			if (location.stackName == locationName)
+			{
+				data.Boxes.Add(location);
+				if (location.Occupants == null)
+				{
+					MRGamePieceStack stack = MRGame.TheGame.NewGamePieceStack();
+					location.Occupants = stack;
+				}
+				// add the natives to the box
+				for (int i = 0; i < amount; ++i)
+				{
+					MRNative native = MRDenizenManager.GetNative(nativeName, i);
+					if (native != null)
+					{
+						native.MonsterBox = location;
+						location.Occupants.AddPieceToTop(native);
+						data.Denizens.Add(native);
+					}
+				}
+			}
+		}
+	}
+
+	public bool Load(JSONObject root) 
+	{
+		JSONObject monsterData = root["monsterChart"] as JSONObject;
+		if (monsterData == null)
+			return true;
+
+		if (monsterData["deadPool"] != null)
+		{
+			JSONArray deadPool = (JSONArray)monsterData["deadPool"];
+			for (int i = 0; i < deadPool.Count; ++i)
+			{
+				MRIGamePiece piece = MRGame.TheGame.GetGamePiece(deadPool[i]);
+				if (piece != null && piece is MRDenizen)
+				{
+					AddDeadDenizen((MRDenizen)piece);
+				}
+			}
+		}
+		if (monsterData["onBoard"] != null)
+		{
+			JSONArray onBoard = (JSONArray)monsterData["onBoard"];
+			for (int i = 0; i < onBoard.Count; ++i)
+			{
+				JSONObject creatureData = (JSONObject)onBoard[i];
+                MRILocation startLocation = null;
+                if (creatureData["startLocation"] != null)
+                {
+                    startLocation = MRGame.TheGame.GetClearing(creatureData["startLocation"]);
+					if (startLocation == null)
+					{
+						Debug.LogError("OnBoard data bad location");
+					}
+                }
+				if (startLocation != null)
+				{
+					MRMapChit.eMapChitType type = (MRMapChit.eMapChitType)((JSONNumber)creatureData["type"]).IntValue;
+					switch (type)
+					{
+						case MRMapChit.eMapChitType.Dwelling:
+							{
+								MRDwelling.eDwelling subtype = (MRDwelling.eDwelling)((JSONNumber)creatureData["subtype"]).IntValue;
+								for (int j = 0; j < mOnBoardData.Count; ++j)
+								{
+									if (mOnBoardData[j].Trigger.Type == type && mOnBoardData[j].Trigger.Dwelling == subtype)
+									{
+										mOnBoardData[j].StartLocation = startLocation;
+									}
+								}
+							}
+							break;
+						case MRMapChit.eMapChitType.Site:
+							{
+								MRMapChit.eSiteChitType subtype = (MRMapChit.eSiteChitType)((JSONNumber)creatureData["subtype"]).IntValue;
+								for (int j = 0; j < mOnBoardData.Count; ++j)
+								{
+									if (mOnBoardData[j].Trigger.Type == type && mOnBoardData[j].Trigger.Site == subtype)
+									{
+										mOnBoardData[j].StartLocation = startLocation;
+									}
+								}
+							}
+							break;
+						case MRMapChit.eMapChitType.Sound:
+							{
+								MRMapChit.eSoundChitType subtype = (MRMapChit.eSoundChitType)((JSONNumber)creatureData["subtype"]).IntValue;
+								for (int j = 0; j < mOnBoardData.Count; ++j)
+								{
+									if (mOnBoardData[j].Trigger.Type == type && mOnBoardData[j].Trigger.Sound == subtype)
+									{
+										mOnBoardData[j].StartLocation = startLocation;
+									}
+								}
+							}
+							break;
+						case MRMapChit.eMapChitType.Warning:
+							{
+								MRMapChit.eWarningChitType subtype = (MRMapChit.eWarningChitType)((JSONNumber)creatureData["subtype"]).IntValue;
+								for (int j = 0; j < mOnBoardData.Count; ++j)
+								{
+									if (mOnBoardData[j].Trigger.Type == type && mOnBoardData[j].Trigger.Warning == subtype)
+									{
+										mOnBoardData[j].StartLocation = startLocation;
+										sTestLocation = mOnBoardData[j].StartLocation;
+									}
+								}
+							}
+							break;
+					}
+				}
+			}
+		}
+
+		return true;
+	}
+
+	public void Save(JSONObject root) 
+	{
+		JSONObject monsterData = new JSONObject();
+
+		if (mDeadPool.Count > 0)
+		{
+			JSONArray deadPool = new JSONArray(mDeadPool.Count);
+			for (int i = 0; i < mDeadPool.Count; ++i)
+			{
+				deadPool[i] = new JSONNumber(mDeadPool[i].Id);
+			}
+			monsterData["deadPool"] = deadPool;
+		}
+		if (mOnBoardData.Count > 0)
+		{
+			JSONArray onBoard = new JSONArray(mOnBoardData.Count);
+			for (int i = 0; i < mOnBoardData.Count; ++i)
+			{
+				JSONObject creatureData = new JSONObject();
+                if (mOnBoardData[i].StartLocation != null)
+                {
+                    creatureData["startLocation"] = new JSONNumber(mOnBoardData[i].StartLocation.Id);
+                }
+				creatureData["type"] = new JSONNumber((int)mOnBoardData[i].Trigger.Type);
+				switch (mOnBoardData[i].Trigger.Type)
+				{
+					case MRMapChit.eMapChitType.Dwelling:
+						creatureData["subtype"] = new JSONNumber((int)mOnBoardData[i].Trigger.Dwelling);
+						break;
+					case MRMapChit.eMapChitType.Site:
+						creatureData["subtype"] = new JSONNumber((int)mOnBoardData[i].Trigger.Site);
+						break;
+					case MRMapChit.eMapChitType.Sound:
+						creatureData["subtype"] = new JSONNumber((int)mOnBoardData[i].Trigger.Sound);
+						break;
+					case MRMapChit.eMapChitType.Warning:
+						creatureData["subtype"] = new JSONNumber((int)mOnBoardData[i].Trigger.Warning);
+						break;
+					default:
+						break;
+				}
+				onBoard[i] = creatureData;
+			}
+			monsterData["onBoard"] = onBoard;
+		}
+
+		root["monsterChart"] = monsterData;
 	}
 
 	#endregion
@@ -578,8 +924,14 @@ public class MRMonsterChart : MonoBehaviour
 	// summon data for each monster roll
 	private IList<SummonData>[] mSummonsData;
 
+	// denizens that start on-board
+	private IList<OnBoardData> mOnBoardData;
+
 	private IList<MRDenizen> mDeadPool = new List<MRDenizen>();
 
 	#endregion
+
+	static MRILocation sTestLocation = null;
 }
 
+}

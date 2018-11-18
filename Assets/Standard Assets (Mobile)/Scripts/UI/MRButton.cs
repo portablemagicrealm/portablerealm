@@ -26,6 +26,9 @@
 using System;
 using UnityEngine;
 
+namespace PortableRealm
+{
+	
 public class MRButton : MonoBehaviour, MRITouchable
 {
 	#region Constants
@@ -74,16 +77,16 @@ public class MRButton : MonoBehaviour, MRITouchable
 		}
 	}
 
-	public virtual bool OnTouched(GameObject touchedObject)
+	public bool OnTouched(GameObject touchedObject)
 	{
 		if (Visible)
 		{
 			mTouched = true;
 		}
-		return true;
+		return Visible;
 	}
 
-	public virtual bool OnReleased(GameObject touchedObject)
+	public bool OnReleased(GameObject touchedObject)
 	{
 		if (Visible)
 		{
@@ -105,7 +108,7 @@ public class MRButton : MonoBehaviour, MRITouchable
 		return false;
 	}
 
-	public virtual bool OnSingleTapped(GameObject touchedObject)
+	public bool OnSingleTapped(GameObject touchedObject)
 	{
 		if (Visible)
 		{
@@ -115,20 +118,24 @@ public class MRButton : MonoBehaviour, MRITouchable
 		return false;
 	}
 
-	public virtual bool OnDoubleTapped(GameObject touchedObject)
+	public bool OnDoubleTapped(GameObject touchedObject)
 	{
 		if (Visible)
 		{
 			mTouched = false;
-			return true;
 		}
-		return false;
+		return Visible;
 
 	}
 
-	public virtual bool OnTouchHeld(GameObject touchedObject)
+	public bool OnTouchHeld(GameObject touchedObject)
 	{
-		return true;
+		return Visible;
+	}
+
+	public bool OnTouchMove(GameObject touchedObject, float delta_x, float delta_y)
+	{
+		return Visible;
 	}
 
 	public virtual bool OnButtonActivate(GameObject touchedObject)
@@ -141,7 +148,7 @@ public class MRButton : MonoBehaviour, MRITouchable
 		return false;
 	}
 
-	public virtual bool OnPinchZoom(float pinchDelta)
+	public bool OnPinchZoom(float pinchDelta)
 	{
 		return true;
 	}
@@ -163,3 +170,4 @@ public class MRButton : MonoBehaviour, MRITouchable
 	#endregion
 }
 
+}

@@ -27,6 +27,9 @@ using UnityEngine;
 using System.Collections;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public static class SiteChitExtensions
 {
 	public static int ClearingNumber(this MRMapChit.eSiteChitType type)
@@ -180,7 +183,26 @@ public class MRSiteChit : MRMapChit
 	public override bool Load(JSONObject root)
 	{
 		base.Load(root);
-		SiteType = (MRMapChit.eSiteChitType)((JSONNumber)root["site"]).IntValue;
+
+		if (root["site"] is JSONNumber)
+		{
+			SiteType = (MRMapChit.eSiteChitType)((JSONNumber)root["site"]).IntValue;
+		}
+		else if (root["site"] is JSONString)
+		{
+			if (MRMapChit.ChitSiteMap.TryGetValue(((JSONString)root["site"]).Value, out mSiteType))
+			{
+				SiteType = mSiteType;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
 
 		return true;
 	}
@@ -201,3 +223,4 @@ public class MRSiteChit : MRMapChit
 	#endregion
 }
 
+}

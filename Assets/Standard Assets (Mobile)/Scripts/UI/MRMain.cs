@@ -31,6 +31,9 @@ using System.IO;
 using System.Text;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRMain : MonoBehaviour, MRITouchable
 {
 	#region Constants
@@ -200,6 +203,18 @@ public class MRMain : MonoBehaviour, MRITouchable
 				case "shield":
 					mShieldPosition = obj;
 					break;
+				case "allyNames":
+					mCharacterRelationships[MRGame.eRelationship.Ally] = obj.GetComponent<TextMesh>();
+					break;
+				case "friendlyNames":
+					mCharacterRelationships[MRGame.eRelationship.Friendly] = obj.GetComponent<TextMesh>();
+					break;
+				case "unfriendlyNames":
+					mCharacterRelationships[MRGame.eRelationship.Unfriendly] = obj.GetComponent<TextMesh>();
+					break;
+				case "enemyNames":
+					mCharacterRelationships[MRGame.eRelationship.Enemy] = obj.GetComponent<TextMesh>();
+					break;
 				default:
 					if (obj.name.StartsWith("chit"))
 						mChitPositions[int.Parse(obj.name.Substring("chit".Length)) - 1] = obj;
@@ -251,21 +266,49 @@ public class MRMain : MonoBehaviour, MRITouchable
 		{
 			// display the character info
 			MRCharacter character = mAvailableCharacters[mDisplayedCharacterIndex];
-			mCharacterName.text = MRUtility.DisplayName(character.Name);
+			mCharacterName.text = character.Name.DisplayName();
 			mCharacterWeight.text = "Weight - " + character.BaseWeight.ToString();
 			mCharacterStartLocation.text = "Start at - ";
 			for (int i = 0; i < character.StartingLocations.Length; ++i)
 			{
 				if (i > 0)
 					mCharacterStartLocation.text += ", ";
-				mCharacterStartLocation.text += MRUtility.DisplayName(character.StartingLocations[i]);
+				mCharacterStartLocation.text += character.StartingLocations[i].DisplayName();
 			}
 			for (int i = 0; i < mCharacterAbilities.Length; ++i)
 				mCharacterAbilities[i].text = "";
 			for (int i = 0; i < character.Abilities.Length; ++i)
 			{
 				if (i < mCharacterAbilities.Length)
-					mCharacterAbilities[i].text += MRUtility.DisplayName(character.Abilities[i]);
+					mCharacterAbilities[i].text += character.Abilities[i].DisplayName();
+			}
+
+			// display relationships
+			foreach (MRGame.eRelationship relationship in Enum.GetValues(typeof(MRGame.eRelationship)))
+			{
+				if (relationship != MRGame.eRelationship.Neutral)
+				{
+					mCharacterRelationships[relationship].text = "";
+				}
+			}
+			foreach (MRGame.eNatives native in Enum.GetValues(typeof(MRGame.eNatives)))
+			{
+				MRGame.eRelationship relationship = character.Relationships[native];
+				if (relationship != MRGame.eRelationship.Neutral)
+				{
+					TextMesh text = mCharacterRelationships[relationship];
+					if (text.text.Length > 0)
+						text.text += ", ";
+					text.text += native.ToString();
+				}
+			}
+			foreach (MRGame.eRelationship relationship in Enum.GetValues(typeof(MRGame.eRelationship)))
+			{
+				if (relationship != MRGame.eRelationship.Neutral && 
+					mCharacterRelationships[relationship].text.Length == 0)
+				{
+					mCharacterRelationships[relationship].text = "none";
+				}
 			}
 
 			// display the character's equipment
@@ -326,6 +369,8 @@ public class MRMain : MonoBehaviour, MRITouchable
 			mState = OptionsState.NewGame;
 			mCurrentSaveGameSlot = -1;
 			mCurrentSaveGameName = "";
+
+			MRGame.TheGame.LoadWorldData("default_world");
 
 			// create the map
 			MRGame.TheGame.TheMap.CreateMap();
@@ -562,27 +607,33 @@ public class MRMain : MonoBehaviour, MRITouchable
 		return true;
 	}
 
-	public virtual bool OnSingleTapped(GameObject touchedObject)
+	public bool OnSingleTapped(GameObject touchedObject)
 	{
 		return true;
 	}
 	
-	public virtual bool OnDoubleTapped(GameObject touchedObject)
+	public bool OnDoubleTapped(GameObject touchedObject)
 	{
 		return true;
 	}
 
-	public virtual bool OnTouchHeld(GameObject touchedObject)
+	public bool OnTouchHeld(GameObject touchedObject)
 	{
 		return true;
 	}
 
-	public virtual bool OnButtonActivate(GameObject touchedObject)
+	public bool OnTouchMove(GameObject touchedObject, float delta_x, float delta_y)
 	{
-		Debug.LogWarning("MRMain OnButtonActivate");
+		return true;
+	}
+
+	public bool OnButtonActivate(GameObject touchedObject)
+	{
+		//Debug.LogWarning("MRMain OnButtonActivate");
 		if (touchedObject == mNewGameButton.gameObject && mNewGameButton.Visible)
 		{
-			StartCoroutine(NewGame());
+//			StartCoroutine(NewGame());
+			MRMainUI.TheUI.DisplayGameTypeSelectDialog();
 		}
 		else if (touchedObject == mAddCharacterButton.gameObject && mAddCharacterButton.Visible)
 		{
@@ -661,6 +712,8 @@ public class MRMain : MonoBehaviour, MRITouchable
 			}
 			if (File.Exists(filename))
 			{
+				MRGame.TheGame.LoadWorldData("default_world");
+
 				StringBuilder dataBuffer = new StringBuilder(File.ReadAllText(filename));
 				JSONObject gameData = new JSONObject(dataBuffer);
 				MRGame.TheGame.Load(gameData);
@@ -706,11 +759,16 @@ public class MRMain : MonoBehaviour, MRITouchable
 		}
 	}
 
+	public void StartNewGame()
+	{
+		StartCoroutine(NewGame());
+	}
+
 	/// <summary>
 	/// Starts a new game. Run as a coroutine so we can clear out the current game before creating a new one.
 	/// </summary>
 	/// <returns>yield enumerator</returns>
-	private IEnumerator NewGame()
+	public IEnumerator NewGame()
 	{
 		if (mState == OptionsState.GameStarted)
 		{
@@ -718,6 +776,27 @@ public class MRMain : MonoBehaviour, MRITouchable
 			mState = OptionsState.NoGame;
 		}
 		CreateNewGame();
+	}
+
+	public void StartPregeneratedGame(string name)
+	{
+		StartCoroutine(NewPregeneratedGame(name));
+	}
+
+	/// <summary>
+	/// Starts a new game. Run as a coroutine so we can clear out the current game before creating a new one.
+	/// </summary>
+	/// <returns>yield enumerator</returns>
+	public IEnumerator NewPregeneratedGame(string name)
+	{
+		if (mState == OptionsState.GameStarted)
+		{
+			yield return StartCoroutine(MRGame.TheGame.Reset());
+			mState = OptionsState.NoGame;
+		}
+		MRGame.TheGame.LoadWorldData(name);
+		mState = OptionsState.GameStarted;
+		MRGame.TheGame.StartGame();
 	}
 
 	private void ShowInstructions()
@@ -757,6 +836,7 @@ public class MRMain : MonoBehaviour, MRITouchable
 	private TextMesh mCharacterWeight;
 	private TextMesh mCharacterStartLocation;
 	private TextMesh[] mCharacterAbilities = new TextMesh[2];
+	private IDictionary<MRGame.eRelationship, TextMesh> mCharacterRelationships = new Dictionary<MRGame.eRelationship, TextMesh>();
 	private Sprite mEnabledArrow;
 	private Sprite mDisabledArrow;
 	private MRButton mCharacterLeftArrow;
@@ -773,3 +853,4 @@ public class MRMain : MonoBehaviour, MRITouchable
 	#endregion
 }
 
+}

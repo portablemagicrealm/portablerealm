@@ -29,6 +29,9 @@ using System.Collections;
 using System.Collections.Generic;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRClearing : MonoBehaviour, MRILocation, MRITouchable
 {
 	#region Constants
@@ -101,6 +104,59 @@ public class MRClearing : MonoBehaviour, MRILocation, MRITouchable
 		}
 	}
 
+	public virtual IList<MRGame.eMagicColor> MagicSupplied
+	{
+		get{
+			HashSet<MRGame.eMagicColor> magicSupplied = new HashSet<MRGame.eMagicColor>();
+			foreach (var color in MRGame.TheGame.WorldMagic)
+			{
+				magicSupplied.Add(color);
+			}
+			foreach (var color in MyTileSide.MagicSupplied)
+			{
+				magicSupplied.Add(color);
+			}
+			// borderlands supplies magic on a per-clearing basis
+			// @todo make this data driven
+			if (MyTileSide.Tile.Id == MRMap.eTileNames.borderland && MyTileSide.type == MRTileSide.eType.Enchanted)
+			{
+				switch (clearingNumber)
+				{
+					case 1:
+						magicSupplied.Add(MRGame.eMagicColor.Grey);
+						break;
+					case 2:
+					case 3:
+						magicSupplied.Add(MRGame.eMagicColor.Gold);
+						break;
+					case 4:
+					case 5:
+						magicSupplied.Add(MRGame.eMagicColor.Purple);
+						break;
+					case 6:
+						magicSupplied.Add(MRGame.eMagicColor.Grey);
+						magicSupplied.Add(MRGame.eMagicColor.Gold);
+						magicSupplied.Add(MRGame.eMagicColor.Purple);
+						break;
+					default:
+						Debug.LogError("MagicSupplied invalid Borderlands clearing");
+						break;
+				}
+			}
+			foreach (var item in mPieces.Pieces)
+			{
+				if (item is MRIColorSource)
+				{
+					foreach (var color in ((MRIColorSource)item).MagicSupplied)
+					{
+						magicSupplied.Add(color);
+					}
+				}
+			}
+			return new List<MRGame.eMagicColor>(magicSupplied);
+		}
+	}
+
 	#endregion
 
 	#region Methods
@@ -135,7 +191,7 @@ public class MRClearing : MonoBehaviour, MRILocation, MRITouchable
 
 	void OnDestroy()
 	{
-//		Debug.LogWarning("Destroy clearing " + Name);
+		//Debug.LogWarning("Destroy clearing " + Name);
 		MRGame.TheGame.RemoveClearing(this);
 	}
 
@@ -181,7 +237,12 @@ public class MRClearing : MonoBehaviour, MRILocation, MRITouchable
 		return true;
 	}
 
-	public virtual bool OnButtonActivate(GameObject touchedObject)
+	public bool OnTouchMove(GameObject touchedObject, float delta_x, float delta_y)
+	{
+		return true;
+	}
+
+	public bool OnButtonActivate(GameObject touchedObject)
 	{
 		return true;
 	}
@@ -244,12 +305,25 @@ public class MRClearing : MonoBehaviour, MRILocation, MRITouchable
 
 	public bool Load(JSONObject root)
 	{
-		if (Id != ((JSONNumber)root["id"]).UintValue)
-			return false;
-		if (!mPieces.Load((JSONObject)root["pieces"]))
-			return false;
-		if (!mAbandonedItems.Load((JSONObject)root["items"]))
-			return false;
+		if (root["id"] != null)
+		{
+			if (Id != ((JSONNumber)root["id"]).UintValue)
+				return false;
+		}
+		else
+		{
+			// todo: check for tile and clearing number
+		}
+		if (root["pieces"] != null)
+		{
+			if (!mPieces.Load((JSONObject)root["pieces"]))
+				return false;
+		}
+		if (root["items"] != null)
+		{
+			if (!mAbandonedItems.Load((JSONObject)root["items"]))
+				return false;
+		}
 		// make sure controllable locations are set
 		List<MRControllable> controllables = new List<MRControllable>();
 		foreach (MRIGamePiece piece in mPieces.Pieces)
@@ -288,4 +362,6 @@ public class MRClearing : MonoBehaviour, MRILocation, MRITouchable
 	private MRGamePieceStack mAbandonedItems;
 
 	#endregion
+}
+
 }

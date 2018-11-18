@@ -32,6 +32,9 @@ using System.Text;
 using AssemblyCSharp;
 using DamienG.Security.Cryptography;
 
+namespace PortableRealm
+{
+	
 public static class MRUtility
 {
 	//
@@ -160,6 +163,36 @@ public static class MRUtility
 		}
 	}
 
+	/// <summary>
+	/// Converts a number from 1-8 to its Roman numeral equivalent.
+	/// </summary>
+	/// <returns>The roman numeral.</returns>
+	/// <param name="value">Value.</param>
+	public static string ToRomanNumeral(this Int32 value)
+	{
+		switch (value)
+		{
+			case 1:
+				return "I";
+			case 2:
+				return "II";
+			case 3:
+				return "III";
+			case 4:
+				return "IV";
+			case 5:
+				return "V";
+			case 6:
+				return "VI";
+			case 7:
+				return "VII";
+			case 8:
+				return "VIII";
+			default:
+				return "??";
+		}
+	}
+
 	public static MRArmor.eType Armor(this string name)
 	{
 		switch (char.ToLower(name[0]))
@@ -205,6 +238,11 @@ public static class MRUtility
 		return name;
 	}
 
+	/// <summary>
+	/// Converts a dwelling name to a dwelling enum.
+	/// </summary>
+	/// <returns>The dwelling.</returns>
+	/// <param name="name">Name.</param>
 	public static MRDwelling.eDwelling Dwelling(this string name)
 	{
 		switch (name.ToLower())
@@ -220,9 +258,250 @@ public static class MRUtility
 				return MRDwelling.eDwelling.Inn;
 			case "ghosts":
 				return MRDwelling.eDwelling.Ghosts;
+			case "largefire":
+				return MRDwelling.eDwelling.LargeFire;
+			case "smallfire":
+				return MRDwelling.eDwelling.SmallFire;
 			default:
 				Debug.LogError("Unhandled dwelling name " + name);
 				return MRDwelling.eDwelling.Inn;
+		}
+	}
+
+	/// <summary>
+	/// Converts a native name to a native enum.
+	/// </summary>
+	/// <returns>The native.</returns>
+	/// <param name="name">Name.</param>
+	public static MRGame.eNatives Native(this string name)
+	{
+		switch (name.ToLower())
+		{
+			case "bashkars":
+				return MRGame.eNatives.Bashkars;
+			case "company":
+				return MRGame.eNatives.Company;
+			case "guard":
+				return MRGame.eNatives.Guard;
+			case "lancers":
+				return MRGame.eNatives.Lancers;
+			case "order":
+				return MRGame.eNatives.Order;
+			case "patrol":
+				return MRGame.eNatives.Patrol;
+			case "rogues":
+				return MRGame.eNatives.Rogues;
+			case "soldiers":
+				return MRGame.eNatives.Soldiers;
+			case "woodfolk":
+				return MRGame.eNatives.Woodfolk;
+			default:
+				Debug.LogError("Unhandled native name " + name);
+				return MRGame.eNatives.Bashkars;
+		}
+	}
+
+	/// <summary>
+	/// Converts a relationship name to a relationship enum.
+	/// </summary>
+	/// <returns>The relationship.</returns>
+	/// <param name="name">Name.</param>
+	public static MRGame.eRelationship Relationship(this string name)
+	{
+		switch (name.ToLower())
+		{
+			case "enemy":
+				return MRGame.eRelationship.Enemy;
+			case "unfriendly":
+				return MRGame.eRelationship.Unfriendly;
+			case "neutral":
+				return MRGame.eRelationship.Neutral;
+			case "friendly":
+				return MRGame.eRelationship.Friendly;
+			case "ally":
+				return MRGame.eRelationship.Ally;
+			default:
+				Debug.LogError("Unhandled relationship name " + name);
+				return MRGame.eRelationship.Neutral;
+		}
+	}
+
+	/// <summary>
+	/// Converts a site name to a site enum.
+	/// </summary>
+	/// <returns>The site.</returns>
+	/// <param name="name">Name.</param>
+	public static MRMapChit.eSiteChitType Site(this string name)
+	{
+		switch (name.ToLower())
+		{
+			case "altar":
+				return MRMapChit.eSiteChitType.Altar;
+			case "cairns":
+				return MRMapChit.eSiteChitType.Cairns;
+			case "hoard":
+				return MRMapChit.eSiteChitType.Hoard;
+			case "lair":
+				return MRMapChit.eSiteChitType.Lair;
+			case "pool":
+				return MRMapChit.eSiteChitType.Pool;
+			case "shrine":
+				return MRMapChit.eSiteChitType.Shrine;
+			case "statue":
+				return MRMapChit.eSiteChitType.Statue;
+			case "vault":
+				return MRMapChit.eSiteChitType.Vault;
+			default:
+				Debug.LogError("Unhandled site name " + name);
+				return 0;
+		}
+	}
+
+	/// <summary>
+	/// Converts a color name to a color enum.
+	/// </summary>
+	/// <returns>The color.</returns>
+	/// <param name="name">Name.</param>
+	public static MRGame.eMagicColor ToColor(this string name)
+	{
+		switch (name.ToLower())
+		{
+			case "white":
+				return MRGame.eMagicColor.White;
+			case "grey":
+			case "gray":
+				return MRGame.eMagicColor.Grey;
+			case "gold":
+				return MRGame.eMagicColor.Gold;
+			case "purple":
+				return MRGame.eMagicColor.Purple;
+			case "black":
+				return MRGame.eMagicColor.Black;
+			case "any":
+				return MRGame.eMagicColor.Any;
+			default:
+				Debug.LogError("Unhandled color name " + name);
+				return MRGame.eMagicColor.None;
+		}
+	}
+
+	/// <summary>
+	/// Converts a spell duration name to a duration enum.
+	/// </summary>
+	/// <returns>The spell duration.</returns>
+	/// <param name="name">Name.</param>
+	public static MRGame.eSpellDuration ToSpellDuration(this string name)
+	{
+		switch (name.ToLower())
+		{
+			case "attack":
+				return MRGame.eSpellDuration.Attack;
+			case "combat":
+				return MRGame.eSpellDuration.Combat;
+			case "day":
+				return MRGame.eSpellDuration.Day;
+			case "fly":
+				return MRGame.eSpellDuration.Fly;
+			case "instant":
+				return MRGame.eSpellDuration.Instant;
+			case "permanent":
+				return MRGame.eSpellDuration.Permanent;
+			case "phase":
+				return MRGame.eSpellDuration.Phase;
+			default:
+				Debug.LogError("Unhandled spell duration name " + name);
+				return MRGame.eSpellDuration.None;
+		}
+	}
+
+	/// <summary>
+	/// Converts a spell target name to a target enum.
+	/// </summary>
+	/// <returns>The spell target.</returns>
+	/// <param name="name">Name.</param>
+	public static MRGame.eSpellTarget ToSpellTarget(this string name)
+	{
+		switch (name.ToLower())
+		{
+			case "artifact":
+				return MRGame.eSpellTarget.Artifact;
+			case "bats":
+				return MRGame.eSpellTarget.Bats;
+			case "caveclearing":
+				return MRGame.eSpellTarget.CaveClearing;
+			case "character":
+				return MRGame.eSpellTarget.Character;
+			case "characters":
+				return MRGame.eSpellTarget.Characters;
+			case "clearing":
+				return MRGame.eSpellTarget.Clearing;
+			case "controlledmonster":
+				return MRGame.eSpellTarget.ControlledMonster;
+			case "curse":
+				return MRGame.eSpellTarget.Curse;
+			case "demon":
+				return MRGame.eSpellTarget.Demon;
+			case "giants":
+				return MRGame.eSpellTarget.Giants;
+			case "goblin":
+				return MRGame.eSpellTarget.Goblin;
+			case "goblins":
+				return MRGame.eSpellTarget.Goblins;
+			case "hex":
+				return MRGame.eSpellTarget.Hex;
+			case "hiredleader":
+				return MRGame.eSpellTarget.HiredLeader;
+			case "lightcharacter":
+				return MRGame.eSpellTarget.LightCharacter;
+			case "monster":
+				return MRGame.eSpellTarget.Monster;
+			case "monsters":
+				return MRGame.eSpellTarget.Monsters;
+			case "native":
+				return MRGame.eSpellTarget.Native;
+			case "natives":
+				return MRGame.eSpellTarget.Natives;
+			case "nativegroup":
+				return MRGame.eSpellTarget.NativeGroup;
+			case "octopus":
+				return MRGame.eSpellTarget.Octopus;
+			case "ogre":
+				return MRGame.eSpellTarget.Ogre;
+			case "ogres":
+				return MRGame.eSpellTarget.Ogres;
+			case "soundchit":
+				return MRGame.eSpellTarget.SoundChit;
+			case "spell":
+				return MRGame.eSpellTarget.Spell;
+			case "spellbook":
+				return MRGame.eSpellTarget.SpellBook;
+			case "spellchitany":
+				return MRGame.eSpellTarget.SpellChitAny;
+			case "spellchit1":
+				return MRGame.eSpellTarget.SpellChit1;
+			case "spellchit2":
+				return MRGame.eSpellTarget.SpellChit2;
+			case "spellchit3":
+				return MRGame.eSpellTarget.SpellChit3;
+			case "spellchit4":
+				return MRGame.eSpellTarget.SpellChit4;
+			case "spellchit5":
+				return MRGame.eSpellTarget.SpellChit5;
+			case "spellchit6":
+				return MRGame.eSpellTarget.SpellChit6;
+			case "spellchit7":
+				return MRGame.eSpellTarget.SpellChit7;
+			case "spellchit8":
+				return MRGame.eSpellTarget.SpellChit8;
+			case "spider":
+				return MRGame.eSpellTarget.Spider;
+			case "weapon":
+				return MRGame.eSpellTarget.Weapon;
+			case "wingeddemon":
+				return MRGame.eSpellTarget.WingedDemon;
+			default:
+				Debug.LogError("Unhandled spell target name " + name);
+				return MRGame.eSpellTarget.None;
 		}
 	}
 
@@ -231,7 +510,7 @@ public static class MRUtility
 	/// </summary>
 	/// <returns>The base name</returns>
 	/// <param name="name">The upper-case name</param>
-	public static string DisplayName(string name)
+	public static string DisplayName(this string name)
 	{
 		StringBuilder buffer = new StringBuilder(name);
 		bool nextUpper = true;
@@ -278,7 +557,7 @@ public static class MRUtility
 	public static uint IdForName(string name, int index)
 	{
 		uint id = 0;
-		string idName = name + index;
+		string idName = name.ToLower() + index;
 		Crc32 crc32 = new Crc32();
 		byte[] bytes = new byte[idName.Length * sizeof(char)];
 		System.Buffer.BlockCopy(idName.ToCharArray(), 0, bytes, 0, bytes.Length);
@@ -328,3 +607,4 @@ public static class MRUtility
 	}
 }
 
+}

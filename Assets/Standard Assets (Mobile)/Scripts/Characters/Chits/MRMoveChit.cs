@@ -27,6 +27,9 @@ using UnityEngine;
 using System.Collections;
 using System.Text;
 
+namespace PortableRealm
+{
+	
 public class MRMoveChit : MRActionChit
 {
 	#region Properties
@@ -130,3 +133,4 @@ public class MRMoveChit : MRActionChit
 	#endregion
 }
 
+}

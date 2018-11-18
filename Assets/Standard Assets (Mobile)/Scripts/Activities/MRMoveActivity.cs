@@ -29,6 +29,9 @@ using System.Collections;
 using System.Collections.Generic;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRMoveActivity : MRActivity
 {
 	#region Properties
@@ -204,3 +207,4 @@ public class MRMoveActivity : MRActivity
 	#endregion
 }
 
+}

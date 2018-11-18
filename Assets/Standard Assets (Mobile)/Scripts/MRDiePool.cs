@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRDiePool
 {
 	#region Properties
@@ -149,3 +152,4 @@ public class MRDiePool
 	#endregion
 }
 
+}

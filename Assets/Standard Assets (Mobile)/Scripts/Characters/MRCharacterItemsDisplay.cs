@@ -28,6 +28,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+namespace PortableRealm
+{
+	
 public class MRCharacterItemsDisplay : MRTabItems, MRITouchable
 {
 	#region Properties
@@ -326,10 +329,7 @@ public class MRCharacterItemsDisplay : MRTabItems, MRITouchable
 					if (chit.Stack != null)
 						chit.Stack.RemovePiece(chit);
 					chit.Visible = true;
-					if (character.CanSelectChit(chit))
-						chit.FrontColor = MRGame.offWhite;
-					else
-						chit.FrontColor = MRGame.darkGrey;
+					chit.Selectable = character.CanSelectChit(chit);
 					switch (chit.State)
 					{
 						case MRActionChit.eState.Active:
@@ -507,6 +507,11 @@ public class MRCharacterItemsDisplay : MRTabItems, MRITouchable
 	}
 
 	public bool OnTouchHeld(GameObject touchedObject)
+	{
+		return true;
+	}
+
+	public virtual bool OnTouchMove(GameObject touchedObject, float delta_x, float delta_y)
 	{
 		return true;
 	}
@@ -696,10 +701,4 @@ public class MRCharacterItemsDisplay : MRTabItems, MRITouchable
 	#endregion
 }
 
-
-
-
-
-
-
-
+}

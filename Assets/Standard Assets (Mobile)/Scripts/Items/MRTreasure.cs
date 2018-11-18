@@ -37,6 +37,9 @@ using System;
 using System.Text;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRTreasure : MRItem
 {
 	#region Properties
@@ -59,6 +62,20 @@ public class MRTreasure : MRItem
 	{
 		get{
 			return mIsTwiT;
+		}
+	}
+
+	public int SellFame 
+	{
+		get{
+			return mSellFame;
+		}
+	}
+
+	public MRGame.eNatives SellFameGroup
+	{
+		get{
+			return mSellFameGroup;
 		}
 	}
 
@@ -95,6 +112,11 @@ public class MRTreasure : MRItem
 		mIsGreatTreasure = ((JSONBoolean)data["isgreat"]).Value;
 		mIsLargeTreasure = ((JSONBoolean)data["islarge"]).Value;
 		mIsTwiT = ((JSONBoolean)data["istwit"]).Value;
+		mSellFame = ((JSONNumber)data["sellfame"]).IntValue;
+		if (mSellFame > 0)
+		{
+			mSellFameGroup = ((JSONString)data["sellfamegroup"]).Value.Native();
+		}
 
 		mCounter = (GameObject)MRGame.Instantiate(MRGame.TheGame.treasureCardPrototype);
 		TextMesh text = mCounter.GetComponentInChildren<TextMesh>();
@@ -103,15 +125,6 @@ public class MRTreasure : MRItem
 			StringBuilder buffer = new StringBuilder(Name.ToUpper());
 			buffer.Replace(' ', '\n');
 			text.text = buffer.ToString();
-		}
-		Sprite texture = (Sprite)Resources.Load("Textures/treasure_back", typeof(Sprite));
-		SpriteRenderer[] sprites = mCounter.GetComponentsInChildren<SpriteRenderer>();
-		foreach (SpriteRenderer sprite in sprites)
-		{
-			if (sprite.name == "BackSide")
-			{
-				sprite.sprite = texture;
-			}
 		}
 	}
 	
@@ -126,13 +139,6 @@ public class MRTreasure : MRItem
 		{
 			mCounter.transform.Rotate(new Vector3(0, 180f, 0));
 		}
-
-//		Vector3 orientation = mCounter.transform.localEulerAngles;
-//		if (Hidden)
-//			orientation.y = 180f;
-//		else
-//			orientation.y = 0;
-//		mCounter.transform.localEulerAngles = orientation;
 	}
 
 	#endregion
@@ -143,6 +149,10 @@ public class MRTreasure : MRItem
 	private bool mIsLargeTreasure;
 	private bool mIsTwiT;
 	private bool mHidden;
+	private int mSellFame;
+	private MRGame.eNatives mSellFameGroup;
 
 	#endregion
+}
+
 }

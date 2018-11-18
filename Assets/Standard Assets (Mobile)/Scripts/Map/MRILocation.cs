@@ -27,6 +27,9 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+namespace PortableRealm
+{
+	
 /// <summary>
 /// Interface for location a controllable can be, either a clearing or road (if retreating).
 /// </summary>
@@ -45,6 +48,12 @@ public interface MRILocation : MRISerializable
 	MRGamePieceStack Pieces { get; }
 
 	MRGamePieceStack AbandonedItems { get; }
+
+	/// <summary>
+	/// Returns a list of the magic colors available in this location.
+	/// </summary>
+	/// <value>The magic available.</value>
+	IList<MRGame.eMagicColor> MagicSupplied { get; }
 
 	#endregion
 
@@ -71,4 +80,5 @@ public interface MRILocation : MRISerializable
 
 	#endregion
 }
-
+		
+}

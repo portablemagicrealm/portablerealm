@@ -27,9 +27,13 @@ using UnityEngine;
 using System.Collections;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public interface MRISerializable
 {
 	bool Load(JSONObject root);
 	void Save(JSONObject root);
 }
 
+}

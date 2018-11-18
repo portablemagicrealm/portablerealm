@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRInspectionArea : MonoBehaviour, MRITouchable
 {
 	#region Constants
@@ -268,7 +271,12 @@ public class MRInspectionArea : MonoBehaviour, MRITouchable
 		return false;
 	}
 
-	public virtual bool OnButtonActivate(GameObject touchedObject)
+	public bool OnTouchMove(GameObject touchedObject, float delta_x, float delta_y)
+	{
+		return true;
+	}
+
+	public bool OnButtonActivate(GameObject touchedObject)
 	{
 		if (touchedObject == mHeader)
 		{
@@ -327,3 +335,4 @@ public class MRInspectionArea : MonoBehaviour, MRITouchable
 	#endregion
 }
 
+}

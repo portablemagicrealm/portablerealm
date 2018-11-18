@@ -26,6 +26,9 @@
 
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRNoActivity : MRActivity
 {
 	public MRNoActivity() : base(MRGame.eActivity.None)
@@ -38,3 +41,4 @@ public class MRNoActivity : MRActivity
 	}
 }
 
+}

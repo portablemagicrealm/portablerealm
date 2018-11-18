@@ -28,6 +28,9 @@ using UnityEngine.UI;
 using System;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRVictoryPointSelectionDialog : MonoBehaviour
 {
 	#region Properties
@@ -228,3 +231,4 @@ public class MRVictoryPointSelectionDialog : MonoBehaviour
 	#endregion
 }
 
+}

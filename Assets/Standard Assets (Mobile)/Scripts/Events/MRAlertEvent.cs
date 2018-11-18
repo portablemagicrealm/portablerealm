@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRAlertEvent : MRUpdateEvent
 {
 	#region Properties
@@ -45,6 +48,7 @@ public class MRAlertEvent : MRUpdateEvent
 	{
 		mCharacter = character;
 		mAlertType = alertType;
+		mFirstPass = false;
 	}
 
 	/// <summary>
@@ -97,3 +101,4 @@ public class MRAlertEvent : MRUpdateEvent
 	#endregion
 }
 
+}

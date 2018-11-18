@@ -11,6 +11,11 @@
 			"armor":false,
 			"start":["inn"],
 			"abilities":["aim", "stamina"],
+			"relationships":
+			{
+				"friendly":["lancers", "patrol"],
+				"unfriendly":["company", "bashkars"]
+			},
 			"chits":[
 				{
 					"action":"mo",
@@ -97,6 +102,11 @@
 			"armor":false,
 			"start":["inn"],
 			"abilities":["robust", "berserk"],
+			"relationships":
+			{
+				"friendly":["rogues", "lancers"],
+				"unfriendly":["patrol", "guard"]
+			},
 			"chits":[
 				{
 					"action":"mo",
@@ -183,6 +193,13 @@
 			"armor":true,
 			"start":["inn"],
 			"abilities":["aim", "fear"],
+			"relationships": 
+			{
+				"ally":["company"],
+				"friendly":["soldiers"],
+				"unfriendly":["lancers"],
+				"enemy":["guard"]
+			},
 			"chits":[
 				{
 					"action":"mo",
@@ -269,6 +286,12 @@
 			"armor":false,
 			"start":["inn","house","guardhouse"],
 			"abilities":["aim", "reputation"],
+			"relationships":
+			{
+				"friendly":["patrol", "soldiers", "guard"],
+				"unfriendly":["woodfolk"],
+				"enemy":["bashkars"]
+			},
 			"chits":[
 				{
 					"action":"mo",
@@ -355,6 +378,13 @@
 			"armor":false,
 			"start":["inn"],
 			"abilities":["concealment", "peace with nature"],
+			"relationships":
+			{
+				"ally":["bashkars"],
+				"friendly":["lancers"],
+				"unfriendly":["order"],
+				"enemy":["woodfolk"]
+			},
 			"chits":[
 				{
 					"action":"mo",
@@ -441,6 +471,11 @@
 			"armor":false,
 			"start":["inn","guardhouse"],
 			"abilities":["short legs", "cave knowledge"],
+			"relationships":
+			{
+				"friendly":["company", "guard"],
+				"unfriendly":["woodfolk", "bashkars"]
+			},
 			"chits":[
 				{
 					"action":"d",
@@ -527,6 +562,13 @@
 			"armor":false,
 			"start":["inn"],
 			"abilities":["elusiveness", "archer"],
+			"relationships":
+			{
+				"ally":["woodfolk"],
+				"friendly":["bashkars"],
+				"unfriendly":["order"],
+				"enemy":["lancers"]
+			},
 			"chits":[
 				{
 					"action":"ma",
@@ -613,6 +655,11 @@
 			"armor":false,
 			"start":["inn"],
 			"abilities":["magical items", "knowledge"],
+			"relationships":
+			{
+				"friendly":["company", "rogues"],
+				"unfriendly":["patrol", "soldiers"]
+			},
 			"chits":[
 				{
 					"action":"f",
@@ -699,6 +746,11 @@
 			"armor":false,
 			"start":["inn","chapel"],
 			"abilities":["heavenly protection", "learning"],
+			"relationships":
+			{
+				"ally":["order"],
+				"unfriendly":["bashkars", "company"]
+			},
 			"chits":[
 				{
 					"action":"mo",
@@ -785,6 +837,13 @@
 			"armor":false,
 			"start":["inn"],
 			"abilities":["lore", "aura of power"],
+			"relationships":
+			{
+				"ally":["lancers"],
+				"friendly":["company", "bashkars"],
+				"unfriendly":["order", "soldiers"],
+				"enemy":["guard"]
+			},
 			"chits":[
 				{
 					"action":"mo",
@@ -871,6 +930,11 @@
 			"armor":false,
 			"start":["inn"],
 			"abilities":["barter", "clever"],
+			"relationships":
+			{
+				"friendly":["rogues", "company"],
+				"enemy":["patrol"]
+			},
 			"chits":[
 				{
 					"action":"mo",
@@ -957,6 +1021,13 @@
 			"armor":true,
 			"start":["inn","chapel"],
 			"abilities":["health", "honor"],
+			"relationships":
+			{
+				"ally":["order"],
+				"friendly":["lancers"],
+				"unfriendly":["bashkars"],
+				"enemy":["company"]
+			},
 			"chits":[
 				{
 					"action":"mo",
@@ -1043,6 +1114,12 @@
 			"armor":false,
 			"start":["inn"],
 			"abilities":["knowledge", "familiar"],
+			"relationships":
+			{
+				"ally":["company"],
+				"friendly":["bashkars"],
+				"unfriendly":["order", "lancers", "soldiers"]
+			},
 			"chits":[
 				{
 					"action":"mo",
@@ -1129,6 +1206,13 @@
 			"armor":false,
 			"start":["inn","ghosts"],
 			"abilities":["disembodied", "aura of power"],
+			"relationships":
+			{
+				"ally":["bashkars"],
+				"friendly":["company"],
+				"unfriendly":["lancers"],
+				"enemy":["order"]
+			},
 			"chits":[
 				{
 					"action":"ma",
@@ -1215,6 +1299,12 @@
 			"armor":false,
 			"start":["inn","house","guardhouse"],
 			"abilities":["lore", "experience"],
+			"relationships":
+			{
+				"friendly":["woodfolk", "patrol", "soldiers", "guard"],
+				"unfriendly":["company", "bashkars"],
+				"enemy":["lancers"]
+			},
 			"chits":[
 				{
 					"action":"mo",
@@ -1301,6 +1391,13 @@
 			"armor":false,
 			"start":["inn","house"],
 			"abilities":["tracking", "archer"],
+			"relationships":
+			{
+				"ally":["woodfolk"],
+				"friendly":["lancers"],
+				"unfriendly":["soldiers"],
+				"enemy":["bashkars"]
+			},
 			"chits":[
 				{
 					"action":"mo",

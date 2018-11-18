@@ -27,6 +27,9 @@ using UnityEngine;
 using System.Collections;
 using System.Text;
 
+namespace PortableRealm
+{
+	
 public class MRBerserkChit : MRFightChit
 {
 	#region Properties
@@ -96,8 +99,7 @@ public class MRBerserkChit : MRFightChit
 			Owner.CurrentVulnerability = MRGame.eStrength.Tremendous;
 			if (action == eAction.Alert)
 			{
-				Owner.SetFatigueBalance(BaseAsterisks);
-				Owner.FatigueChit(this);
+				Owner.ForceFatigueChit(this);
 			}
 			else if (action == eAction.CombatAlert)
 			{
@@ -108,3 +110,4 @@ public class MRBerserkChit : MRFightChit
 	#endregion
 }
 
+}

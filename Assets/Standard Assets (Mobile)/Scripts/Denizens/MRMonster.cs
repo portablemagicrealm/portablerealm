@@ -27,6 +27,9 @@ using UnityEngine;
 using System.Collections;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+
 public class MRMonster : MRDenizen
 {
 	#region Properties
@@ -149,6 +152,12 @@ public class MRMonster : MRDenizen
 		}
 	}
 
+	public override bool IsValidTarget(MRSpell spell)
+	{
+		return (spell.Targets.Contains(MRGame.eSpellTarget.Monster) ||
+			spell.Targets.Contains(MRGame.eSpellTarget.Monsters));
+	}
+
 	#endregion
 
 	#region Members
@@ -161,3 +170,4 @@ public class MRMonster : MRDenizen
 	#endregion
 }
 
+}

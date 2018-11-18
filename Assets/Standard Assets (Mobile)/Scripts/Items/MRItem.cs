@@ -29,7 +29,10 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using AssemblyCSharp;
 
-public class MRItem : MRIGamePiece, MRISerializable
+namespace PortableRealm
+{
+	
+public class MRItem : MRIGamePiece, MRISerializable, MRIColorSource
 {
 	#region Properties
 
@@ -76,6 +79,13 @@ public class MRItem : MRIGamePiece, MRISerializable
 	{
 		get{
 			return mBasePrice;
+		}
+	}
+
+	public virtual int CurrentPrice
+	{
+		get{
+			return BasePrice;
 		}
 	}
 
@@ -185,7 +195,7 @@ public class MRItem : MRIGamePiece, MRISerializable
 		}
 
 		set {
-			mCounter.transform.parent = value;
+			mCounter.transform.SetParent(value);
 		}
 	}
 
@@ -246,6 +256,21 @@ public class MRItem : MRIGamePiece, MRISerializable
 		}
 	}
 
+	/**********************/
+	// MRIMagicSource properties
+
+	/// <summary>
+	/// Returns a list of the color magic supplied by this object.
+	/// </summary>
+	/// <value>The magic supplied.</value>
+	public virtual IList<MRGame.eMagicColor> MagicSupplied 
+	{ 
+		get	{
+			List<MRGame.eMagicColor> magic = new List<MRGame.eMagicColor>();
+			return magic;
+		}
+	}
+
 	#endregion
 	
 	#region Methods
@@ -288,7 +313,7 @@ public class MRItem : MRIGamePiece, MRISerializable
 
 	public virtual bool Load(JSONObject root)
 	{
-		if (mId != ((JSONNumber)root["id"]).UintValue)
+		if (mId != MRGame.TheGame.GetPieceId(root["id"]))
 			return false;
 
 		return true;
@@ -323,3 +348,4 @@ public class MRItem : MRIGamePiece, MRISerializable
 	#endregion
 }
 
+}

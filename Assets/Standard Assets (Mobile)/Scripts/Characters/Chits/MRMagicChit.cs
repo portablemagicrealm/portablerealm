@@ -25,9 +25,30 @@
 // THE SOFTWARE.
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using System.Text;
 
-public class MRMagicChit : MRActionChit
+namespace PortableRealm
 {
+
+public class MRMagicChit : MRActionChit, MRIColorSource
+{
+	#region Constants
+
+	public static Dictionary<int, MRGame.eMagicColor> MagicMap = new Dictionary<int, MRGame.eMagicColor>()
+	{
+		{1, MRGame.eMagicColor.White},
+		{2, MRGame.eMagicColor.Grey},
+		{3, MRGame.eMagicColor.Gold},
+		{4, MRGame.eMagicColor.Purple},
+		{5, MRGame.eMagicColor.Black},
+		{6, MRGame.eMagicColor.None},
+		{7, MRGame.eMagicColor.None},
+		{8, MRGame.eMagicColor.None},
+	};
+
+	#endregion
+
 	#region Properties
 
 	public override eType Type
@@ -45,6 +66,7 @@ public class MRMagicChit : MRActionChit
 		
 		set{
 			mBaseMagicType = value;
+			CurrentMagicType = value;
 		}
 	}
 	
@@ -59,6 +81,45 @@ public class MRMagicChit : MRActionChit
 		}
 	}
 
+	public bool IsEnchanted
+	{
+		get{
+			return mEnchanted;
+		}
+		set{
+			mEnchanted = value;
+			if (mEnchanted)
+				mState = eState.Enchanted;
+			SideUp = mEnchanted ? eSide.Back : eSide.Front;
+		}
+	}
+
+	public MRGame.eMagicColor MagicColor
+	{
+		get{
+			return MagicMap[CurrentMagicType];
+		}
+	}
+
+	public IList<MRGame.eMagicColor> MagicSupplied 
+	{ 
+		get {
+			IList<MRGame.eMagicColor> color = new List<MRGame.eMagicColor>();
+			color.Add(MagicColor);
+			return color;
+		}
+	}
+
+	public override eState State
+	{
+		set{
+			base.State = value;
+			// magic chits can only be enchanted if active
+			if (State != eState.Active)
+				IsEnchanted = false;
+		}
+	}
+
 	#endregion
 
 	#region Methods
@@ -67,12 +128,44 @@ public class MRMagicChit : MRActionChit
 	public override void Start ()
 	{
 		base.Start();
+
+		mChitText = mCounter.GetComponentInChildren<TextMesh>();
+
+		if (MagicColor != MRGame.eMagicColor.None)
+			BackColor = MRGame.MagicColorMap[MagicColor];
+
+		SpriteRenderer[] sprites = mCounter.GetComponentsInChildren<SpriteRenderer>();
+		foreach (SpriteRenderer sprite in sprites)
+		{
+			if (sprite.gameObject.name == "BackImage")
+			{
+				Sprite texture = (Sprite)Resources.Load(mOwner.IconName, typeof(Sprite));
+				sprite.sprite = texture;
+				break;
+			}
+		}
 	}
-	
+
 	// Update is called once per frame
 	public override void Update ()
 	{
 		base.Update();
+
+		if (!mEnchanted)
+		{
+			StringBuilder buffer = new StringBuilder("MAGIC\n");
+			buffer.Append(CurrentMagicType.ToRomanNumeral());
+			buffer.Append(" ");
+			buffer.Append(CurrentTime);
+			buffer.Append("\n");
+			for (int i = 0; i < CurrentAsterisks; ++i)
+			{
+				buffer.Append("*");
+				if (i < CurrentAsterisks - 1)
+					buffer.Append(" ");
+			}
+			mChitText.text = buffer.ToString();
+		}
 	}
 
 	public override bool CanBeUsedFor(eAction action, MRGame.eStrength strength)
@@ -83,7 +176,23 @@ public class MRMagicChit : MRActionChit
 			switch (action)
 			{
 				case eAction.Alert:
-					canBeUsed = true;
+				case eAction.CastSpell:
+					canBeUsed = (!mEnchanted && State == MRActionChit.eState.Active);
+					break;
+				case eAction.EnchantChit:
+				case eAction.EnchantTile:
+					canBeUsed = (!mEnchanted && State == MRActionChit.eState.Active && CurrentMagicType <= 5);
+					break;
+				case eAction.Fatigue:
+				case eAction.FatigueMagic:
+					canBeUsed = (!mEnchanted && State == MRActionChit.eState.Active && BaseAsterisks > 0);
+					break;
+				case eAction.FatigueChange:
+				case eAction.FatigueChangeMagic:
+					canBeUsed = (!mEnchanted && State == MRActionChit.eState.Fatigued && BaseAsterisks == 1);
+					break;
+				case eAction.SupplyColor:
+					canBeUsed = (mEnchanted && State == MRActionChit.eState.Enchanted && CurrentMagicType <= 5);
 					break;
 			}
 		}
@@ -94,7 +203,7 @@ public class MRMagicChit : MRActionChit
 	{
 		if (action == eAction.Alert)
 		{
-
+			CurrentTime = 0;
 		}
 	}
 
@@ -104,7 +213,10 @@ public class MRMagicChit : MRActionChit
 
 	private int mBaseMagicType;
 	private int mCurrentMagicType;
+	private bool mEnchanted;
+	private TextMesh mChitText;
 
 	#endregion
 }
 
+}

@@ -25,8 +25,12 @@
 // THE SOFTWARE.
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
-public class MRDwelling : MRChit
+namespace PortableRealm
+{
+	
+public class MRDwelling : MRChit, MRIColorSource
 {
 	#region Constants
 
@@ -74,6 +78,20 @@ public class MRDwelling : MRChit
 	{
 		get{
 			return (int)MRGame.eSortValue.Dwelling;
+		}
+	}
+
+	/// <summary>
+	/// Returns a list of the color magic supplied by this object.
+	/// </summary>
+	/// <value>The magic supplied.</value>
+	public virtual IList<MRGame.eMagicColor> MagicSupplied 
+	{ 
+		get	{
+			List<MRGame.eMagicColor> magic = new List<MRGame.eMagicColor>();
+			if (Type == eDwelling.Chapel)
+				magic.Add(MRGame.eMagicColor.White);
+			return magic;
 		}
 	}
 
@@ -153,3 +171,4 @@ public class MRDwelling : MRChit
 	#endregion
 }
 
+}

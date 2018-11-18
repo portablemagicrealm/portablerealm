@@ -26,6 +26,9 @@
 
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRAlertActivity : MRActivity
 {
 	public MRAlertActivity() : base(MRGame.eActivity.Alert)
@@ -42,3 +45,4 @@ public class MRAlertActivity : MRActivity
 	}
 }
 
+}

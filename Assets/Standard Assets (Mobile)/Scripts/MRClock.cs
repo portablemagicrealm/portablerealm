@@ -26,7 +26,11 @@
 
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
+namespace PortableRealm
+{
+	
 public class MRClock : MonoBehaviour, MRITouchable
 {
 	#region Constants
@@ -74,6 +78,17 @@ public class MRClock : MonoBehaviour, MRITouchable
 				mClockImage = t.gameObject;
 				break;
 			}
+			else if (t.gameObject.name == "DayBackground")
+			{
+				mDayBackground = t.gameObject.GetComponent<SpriteRenderer>();
+				mDayBackground.color = MRGame.darkGreen;
+			}
+			else if (t.gameObject.name == "MagicEffect")
+			{
+				mMagicEffect = t.gameObject.GetComponent<ParticleSystem>();
+				mMagicEffect.Stop();
+				mMagicEffect.Clear();
+			}
 		}
 		mDateText = gameObject.GetComponentsInChildren<TextMesh>()[0];
 	}
@@ -92,11 +107,51 @@ public class MRClock : MonoBehaviour, MRITouchable
 		Vector3 colliderPosWorld = transform.TransformPoint(new Vector3(0 - collider.size.x / 2.0f, 0 - collider.size.y / 2.0f, 0));
 		transform.Translate(cameraPosMap.x - colliderPosWorld.x, cameraPosMap.y - colliderPosWorld.y, 0);
 
+		// update the particles
+		IList<MRGame.eMagicColor> worldMagic = MRGame.TheGame.WorldMagic;
+		if (worldMagic.Count > 1)
+		{
+			if (!mMagicEffect.isStopped)
+			{
+				var main = mMagicEffect.main;
+				main.startColor = MRGame.MagicColorMap[worldMagic[Random.Range(0, worldMagic.Count)]];
+			}
+		}
+
+		// rotate the clock
 		Quaternion desiredRotation = Quaternion.AngleAxis(30.0f + 60.0f * (int)MRGame.TimeOfDay, Vector3.forward);
 		Quaternion currentRotation = mClockImage.transform.localRotation;
 		if (!mRotatingClock && Mathf.Abs(Quaternion.Angle(desiredRotation, currentRotation)) > 1.0f)
 		{
 			StartCoroutine(RotateClock(1.0f/30.0f));
+		}
+	}
+
+	/// <summary>
+	/// Updates the clock for the current date.
+	/// </summary>
+	public void UpdateDate()
+	{
+		mDateText.text = MRGame.DayOfMonth.ToString();
+
+		// update magic particles for current world magic
+		IList<MRGame.eMagicColor> worldMagic = MRGame.TheGame.WorldMagic;
+		if (worldMagic.Count > 0)
+		{
+			if (mMagicEffect.isStopped)
+			{
+				var main = mMagicEffect.main;
+				main.startColor = MRGame.MagicColorMap[worldMagic[0]];
+				mMagicEffect.Play();
+			}
+		}
+		else
+		{
+			if (mMagicEffect.isPlaying)
+			{
+				mMagicEffect.Stop();
+				mMagicEffect.Clear();
+			}
 		}
 	}
 
@@ -124,7 +179,8 @@ public class MRClock : MonoBehaviour, MRITouchable
 		}
 		mRotatingClock = false;
 		mClockImage.transform.localRotation = desiredRotation;
-		mDateText.text = MRGame.DayOfMonth.ToString();
+		UpdateDate();
+
 //		Debug.Log("rotate clock exit");
 		yield return null;
 	}
@@ -158,7 +214,12 @@ public class MRClock : MonoBehaviour, MRITouchable
 		return true;
 	}
 
-	public virtual bool OnButtonActivate(GameObject touchedObject)
+	public bool OnTouchMove(GameObject touchedObject, float delta_x, float delta_y)
+	{
+		return true;
+	}
+
+	public bool OnButtonActivate(GameObject touchedObject)
 	{
 		return true;
 	}
@@ -175,8 +236,11 @@ public class MRClock : MonoBehaviour, MRITouchable
 	private Camera mCamera;
 	private GameObject mClockImage;
 	private TextMesh mDateText;
+	private SpriteRenderer mDayBackground;
+	private ParticleSystem mMagicEffect;
 	private bool mRotatingClock;
 
 	#endregion
 }
 
+}

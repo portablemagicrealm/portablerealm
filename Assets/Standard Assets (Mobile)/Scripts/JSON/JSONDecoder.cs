@@ -32,6 +32,7 @@
 //     the code is regenerated.
 // </auto-generated>
 //------------------------------------------------------------------------------
+using UnityEngine;
 using System;
 using System.Reflection;
 using System.Text;
@@ -90,11 +91,16 @@ namespace AssemblyCSharp
 			JSONValue className = jsonData["class"];
 			if (className != null && className is JSONString)
 			{
+				string realClassName = ((JSONString)className).Value;
+				realClassName = "PortableRealm." + realClassName;
 				int amount = ((JSONNumber)jsonData["amount"]).IntValue;
 				result = new object[amount];
-				Type t = Type.GetType(((JSONString)className).Value);
+				Type t = Type.GetType(realClassName);
 				if (t == null)
+				{	
+					Debug.LogError("Unable to find class name " + realClassName);
 					throw new InvalidJSONException();
+				}
 				ConstructorInfo cinfo = t.GetConstructor(new Type[] {typeof(JSONObject), typeof(int)});
 				if (cinfo == null)
 					throw new InvalidJSONException();

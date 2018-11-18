@@ -28,100 +28,142 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using AssemblyCSharp;
 
-namespace AssemblyCSharp
+namespace PortableRealm
 {
-	public class MRDenizenManager
+
+public class MRDenizenManager
+{
+	#region Properties
+	
+	public static IDictionary<uint, MRMonster> Monsters
 	{
-		#region Properties
-		
-		public static IDictionary<uint, MRMonster> Monsters
-		{
-			get{
-				return msMonsters;
-			}
+		get{
+			return msMonsters;
 		}
+	}
 
-		#endregion
+	#endregion
 
-		#region Methods
-		
-		public MRDenizenManager ()
+	#region Methods
+	
+	public MRDenizenManager ()
+	{
+		try
 		{
-			try
-			{
-				TextAsset denizenList = (TextAsset)Resources.Load("denizens");
-				StringBuilder jsonText = new StringBuilder(denizenList.text);
-				JSONObject jsonData = (JSONObject)JSONDecoder.CreateJSONValue(jsonText);
+			TextAsset denizenList = (TextAsset)Resources.Load("denizens");
+			StringBuilder jsonText = new StringBuilder(denizenList.text);
+			JSONObject jsonData = (JSONObject)JSONDecoder.CreateJSONValue(jsonText);
 
-				// parse the monster data
-				JSONArray monstersData = (JSONArray)jsonData["monsters"];
-				int count = monstersData.Count;
-				for (int i = 0; i < count; ++i)
+			// parse the monsters data
+			JSONArray monstersData = (JSONArray)jsonData["monsters"];
+			int count = monstersData.Count;
+			for (int i = 0; i < count; ++i)
+			{
+				object[] monsters = JSONDecoder.DecodeObjects((JSONObject)monstersData[i]);
+				if (monsters != null)
 				{
-					object[] monsters = JSONDecoder.DecodeObjects((JSONObject)monstersData[i]);
-					if (monsters != null)
+					foreach (object monster in monsters)
 					{
-						foreach (object monster in monsters)
-						{
-							((MRMonster)monster).Layer = LayerMask.NameToLayer("Dummy");
-							msMonsters.Add(((MRMonster)monster).Id, (MRMonster)monster);
-						}
+						((MRMonster)monster).Layer = LayerMask.NameToLayer("Dummy");
+						msMonsters.Add(((MRMonster)monster).Id, (MRMonster)monster);
 					}
 				}
-				foreach (MRMonster monster in msMonsters.Values)
-				{
-					monster.SetOwnership();
-				}
 			}
-			catch (Exception err)
-			{
-				Debug.LogError("Error parsing denizens: " + err);
-			}
-		}
-
-		/// <summary>
-		/// Removes all denizens from their current stacks.
-		/// </summary>
-		public static void ResetDenizens()
-		{
-			foreach(MRMonster monster in msMonsters.Values)
-			{
-				if (monster.Stack != null)
-				{
-					monster.Stack.RemovePiece(monster);
-				}
-			}
-		}
-
-		public static MRMonster GetMonster(string name, int index)
-		{
-			return GetMonster(MRUtility.IdForName(name, index));
-		}
-
-		public static MRMonster GetMonster(uint id)
-		{
-			MRMonster monster = null;
-			msMonsters.TryGetValue(id, out monster);
-			return monster;
-		}
-
-		public static void StartMidnight()
-		{
-			// reset monster conditions at end of day
 			foreach (MRMonster monster in msMonsters.Values)
 			{
-				monster.StartMidnight();
+				monster.SetOwnership();
+			}
+
+			// parse the natives data
+			JSONArray nativesData = (JSONArray)jsonData["natives"];
+			count = nativesData.Count;
+			for (int i = 0; i < count; ++i)
+			{
+				object[] natives = JSONDecoder.DecodeObjects((JSONObject)nativesData[i]);
+				if (natives != null)
+				{
+					foreach (object native in natives)
+					{
+						((MRNative)native).Layer = LayerMask.NameToLayer("Dummy");
+						msNatives.Add(((MRNative)native).Id, (MRNative)native);
+					}
+				}
+			}
+			//foreach (MRNative native in msNatives.Values)
+			//{
+			//	native.SetOwnership();
+			//}
+		}
+		catch (Exception err)
+		{
+			Debug.LogError("Error parsing denizens: " + err);
+		}
+	}
+
+	/// <summary>
+	/// Removes all denizens from their current stacks.
+	/// </summary>
+	public static void ResetDenizens()
+	{
+		foreach(MRMonster monster in msMonsters.Values)
+		{
+			if (monster.Stack != null)
+			{
+				monster.Stack.RemovePiece(monster);
 			}
 		}
-
-		#endregion
-
-		#region Members
-
-		private static IDictionary<uint, MRMonster> msMonsters = new Dictionary<uint, MRMonster>();
-
-		#endregion
+		foreach(MRNative native in msNatives.Values)
+		{
+			if (native.Stack != null)
+			{
+				native.Stack.RemovePiece(native);
+			}
+		}
 	}
+
+	public static MRMonster GetMonster(string name, int index)
+	{
+		return GetMonster(MRUtility.IdForName(name, index));
+	}
+
+	public static MRMonster GetMonster(uint id)
+	{
+		MRMonster monster = null;
+		msMonsters.TryGetValue(id, out monster);
+		return monster;
+	}
+
+	public static MRNative GetNative(string name, int index)
+	{
+		return GetNative(MRUtility.IdForName(name, index));
+	}
+
+	public static MRNative GetNative(uint id)
+	{
+		MRNative native = null;
+		msNatives.TryGetValue(id, out native);
+		return native;
+	}
+
+	public static void StartMidnight()
+	{
+		// reset monster conditions at end of day
+		foreach (MRMonster monster in msMonsters.Values)
+		{
+			monster.StartMidnight();
+		}
+	}
+
+	#endregion
+
+	#region Members
+
+	private static IDictionary<uint, MRMonster> msMonsters = new Dictionary<uint, MRMonster>();
+	private static IDictionary<uint, MRNative> msNatives = new Dictionary<uint, MRNative>();
+
+	#endregion
+}
 
 }

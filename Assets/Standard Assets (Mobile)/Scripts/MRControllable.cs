@@ -29,7 +29,10 @@ using System.Collections;
 using System.Collections.Generic;
 using AssemblyCSharp;
 
-public abstract class MRControllable : MRIControllable, MRISerializable
+namespace PortableRealm
+{
+	
+public abstract class MRControllable : MRIControllable, MRISerializable, MRISpellTarget
 {
 	#region Properties
 	
@@ -526,6 +529,8 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 	// Tells the controllable an activity was performed
 	public abstract void ExecutedActivity(MRActivity activity);
 
+	public abstract bool IsValidTarget(MRSpell spell);
+
 	protected MRControllable()
 	{
 	}
@@ -739,41 +744,60 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 		if (root == null)
 			return false;
 
-		if (((JSONNumber)root["id"]).UintValue != mId)
-			return false;
+		if (root["id"] != null)
+		{
+			if (MRGame.TheGame.GetPieceId(root["id"]) != mId)
+				return false;
+		}
 
 		mGold = ((JSONNumber)root["gold"]).IntValue;
 		mHidden = ((JSONBoolean)root["hidden"]).Value;
 		mBlocked = ((JSONBoolean)root["blocked"]).Value;
+
 		mDiscoveredRoads.Clear();
-		JSONArray roads = (JSONArray)root["roads"];
-		for (int i = 0; i < roads.Count; ++i)
+		if (root["roads"] != null)
 		{
-			string roadName = ((JSONString)roads[i]).Value;
-			MRRoad road;
-			if (MRGame.TheGame.TheMap.Roads.TryGetValue(roadName, out road))
-				mDiscoveredRoads.Add(road);
-			else
+			JSONArray roads = (JSONArray)root["roads"];
+			for (int i = 0; i < roads.Count; ++i)
 			{
-				Debug.LogError("Controllable " + mId + " load unknown road " + roadName);
+				string roadName = ((JSONString)roads[i]).Value;
+				MRRoad road;
+				if (MRGame.TheGame.TheMap.Roads.TryGetValue(roadName, out road))
+					mDiscoveredRoads.Add(road);
+				else
+				{
+					Debug.LogError("Controllable " + mId + " load unknown road " + roadName);
+				}
 			}
 		}
+
 		mDiscoveredTreasues.Clear();
-		JSONArray treasures = (JSONArray)root["treasures"];
-		for (int i = 0; i < treasures.Count; ++i)
+		if (root["treasures"] != null)
 		{
-			mDiscoveredTreasues.Add((uint)((JSONNumber)treasures[i]).IntValue);
+			JSONArray treasures = (JSONArray)root["treasures"];
+			for (int i = 0; i < treasures.Count; ++i)
+			{
+				mDiscoveredTreasues.Add((uint)((JSONNumber)treasures[i]).IntValue);
+			}
 		}
+
 		int[] sites = new int[1];
-		sites[0] = ((JSONNumber)root["sites"]).IntValue;
-		mDiscoveredSites = new BitArray(sites);
-		mActivities.Clear();
-		JSONArray activities = (JSONArray)root["activities"];
-		for (int i = 0; i < activities.Count; ++i)
+		if (root["sites"] != null)
 		{
-			MRActivityList activityList = new MRActivityList(this);
-			activityList.Load((JSONObject)activities[i]);
-			mActivities.Add(activityList);
+			sites[0] = ((JSONNumber)root["sites"]).IntValue;
+			mDiscoveredSites = new BitArray(sites);
+		}
+
+		mActivities.Clear();
+		if (root["activities"] != null)
+		{
+			JSONArray activities = (JSONArray)root["activities"];
+			for (int i = 0; i < activities.Count; ++i)
+			{
+				MRActivityList activityList = new MRActivityList(this);
+				activityList.Load((JSONObject)activities[i]);
+				mActivities.Add(activityList);
+			}
 		}
 		if (root["location"] != null)
 		{
@@ -840,7 +864,6 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 	// Returns the weight of the heaviest item owned by the controllable
 	public abstract MRGame.eStrength GetHeaviestWeight(bool includeHorse, bool includeSelf);
 
-
 	/**********************/
 	// MRIGamePiece methods
 
@@ -874,4 +897,6 @@ public abstract class MRControllable : MRIControllable, MRISerializable
 	private uint mId;
 
 	#endregion
+}
+
 }

@@ -85,6 +85,26 @@
 			]
 		},
 		{
+			"row":1,
+			"boxes":[
+				{
+					"name":"company",
+					"natives":"company",
+					"amount":1
+				}
+			],
+			"chits":[
+				{
+					"type":"dwelling",
+					"subtype":"inn"
+				},
+				{
+					"type":"dwelling",
+					"subtype":"largefire"
+				}
+			]
+		},
+		{
 			"row":2,
 			"boxes":[
 				{
@@ -146,6 +166,26 @@
 				{
 					"type":"site",
 					"subtype":"shrine"
+				}
+			]
+		},
+		{
+			"row":2,
+			"boxes":[
+				{
+					"name":"woodfolk",
+					"natives":"woodfolk",
+					"amount":1
+				}
+			],
+			"chits":[
+				{
+					"type":"dwelling",
+					"subtype":"house"
+				},
+				{
+					"type":"dwelling",
+					"subtype":"smallfire"
 				}
 			]
 		},
@@ -242,6 +282,34 @@
 			]
 		},
 		{
+			"row":3,
+			"boxes":[
+				{
+					"name":"patrol",
+					"natives":"patrol",
+					"amount":1
+				}
+			],
+			"chits":[
+				{
+					"type":"dwelling",
+					"subtype":"chapel"
+				},
+				{
+					"type":"dwelling",
+					"subtype":"guardhouse"
+				},
+				{
+					"type":"dwelling",
+					"subtype":"house"
+				},
+				{
+					"type":"dwelling",
+					"subtype":"inn"
+				}
+			]
+		},
+		{
 			"row":4,
 			"boxes":[
 				{
@@ -322,6 +390,30 @@
 			]
 		},
 		{
+			"row":4,
+			"boxes":[
+				{
+					"name":"lancers",
+					"natives":"lancers",
+					"amount":1
+				}
+			],
+			"chits":[
+				{
+					"type":"dwelling",
+					"subtype":"chapel"
+				},
+				{
+					"type":"dwelling",
+					"subtype":"smallfire"
+				},
+				{
+					"type":"dwelling",
+					"subtype":"largefire"
+				}
+			]
+		},
+		{
 			"row":5,
 			"boxes":[
 				{
@@ -386,6 +478,26 @@
 			]
 		},
 		{
+			"row":5,
+			"boxes":[
+				{
+					"name":"bashkars",
+					"natives":"bashkars",
+					"amount":1
+				}
+			],
+			"chits":[
+				{
+					"type":"dwelling",
+					"subtype":"smallfire"
+				},
+				{
+					"type":"dwelling",
+					"subtype":"largefire"
+				}
+			]
+		},
+		{
 			"row":6,
 			"boxes":[
 				{
@@ -425,6 +537,63 @@
 					"location":"m"
 				}
 			]
+		}
+	],
+	"startonboard":[
+		{
+			"monster":"ghost",
+			"amount":2,
+			"regen":0,
+			"chit":
+			{
+				"type":"warning",
+				"subtype":"bones",
+				"location":"v"
+			}
+		},
+		{
+			"native":"order",
+			"amount":4,
+			"regen":6,
+			"chit":
+			{
+				"type":"warning",
+				"subtype":"dank",
+				"location":"v"
+			}
+		},
+		{
+			"native":"soldiers",
+			"amount":1,
+			"regen":3,
+			"chit":
+			{
+				"type":"warning",
+				"subtype":"smoke",
+				"location":"v"
+			}
+		},
+		{
+			"native":"rogues",
+			"amount":1,
+			"regen":5,
+			"chit":
+			{
+				"type":"warning",
+				"subtype":"stink",
+				"location":"v"
+			}
+		},
+		{
+			"native":"guard",
+			"amount":1,
+			"regen":6,
+			"chit":
+			{
+				"type":"warning",
+				"subtype":"ruins",
+				"location":"v"
+			}
 		}
 	]
 }

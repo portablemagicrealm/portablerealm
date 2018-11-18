@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public abstract class MRActionChit : MRChit
 {
 	#region Constants
@@ -63,11 +66,17 @@ public abstract class MRActionChit : MRChit
 		Fatigue,
 		FatigueFight,
 		FatigueMove,
+		FatigueMagic,
 		FatigueChange,
 		FatigueChangeFight,
 		FatigueChangeMove,
+		FatigueChangeMagic,
 		Alert,
 		CombatAlert,
+		EnchantChit,
+		EnchantTile,
+		SupplyColor,
+		CastSpell
 	}
 
 	#endregion
@@ -122,7 +131,7 @@ public abstract class MRActionChit : MRChit
 		}
 	}
 
-	public eState State
+	public virtual eState State
 	{
 		get{
 			return mState;
@@ -144,6 +153,17 @@ public abstract class MRActionChit : MRChit
 		}
 	}
 
+	public bool Selectable
+	{
+		get{
+			return mSelectable;
+		}
+
+		set{
+			mSelectable = value;
+		}
+	}
+
 	public MRCharacter Owner
 	{
 		get{
@@ -162,7 +182,7 @@ public abstract class MRActionChit : MRChit
 	// Called when the script instance is being loaded
 	void Awake()
 	{
-		mCounter = (GameObject)Instantiate(MRGame.TheGame.largeChitPrototype);
+		mCounter = (GameObject)Instantiate(MRGame.TheGame.actionChitPrototype);
 	}
 
 	// Use this for initialization
@@ -171,12 +191,27 @@ public abstract class MRActionChit : MRChit
 		base.Start();
 
 		Layer = LayerMask.NameToLayer("Dummy");
+		Selectable = false;
+		FrontColor = MRGame.tan;
+		BackColor = MRGame.tan;
+
+		SpriteRenderer[] sprites = mCounter.GetComponentsInChildren<SpriteRenderer>();
+		foreach (SpriteRenderer sprite in sprites)
+		{
+			if (sprite.gameObject.name == "FrontOverlay")
+				mFontSelectable = sprite.gameObject;
+			else if (sprite.gameObject.name == "BackOverlay")
+				mBackSelectable = sprite.gameObject;
+		}
 	}
 	
 	// Update is called once per frame
 	public override void Update ()
 	{
 		base.Update();
+
+		mFontSelectable.SetActive(Selectable);
+		mBackSelectable.SetActive(Selectable);
 	}
 
 	public bool CanBeUsedFor(eAction action)
@@ -203,8 +238,12 @@ public abstract class MRActionChit : MRChit
 	protected int mCurrentAsterisks;
 	protected eState mState;
 	protected bool mUsedThisRound;
+	protected bool mSelectable;
+	protected GameObject mFontSelectable;
+	protected GameObject mBackSelectable;
 	protected MRCharacter mOwner;
 
 	#endregion
 }
 
+}

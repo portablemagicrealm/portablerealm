@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRMonsterRollEvent : MRUpdateEvent
 {
 	#region Properties
@@ -72,3 +75,4 @@ public class MRMonsterRollEvent : MRUpdateEvent
 	#endregion
 }
 
+}

@@ -28,6 +28,9 @@ using System.Collections;
 using System.Collections.Generic;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public static class SuperSiteChitExtensions
 {
 	public static int ClearingNumber(this MRMapChit.eSuperSiteChitType type)
@@ -118,7 +121,8 @@ public class MRSuperSiteChit : MRMapChit
 
 		foreach (MRMapChit chit in mContainedChits)
 		{
-			DestroyObject(chit.gameObject);
+			if (chit != null && chit.gameObject != null)
+				DestroyObject(chit.gameObject);
 		}
 	}
 
@@ -170,3 +174,4 @@ public class MRSuperSiteChit : MRMapChit
 	#endregion
 }
 
+}

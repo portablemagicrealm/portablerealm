@@ -29,6 +29,9 @@ using System;
 using System.Collections;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+
 public class MRChit : MonoBehaviour, MRIGamePiece, MRISerializable
 {
 	#region Constants
@@ -84,12 +87,10 @@ public class MRChit : MonoBehaviour, MRIGamePiece, MRISerializable
 	public virtual Vector3 Position
 	{
 		get{
-			//return mCounter.transform.position;
 			return gameObject.transform.position;
 		}
 
 		set{
-			//mCounter.transform.position = value;
 			gameObject.transform.position = value;
 		}
 	}
@@ -131,6 +132,7 @@ public class MRChit : MonoBehaviour, MRIGamePiece, MRISerializable
 
 		set {
 			gameObject.transform.parent = value;
+			gameObject.transform.localRotation = Quaternion.Euler(0, 0, 0);
 		}
 	}
 
@@ -326,3 +328,4 @@ public class MRChit : MonoBehaviour, MRIGamePiece, MRISerializable
 	#endregion
 }
 
+}

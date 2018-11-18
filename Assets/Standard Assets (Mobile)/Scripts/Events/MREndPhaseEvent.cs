@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+
 public class MREndPhaseEvent : MRUpdateEvent
 {
 	#region Properties
@@ -91,3 +94,4 @@ public class MREndPhaseEvent : MRUpdateEvent
 	#endregion
 }
 
+}

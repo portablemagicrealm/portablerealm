@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+
 public class MRCreateMapEvent : MRUpdateEvent
 {
 	#region Properties
@@ -70,3 +73,4 @@ public class MRCreateMapEvent : MRUpdateEvent
 	#endregion
 }
 
+}

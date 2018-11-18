@@ -27,6 +27,9 @@ using UnityEngine;
 using System.Collections;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRWarningChit : MRMapChit
 {
 	#region Properties
@@ -164,8 +167,38 @@ public class MRWarningChit : MRMapChit
 	public override bool Load(JSONObject root)
 	{
 		base.Load(root);
-		WarningType = (MRMapChit.eWarningChitType)((JSONNumber)root["warning"]).IntValue;
-		TileType = (MRTile.eTileType)((JSONNumber)root["tile"]).IntValue;
+
+		if (root["warning"] is JSONNumber)
+		{
+			WarningType = (MRMapChit.eWarningChitType)((JSONNumber)root["warning"]).IntValue;
+		}
+		else if (root["warning"] is JSONString)
+		{
+			if (ChitWarningMap.TryGetValue(((JSONString)root["warning"]).Value, out mWarningType))
+			{
+				WarningType = mWarningType;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		if (root["tile"] is JSONNumber)
+		{
+			TileType = (MRTile.eTileType)((JSONNumber)root["tile"]).IntValue;
+		}
+		else if (root["tile"] is JSONString)
+		{
+			if (MRTile.TileTypeMap.TryGetValue(((JSONString)root["tile"]).Value, out mTileType))
+			{
+				TileType = mTileType;
+			}
+			else
+			{
+				return false;
+			}
+		}
 		
 		return true;
 	}
@@ -188,3 +221,4 @@ public class MRWarningChit : MRMapChit
 	#endregion
 }
 
+}

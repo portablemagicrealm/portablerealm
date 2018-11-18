@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public interface MRITouchable
 {
 	/// <summary>
@@ -64,6 +67,14 @@ public interface MRITouchable
 	bool OnTouchHeld(GameObject touchedObject);
 
 	/// <summary>
+	/// Called when the player moves the touch on the object.
+	/// </summary>
+	/// <param name="touchedObject">Touched object.</param>
+	/// <param name="delta_x">Amount moved on the x axis</param>
+	/// <param name="delta_y">Amount moved on the y axis</param>
+	bool OnTouchMove(GameObject touchedObject, float delta_x, float delta_y);
+
+	/// <summary>
 	/// Called when a MRButton object is pressed and released.
 	/// </summary>
 	/// <param name="touchedObject">Touched object.</param>
@@ -78,3 +89,4 @@ public interface MRITouchable
 	bool OnPinchZoom(float pinchDelta);
 }
 
+}

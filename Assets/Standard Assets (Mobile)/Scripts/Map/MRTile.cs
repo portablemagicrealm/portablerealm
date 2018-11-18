@@ -30,7 +30,10 @@ using System.Collections;
 using System.Collections.Generic;
 using AssemblyCSharp;
 
-public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
+namespace PortableRealm
+{
+	
+public class MRTile : MonoBehaviour, MRISerializable, MRITouchable, MRIColorSource
 {
 	#region Constants
 
@@ -41,6 +44,14 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 		Cave,
 		Mountain,
 	}
+
+	public static Dictionary<string, eTileType> TileTypeMap = new Dictionary<string, eTileType>()
+	{
+		{"va", eTileType.Valley},
+		{"wo", eTileType.Woods},
+		{"ca", eTileType.Cave},
+		{"mo", eTileType.Mountain},
+	};
 
 	#endregion
 
@@ -88,6 +99,10 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 		}
 	}
 
+	/// <summary>
+	/// Which side of the tile is face up.
+	/// </summary>
+	/// <value>The front.</value>
 	public MRTileSide.eType Front
 	{
 		get 
@@ -104,13 +119,31 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 			}
 		}
 	}
-	
+
+	/// <summary>
+	/// Returns the tile side that is face up.
+	/// </summary>
+	/// <value>The side.</value>
 	public MRTileSide FrontSide
 	{
 		get
 		{
 			MRTileSide side;
 			mSides.TryGetValue(Front, out side);
+			return side;
+		}
+	}
+
+	/// <summary>
+	/// Returns the tile side that is face down.
+	/// </summary>
+	/// <value>The side.</value>
+	public MRTileSide BackSide
+	{
+		get
+		{
+			MRTileSide side;
+			mSides.TryGetValue(Front == MRTileSide.eType.Normal ? MRTileSide.eType.Enchanted : MRTileSide.eType.Normal, out side);
 			return side;
 		}
 	}
@@ -133,14 +166,8 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 		{
 			value = MREdge.Normalize(value);
 			//Debug.Log("Set tile " + Id + " facing to " + value);
-			if (value != mFacing)
-			{
-				int delta = value - mFacing;
-//				if (delta < 0)
-//					delta = -(delta + 6);
-				mFacing = value;
-				gameObject.transform.Rotate(0, 0, delta * 60.0f);
-			}
+			mFacing = value;
+			Rotation = mFacing * 60.0f;
 		}
 	}
 	
@@ -165,6 +192,49 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 		}
 	}
 
+	/// <summary>
+	/// Returns a list of the color magic supplied by this object.
+	/// </summary>
+	/// <value>The magic supplied.</value>
+	public virtual IList<MRGame.eMagicColor> MagicSupplied 
+	{ 
+		get	{
+			return FrontSide.MagicSupplied;
+		}
+	}
+
+	/// <summary>
+	/// The tile's rotation in degrees.
+	/// </summary>
+	public float Rotation
+	{
+		get{
+			return gameObject.transform.eulerAngles.z;
+		}
+
+		set{
+			gameObject.transform.rotation = Quaternion.Euler(0, Front == MRTileSide.eType.Normal ? 0 : 180.0f, value);
+			// change all the clearings to they aren't rotated relative to the world
+			foreach (var clearing in FrontSide.Clearings)
+			{
+				if (clearing != null)
+					clearing.transform.localRotation = Quaternion.Euler(0, 0, -value);
+			}
+			foreach (var chitLocation in FrontSide.ChitLocations)
+			{
+				if (chitLocation != null)
+					chitLocation.transform.localRotation = Quaternion.Euler(0, 0, -value);
+			}
+		}
+	}
+
+	public bool Loaded
+	{
+		get{
+			return mLoaded;
+		}
+	}
+
 	#endregion
 
 	#region Methods
@@ -173,6 +243,7 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 	{
 		mFront = MRTileSide.eType.Normal;
 		mFacing = 0;
+		mLoaded = false;
 	}
 
 	void Awake()
@@ -242,6 +313,11 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 		return true;
 	}
 
+	public bool OnTouchMove(GameObject touchedObject, float delta_x, float delta_y)
+	{
+		return true;
+	}
+
 	public virtual bool OnButtonActivate(GameObject touchedObject)
 	{
 		return true;
@@ -270,7 +346,7 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 	}
 
 	/// <summary>
-	/// Return which side a given tile is adjecent to. Returns -1 if not adjecent.
+	/// Return which side of this tile is adjacent to a given tile. Returns -1 if not adjecent.
 	/// </summary>
 	/// <returns>The adjacent tile side.</returns>
 	/// <param name="tile">Tile.</param>
@@ -343,9 +419,8 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 						// change new tile's facing and position
 						tile.Facing = Facing - mySide + theirSide - 3;
 						Vector3 offset = new Vector3(0, mSize, 0);
+						offset = Quaternion.Euler(0, 0, 60.0f * (Facing - mySide)) * offset;
 						tile.transform.position = transform.position + offset;
-						tile.transform.RotateAround(transform.position, Vector3.forward, 60.0f * (Facing - mySide));
-						tile.transform.Rotate(new Vector3(0, 0, 60.0f * (mySide - Facing)));
 					}
 				}
 			}
@@ -486,23 +561,12 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 	public void AddMapChit(MRMapChit chit)
 	{
 		MapChits.Add(chit);
-		chit.Parent = FrontSide.transform;
 		chit.Layer = LayerMask.NameToLayer("Map");
-		GameObject positionObject = null;
-		string positionObjectName = "chit" + (MapChits.Count - 1);
-		Component[] coms = FrontSide.GetComponentsInChildren<SpriteRenderer>();
-		foreach (Component com in coms)
-		{
-			if (com.gameObject.name == positionObjectName)
-			{
-				positionObject = com.gameObject;
-				break;
-			}
-		}
+		GameObject positionObject = FrontSide.ChitLocations[(MapChits.Count - 1)];
 		if (positionObject != null)
 		{
-			Vector3 targetPos = positionObject.transform.position;
-			chit.Position = new Vector3(targetPos.x, targetPos.y, -1.0f);
+			chit.Parent = positionObject.transform;
+			chit.Position = positionObject.transform.position;
 		}
 		else
 		{
@@ -515,7 +579,6 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 	/// </summary>
 	public void ActivateMapChits()
 	{
-		//foreach (MRChit chit in mMapChits)
 		for (int i = 0; i < mMapChits.Count; ++i)
 		{
 			MRChit chit = mMapChits[i];
@@ -574,6 +637,120 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 	}
 
 	/// <summary>
+	/// Starts the process of flipping the tile to its other side.
+	/// </summary>
+	public void StartFlip()
+	{
+		StartCoroutine(FlipTile(1.0f/30.0f));
+	}
+
+	/// <summary>
+	/// Animates the tile flipping over, and moves tokens from one side to the other when done.
+	/// </summary>
+	/// <returns>yield WaitForSeconds to continue, yield null when done</returns>
+	/// <param name="waitTime">amount of time to wait between animation updates</param>
+	private IEnumerator FlipTile(float waitTime)
+	{
+		MRTileSide front = FrontSide;
+		MRTileSide back = BackSide;
+
+		//cache our adjacent tile info
+		MRTile[] adjacentTiles = new MRTile[6];
+		int[] adjacentSides = new int[6];
+		for (int i = 0; i < 6; ++i)
+		{
+			adjacentTiles[i] = GetAdjacentTile(i);
+			if (adjacentTiles[i] != null)
+			{
+				adjacentSides[i] = adjacentTiles[i].GetAdjacentTileSide(this);
+			}
+		}
+
+		float totalTime = 0;
+		MRTileSide.eType destinationSide;
+		Quaternion startRotation = gameObject.transform.localRotation;
+		Quaternion desiredRotation;
+		if (Front == MRTileSide.eType.Normal)
+		{
+			destinationSide = MRTileSide.eType.Enchanted;
+			gameObject.transform.Rotate(0, 180.0f, 0);
+			desiredRotation = gameObject.transform.localRotation;
+			gameObject.transform.Rotate(0, -180.0f, 0);
+		}
+		else
+		{
+			destinationSide = MRTileSide.eType.Normal;
+			gameObject.transform.Rotate(0, -180.0f, 0);
+			desiredRotation = gameObject.transform.localRotation;
+			gameObject.transform.Rotate(0, 180.0f, 0);
+		}
+
+		// animate the tile flipping over
+		float ROTATION_SPEED_DEG_PER_SEC = 52.0f;
+		Quaternion currentRotation = startRotation;
+		while (Math.Abs(Quaternion.Angle(desiredRotation, currentRotation)) > 1.0f)
+		{
+			totalTime += waitTime;
+			gameObject.transform.localRotation = Quaternion.Lerp(startRotation, desiredRotation, (ROTATION_SPEED_DEG_PER_SEC * totalTime) / 60.0f);
+			currentRotation = gameObject.transform.localRotation;
+			yield return new WaitForSeconds(waitTime);
+		}
+
+		// disconnect the tile from its current side and reconnect on the flipped side
+		for (int i = 0; i < 6; ++i)
+		{
+			SetAdjacentTile(null, 0, i, false);
+		}
+		mFront = destinationSide;
+		Facing = mFacing;
+		for (int i = 0; i < 6; ++i)
+		{
+			if (adjacentTiles[i] != null)
+			{
+				SetAdjacentTile(adjacentTiles[i], adjacentSides[i], i, false);
+			}
+		}
+		gameObject.transform.localRotation = desiredRotation;
+
+		// move clearing contents from one side to the other
+		MRClearing[] fromClearings = front.Clearings;
+		foreach(var clearing in fromClearings)
+		{
+			if (clearing != null)
+			{
+				MRClearing toClearing = back.GetClearing(clearing.clearingNumber + 1);
+				MRGamePieceStack pieces = clearing.Pieces;
+				while (pieces.Count > 0)
+				{
+					if (clearing.Pieces.Pieces[0] is MRControllable)
+					{
+						((MRControllable)(clearing.Pieces.Pieces[0])).Location = toClearing;
+					}
+					else
+					{
+						toClearing.AddPieceToBottom(clearing.Pieces.Pieces[0]);
+					}
+				}
+			}
+		}
+		// move map chits from one side to the other
+		GameObject[] chitLocations = front.ChitLocations;
+		for (int i = 0; i < chitLocations.Length; ++i)
+		{
+			if (chitLocations[i] != null)
+			{
+				MRMapChit mapChit = chitLocations[i].GetComponentInChildren<MRMapChit>();
+				if (mapChit != null)
+				{
+					GameObject positionObject = back.ChitLocations[i];
+					mapChit.Parent = positionObject.transform;
+					mapChit.Position = positionObject.transform.position;
+				}
+			}
+		}
+	}
+
+	/// <summary>
 	/// Connects the roads on this tile to the ajacent tiles.
 	/// </summary>
 	public void ConnectRoads()
@@ -610,42 +787,99 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 		}
 	}
 
+	/// <summary>
+	/// Loads the tile data from JSON data.
+	/// </summary>
+	/// <param name="root">Root.</param>
 	public bool Load(JSONObject root)
 	{
 		if (root == null)
 			return false;
 
-		int id = ((JSONNumber)root["id"]).IntValue;
-		if (id != (int)mId)
+		int id = -1;
+		if (root["id"] is JSONNumber)
+			id = ((JSONNumber)root["id"]).IntValue;
+		else if (root["id"] is JSONString)
+		{
+			MRMap.eTileNames temp;
+			if (!MRMap.TileNameMap.TryGetValue(((JSONString)root["id"]).Value, out temp))
+			{
+				Debug.LogError("MRMap.Load: invalid tile id " + ((JSONString)root["id"]).Value);
+				return false;
+			}
+			id = (int)temp;
+		}
+		if (id == -1)
+		{
 			return false;
+		}
 
 		// read the position and orientation of the tile
 		Front = (MRTileSide.eType)((JSONNumber)root["front"]).IntValue;
 		Facing = ((JSONNumber)root["facing"]).IntValue;
-		JSONArray adjacent = (JSONArray)root["adjacent"];
-		for (int i = 0; i < 6; ++i)
+
+		if (root["adjacent"] != null)
 		{
-			if (adjacent[i] is JSONNumber)
+			JSONArray adjacent = (JSONArray)root["adjacent"];
+			for (int i = 0; i < 6; ++i)
 			{
-				int adjacentId = ((JSONNumber)adjacent[i]).IntValue;
-				MRTile tile = MRGame.TheGame.TheMap[(MRMap.eTileNames)adjacentId];
-				if (tile != null)
-					mAdjacentTile[i] = tile;
-				else
+				int adjacentId = -1;
+				if (adjacent[i] is JSONNumber)
+					adjacentId = ((JSONNumber)adjacent[i]).IntValue;
+				else if (adjacent[i] is JSONString)
 				{
-					Debug.LogError("Load tile " + mId + ": no adjacent tile " + adjacentId);
-					return false;
+					MRMap.eTileNames temp;
+					if (!MRMap.TileNameMap.TryGetValue(((JSONString)adjacent[i]).Value, out temp))
+					{
+						Debug.LogError("MRTile.Load: invalid tile id " + ((JSONString)adjacent[i]).Value);
+						return false;
+					}
+					adjacentId = (int)temp;
+				}
+				if (adjacentId >= 0)
+				{
+					MRTile tile = MRGame.TheGame.TheMap[(MRMap.eTileNames)adjacentId];
+					if (tile != null)
+						mAdjacentTile[i] = tile;
+					else
+					{
+						Debug.LogError("Load tile " + mId + ": no adjacent tile " + adjacentId);
+						return false;
+					}
 				}
 			}
 		}
-
 		JSONArray pos = (JSONArray)root["pos"];
-		transform.position = new Vector3(((JSONNumber)pos[0]).FloatValue,
-		                                 ((JSONNumber)pos[1]).FloatValue,
-		                                 ((JSONNumber)pos[2]).FloatValue);
-		transform.localRotation = Quaternion.identity;
-		transform.Rotate(new Vector3(0, 0, 60.0f * mFacing));
-
+		if (pos.Count == 3)
+		{
+			// pos is the transform position
+			transform.position = new Vector3(
+				((JSONNumber)pos[0]).FloatValue,
+			    ((JSONNumber)pos[1]).FloatValue,
+			    ((JSONNumber)pos[2]).FloatValue
+			);
+			transform.localRotation = Quaternion.identity;
+			transform.Rotate(new Vector3(0, 0, 60.0f * mFacing));
+		}
+		else if (pos.Count == 2)
+		{
+			// pos is the map coordinate
+			mCoordinate = new MRUtility.IntVector2(
+				((JSONNumber)pos[0]).IntValue,
+			    ((JSONNumber)pos[1]).IntValue
+			);
+			MRUtility.IntVector2[] adjacentCoordinates = AdjacentCoordinates();
+			for (int i = 0; i < adjacentCoordinates.Length; ++i)
+			{
+				MRTile adjacentTile = MRGame.TheGame.TheMap.TileForCoordinate(adjacentCoordinates[i]);
+				if (adjacentTile != null)
+				{
+					int tileSide = SideForCoordinate(adjacentCoordinates[i]);
+					int adjacentSide = adjacentTile.SideForCoordinate(mCoordinate);
+					adjacentTile.SetAdjacentTile(this, tileSide, adjacentSide, false);
+				}
+			}
+		}
 		// get the map chits
 		JSONArray chits = (JSONArray)root["chits"];
 		for (int i = 0; i < chits.Count; ++i)
@@ -658,10 +892,15 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 				return false;
 			AddMapChit(chit);
 		}
+		mLoaded = true;
 
 		return true;
 	}
 
+	/// <summary>
+	/// Save the tile data to a JSON structure.
+	/// </summary>
+	/// <param name="root">Root.</param>
 	public void Save(JSONObject root)
 	{
 		// game data
@@ -710,7 +949,10 @@ public class MRTile : MonoBehaviour, MRISerializable, MRITouchable
 	private IList<MRMapChit> mMapChits = new List<MRMapChit>();
 	private bool mInitialized;
 	private Camera mMapCamera;
+	private bool mLoaded;
 
 	#endregion
+
+}
 
 }

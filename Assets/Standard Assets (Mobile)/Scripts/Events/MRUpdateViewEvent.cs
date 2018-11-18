@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRUpdateViewEvent : MRUpdateEvent
 {
 	#region Properties
@@ -96,6 +99,7 @@ public class MRUpdateViewEvent : MRUpdateEvent
 			case MRGame.eViews.SelectAttack:
 			case MRGame.eViews.SelectManeuver:
 			case MRGame.eViews.SelectChit:
+			case MRGame.eViews.SelectSpell:
 			case MRGame.eViews.Alert:
 				MRGame.TheGame.CharacterMat.Visible = true;
 				MRGame.TheGame.TheMap.Visible = false;
@@ -106,6 +110,14 @@ public class MRUpdateViewEvent : MRUpdateEvent
 				break;
 			case MRGame.eViews.Combat:
 				MRGame.TheGame.CombatSheet.Visible = true;
+				MRGame.TheGame.TreasureChart.Visible = false;
+				MRGame.TheGame.MonsterChart.Visible = false;
+				MRGame.TheGame.TheMap.Visible = false;
+				MRGame.TheGame.CharacterMat.Visible = false;
+				MRGame.TheGame.Main.Visible = false;
+				break;
+			case MRGame.eViews.Trade:
+				MRGame.TheGame.CombatSheet.Visible = false;
 				MRGame.TheGame.TreasureChart.Visible = false;
 				MRGame.TheGame.MonsterChart.Visible = false;
 				MRGame.TheGame.TheMap.Visible = false;
@@ -123,3 +135,4 @@ public class MRUpdateViewEvent : MRUpdateEvent
 	#endregion
 }
 
+}

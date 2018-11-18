@@ -29,6 +29,9 @@ using System.Collections;
 using System.Text;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRWeapon : MRItem
 {
 	#region Constants
@@ -131,7 +134,7 @@ public class MRWeapon : MRItem
 		}
 	}
 
-	public Nullable<MRNative.eGroup> NativeOwner
+	public Nullable<MRGame.eNatives> NativeOwner
 	{
 		get{
 			return mNativeOwner;
@@ -255,7 +258,8 @@ public class MRWeapon : MRItem
 		if (!base.Load(root))
 			return false;
 
-		mAlerted = ((JSONBoolean)root["alert"]).Value;
+		if (root["alert"] != null)
+			mAlerted = ((JSONBoolean)root["alert"]).Value;
 
 		return true;
 	}
@@ -269,7 +273,7 @@ public class MRWeapon : MRItem
 
 	#endregion
 
-	#region Properties
+	#region Members
 
 	private MRGame.eStrength mAlertedStrength;
 	private MRGame.eStrength mUnalertedStrength;
@@ -280,8 +284,9 @@ public class MRWeapon : MRItem
 	private int mLength;
 	private bool mIsMissile;
 	private bool mAlerted;
-	private Nullable<MRNative.eGroup> mNativeOwner;
+	private Nullable<MRGame.eNatives> mNativeOwner;
 
 	#endregion
 }
 
+}

@@ -26,8 +26,12 @@
 
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
-public class MRTileSide : MonoBehaviour 
+namespace PortableRealm
+{
+	
+public class MRTileSide : MonoBehaviour, MRIColorSource
 {
 	#region Constants
 
@@ -71,9 +75,9 @@ public class MRTileSide : MonoBehaviour
 		}
 	}
 	
-	//
-	// Returns a boolean array. If an array element is true, that edge has a road.
-	//
+	/// <summary>
+	/// Returns a boolean array. If an array element is true, that edge has a road.
+	/// </summary>
 	public bool[] RoadEdges
 	{
 		get
@@ -81,7 +85,7 @@ public class MRTileSide : MonoBehaviour
 			return mRoadEdges;
 		}
 	}
-	
+
 	public MRClearing[] EdgeClearings
 	{
 		get
@@ -89,12 +93,73 @@ public class MRTileSide : MonoBehaviour
 			return mEdgeClearings;
 		}
 	}
-	
+
+	/// <summary>
+	/// Returns the clearings that are on this tile side.
+	/// </summary>
 	public MRClearing[] Clearings
 	{
 		get
 		{
 			return mClearings;
+		}
+	}
+
+	public GameObject[] ChitLocations
+	{
+		get{
+			return mChitLocations;
+		}
+	}
+
+	/// <summary>
+	/// Returns a list of the color magic supplied by this object.
+	/// </summary>
+	/// <value>The magic supplied.</value>
+	public virtual IList<MRGame.eMagicColor> MagicSupplied 
+	{ 
+		get	{
+			// @todo make this data-driven
+			List<MRGame.eMagicColor> magicSupplied = new List<MRGame.eMagicColor>();
+			if (type == eType.Enchanted)
+			{
+				switch (mTile.type)
+				{
+					case MRTile.eTileType.Cave:
+						if (mTile.Id == MRMap.eTileNames.ruins)
+							magicSupplied.Add(MRGame.eMagicColor.Grey);
+						else if (mTile.Id == MRMap.eTileNames.highpass || 
+							mTile.Id == MRMap.eTileNames.caves ||
+							mTile.Id == MRMap.eTileNames.cavern)
+						{
+							magicSupplied.Add(MRGame.eMagicColor.Purple);
+						}
+						break;
+					case MRTile.eTileType.Mountain:
+						if (mTile.Id == MRMap.eTileNames.deepwoods)
+							magicSupplied.Add(MRGame.eMagicColor.Gold);
+						else if (mTile.Id == MRMap.eTileNames.mountain || 
+							mTile.Id == MRMap.eTileNames.ledges ||
+							mTile.Id == MRMap.eTileNames.cliff)
+						{
+							magicSupplied.Add(MRGame.eMagicColor.Purple);
+						}
+						else if (mTile.Id == MRMap.eTileNames.crag)
+						{
+							magicSupplied.Add(MRGame.eMagicColor.Grey);
+							magicSupplied.Add(MRGame.eMagicColor.Gold);
+							magicSupplied.Add(MRGame.eMagicColor.Purple);
+						}
+						break;
+					case MRTile.eTileType.Valley:
+						magicSupplied.Add(MRGame.eMagicColor.Grey);
+						break;
+					case MRTile.eTileType.Woods:
+						magicSupplied.Add(MRGame.eMagicColor.Gold);
+						break;
+				}
+			}
+			return magicSupplied;
 		}
 	}
 
@@ -129,7 +194,18 @@ public class MRTileSide : MonoBehaviour
 			Debug.LogError("no edges for tile");
 			Application.Quit();
 		}
-		
+
+		// get other tile locations
+		Component[] coms = GetComponentsInChildren<SpriteRenderer>();
+		foreach (var com in coms)
+		{
+			if (com.gameObject.name.StartsWith("chit"))
+			{
+				int chitNumber = int.Parse(com.gameObject.name.Substring("chit".Length));
+				mChitLocations[chitNumber] = com.gameObject;
+			}
+		}
+
 		// set up roads
 		MRRoad[] roads = gameObject.GetComponentsInChildren<MRRoad>();
 		foreach (MRRoad road in roads)
@@ -184,9 +260,12 @@ public class MRTileSide : MonoBehaviour
 
 	private MRTile mTile;
 	private MRClearing[] mClearings;
+	private GameObject[] mChitLocations = new GameObject[2];
 	private bool[] mRoadEdges = new bool[6];
 	private MRClearing[] mEdgeClearings = new MRClearing[6];
 	private bool mInitialized;
 
 	#endregion
+}
+
 }

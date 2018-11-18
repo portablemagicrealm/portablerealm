@@ -30,6 +30,9 @@ using System.Collections;
 using System.Collections.Generic;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRRoad : MonoBehaviour, MRILocation
 {
 	#region Constants
@@ -115,6 +118,32 @@ public class MRRoad : MonoBehaviour, MRILocation
 	{ 
 		get	{
 			return null;
+		}
+	}
+
+	public virtual IList<MRGame.eMagicColor> MagicSupplied
+	{
+		get{
+			HashSet<MRGame.eMagicColor> magicSupplied = new HashSet<MRGame.eMagicColor>();
+			foreach (var color in MRGame.TheGame.WorldMagic)
+			{
+				magicSupplied.Add(color);
+			}
+			foreach (var color in MyTileSide.MagicSupplied)
+			{
+				magicSupplied.Add(color);
+			}
+			foreach (var item in mPieces.Pieces)
+			{
+				if (item is MRIColorSource)
+				{
+					foreach (var color in ((MRIColorSource)item).MagicSupplied)
+					{
+						magicSupplied.Add(color);
+					}
+				}
+			}
+			return new List<MRGame.eMagicColor>(magicSupplied);
 		}
 	}
 
@@ -255,4 +284,6 @@ public class MRRoad : MonoBehaviour, MRILocation
 	private MRGamePieceStack mPieces;
 
 	#endregion
+}
+
 }

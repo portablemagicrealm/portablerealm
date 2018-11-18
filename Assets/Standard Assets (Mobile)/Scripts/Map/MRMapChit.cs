@@ -30,6 +30,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRMapChit : MRChit
 {
 	#region Sort Class
@@ -51,7 +54,8 @@ public class MRMapChit : MRChit
 		Sound,
 		Warning,
 		Site,
-		SuperSite
+		SuperSite,
+		Dwelling
 	}
 
 	public enum eSoundChitType
@@ -89,6 +93,45 @@ public class MRMapChit : MRChit
 		LostCastle,
 		LostCity,
 	}
+
+	public static Dictionary<string, eMapChitType> ChitTypeMap = new Dictionary<string, eMapChitType>()
+	{
+		{"so", eMapChitType.Sound},
+		{"wa", eMapChitType.Warning},
+		{"si", eMapChitType.Site},
+		{"su", eMapChitType.SuperSite},
+		{"dw", eMapChitType.Dwelling}
+	};
+
+	public static Dictionary<string, eSoundChitType> ChitSoundMap = new Dictionary<string, eSoundChitType>()
+	{
+		{"fl", eSoundChitType.Flutter},
+		{"ho", eSoundChitType.Howl},
+		{"pa", eSoundChitType.Patter},
+		{"ro", eSoundChitType.Roar},
+		{"sl", eSoundChitType.Slither}
+	};
+
+	public static Dictionary<string, eWarningChitType> ChitWarningMap = new Dictionary<string, eWarningChitType>()
+	{
+		{"bo", eWarningChitType.Bones},
+		{"da", eWarningChitType.Dank},
+		{"ru", eWarningChitType.Ruins},
+		{"sm", eWarningChitType.Smoke},
+		{"st", eWarningChitType.Stink}
+	};
+
+	public static Dictionary<string, eSiteChitType> ChitSiteMap = new Dictionary<string, eSiteChitType>()
+	{
+		{"al", eSiteChitType.Altar},
+		{"ca", eSiteChitType.Cairns},
+		{"ho", eSiteChitType.Hoard},
+		{"la", eSiteChitType.Lair},
+		{"po", eSiteChitType.Pool},
+		{"sh", eSiteChitType.Shrine},
+		{"st", eSiteChitType.Statue},
+		{"va", eSiteChitType.Vault}
+	};
 
 	private const int BIG_FONT_SIZE = 180;
 	private const int SMALL_FONT_SIZE = 70;
@@ -272,7 +315,22 @@ public class MRMapChit : MRChit
 
 	public static MRMapChit Create(JSONObject root)
 	{
-		eMapChitType chitType = (eMapChitType)((JSONNumber)root["type"]).IntValue;
+		eMapChitType chitType;
+		if (root["type"] is JSONNumber)
+		{
+			chitType = (eMapChitType)((JSONNumber)root["type"]).IntValue;
+		} 
+		else if (root["type"] is JSONString)
+		{
+			if (!ChitTypeMap.TryGetValue(((JSONString)root["type"]).Value, out chitType))
+			{
+				return null;
+			}
+		}
+		else
+		{
+			return null;
+		}
 		MRMapChit chit = Create(chitType);
 		chit.Load(root);
 
@@ -284,7 +342,18 @@ public class MRMapChit : MRChit
 		if (!base.Load(root))
 			return false;
 
-		mChitType = (eMapChitType)((JSONNumber)root["type"]).IntValue;
+		if (root["type"] is JSONNumber)
+		{
+			mChitType = (eMapChitType)((JSONNumber)root["type"]).IntValue;
+		} 
+		else if (root["type"] is JSONString)
+		{
+			if (!ChitTypeMap.TryGetValue(((JSONString)root["type"]).Value, out mChitType))
+			{
+				return false;
+			}
+		}
+
 		return true;
 	}
 	
@@ -310,3 +379,4 @@ public class MRMapChit : MRChit
 	#endregion
 }
 
+}

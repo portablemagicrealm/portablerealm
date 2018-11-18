@@ -28,6 +28,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+namespace PortableRealm
+{
+	
 public class MRCombatSheet : MonoBehaviour, MRITouchable
 {
 	#region Constants
@@ -265,7 +268,7 @@ public class MRCombatSheet : MonoBehaviour, MRITouchable
 		{
 			mPhaseName.text = "";
 			if (mCombat.CurrentCombatant != null)
-				mPhaseName.text = MRUtility.DisplayName(mCombat.CurrentCombatant.Name) + ": ";
+				mPhaseName.text = mCombat.CurrentCombatant.Name.DisplayName() + ": ";
 			mPhaseName.text += PhaseNames[MRGame.TheGame.CombatManager.CombatPhase];
 		}
 
@@ -292,7 +295,7 @@ public class MRCombatSheet : MonoBehaviour, MRITouchable
 				Debug.LogError("Comabt sheet data for " + mCombatData.SheetOwner.Name + " has no character data");
 				return;
 			}
-			mOwnerName.text = "Sheet- " + MRUtility.DisplayName(mCombatData.SheetOwner.Name);
+			mOwnerName.text = "Sheet- " + mCombatData.SheetOwner.Name.DisplayName();
 
 			// place the character's armor pieces
 			if (mCombatData.CharacterData.shield != null)
@@ -321,7 +324,7 @@ public class MRCombatSheet : MonoBehaviour, MRITouchable
 				}
 				if (mCombatData.CharacterData.attackChit != null)
 				{
-					mCombatData.CharacterData.attackChit.FrontColor = MRGame.offWhite;
+//					mCombatData.CharacterData.attackChit.FrontColor = MRGame.offWhite;
 					mAttackPositions[mCombatData.CharacterData.attackType].AddPieceToTop(mCombatData.CharacterData.attackChit);
 				}
 			}
@@ -331,14 +334,14 @@ public class MRCombatSheet : MonoBehaviour, MRITouchable
 			{
 				if (mCombatData.CharacterData.maneuverChit != null)
 				{
-					mCombatData.CharacterData.maneuverChit.FrontColor = MRGame.offWhite;
+//					mCombatData.CharacterData.maneuverChit.FrontColor = MRGame.offWhite;
 					mManeuverPositions[mCombatData.CharacterData.maneuverType].AddPieceToTop(mCombatData.CharacterData.maneuverChit);
 				}
 			}
 		}
 		else
 		{
-			mOwnerName.text = "Sheet- " + MRUtility.DisplayName(mCombatData.SheetOwner.Name);
+			mOwnerName.text = "Sheet- " + mCombatData.SheetOwner.Name.DisplayName();
 		}
 		foreach (MRCombatSheetData.DefenderData data in mCombatData.Defenders)
 		{
@@ -362,11 +365,9 @@ public class MRCombatSheet : MonoBehaviour, MRITouchable
 
 	public bool OnSingleTapped(GameObject touchedObject)
 	{
-/*
-		if (mCombatData.SheetOwner is MRCharacter)
+		if (mCombatData != null && mCombatData.SheetOwner is MRCharacter)
 		{
 			MRCharacter character = mCombatData.SheetOwner as MRCharacter;
-
 			if (mCombat.CombatPhase == MRCombatManager.eCombatPhase.SelectAttackAndManeuver)
 			{
 				// test shield interaction
@@ -378,81 +379,9 @@ public class MRCombatSheet : MonoBehaviour, MRITouchable
 						break;
 					}
 				}
-				// test weapon interaction
-				foreach (MRCombatManager.eAttackType attackType in Enum.GetValues(typeof(MRCombatManager.eAttackType)))
-				{
-					if (mAttackerAttacks.ContainsKey(attackType) && touchedObject == mAttackerAttacks[attackType])
-					{
-						if (mCombatData.CharacterData.attackChit == null || mCombatData.CharacterData.attackType == attackType)
-						{
-							// select fight chit
-							MRGame.TheGame.CharacterMat.Controllable = character;
-							MRActionChit.eAction actionType = MRActionChit.eAction.Attack;
-							switch (attackType)
-							{
-								case MRCombatManager.eAttackType.Smash:
-									actionType = MRActionChit.eAction.Smash;
-									break;
-								case MRCombatManager.eAttackType.Swing:
-									actionType = MRActionChit.eAction.Swing;
-									break;
-								case MRCombatManager.eAttackType.Thrust:
-									actionType = MRActionChit.eAction.Thrust;
-									break;
-								default:
-									break;
-							}
-							character.SelectChitFilter = new MRSelectChitEvent.MRSelectChitFilter(actionType);
-							MRGame.TheGame.CombatManager.LastSelectedAttackType = attackType;
-							MRGame.TheGame.PushView(MRGame.eViews.SelectAttack);
-						}
-						else
-						{
-							// change attack type
-							mCombatData.CharacterData.attackType = attackType;
-						}
-						break;
-					}
-				}
-				// test maneuver interaction
-				foreach (MRCombatManager.eDefenseType defenseType in Enum.GetValues(typeof(MRCombatManager.eDefenseType)))
-				{
-					if (mAttackerManeuvers.ContainsKey(defenseType) && touchedObject == mAttackerManeuvers[defenseType])
-					{
-						if (mCombatData.CharacterData.maneuverChit == null || mCombatData.CharacterData.maneuverType == defenseType)
-						{
-							// select maneuver chit
-							MRGame.TheGame.CharacterMat.Controllable = character;
-							MRActionChit.eAction actionType = MRActionChit.eAction.Move;
-							switch (defenseType)
-							{
-								case MRCombatManager.eDefenseType.Charge:
-									actionType = MRActionChit.eAction.Charge;
-									break;
-								case MRCombatManager.eDefenseType.Dodge:
-									actionType = MRActionChit.eAction.Dodge;
-									break;
-								case MRCombatManager.eDefenseType.Duck:
-									actionType = MRActionChit.eAction.Duck;
-									break;
-								default:
-									break;
-							}
-							character.SelectChitFilter = new MRSelectChitEvent.MRSelectChitFilter(actionType);
-							MRGame.TheGame.CombatManager.LastSelectedDefenseType = defenseType;
-							MRGame.TheGame.PushView(MRGame.eViews.SelectManeuver);
-						}
-						else
-						{
-							// change attack type
-							mCombatData.CharacterData.maneuverType = defenseType;
-						}
-						break;
-					}
-				}
 			}
 		}
-*/
+
 		return true;
 	}
 
@@ -461,7 +390,6 @@ public class MRCombatSheet : MonoBehaviour, MRITouchable
 		if (mCombatData.SheetOwner is MRCharacter)
 		{
 			MRCharacter character = mCombatData.SheetOwner as MRCharacter;
-
 			if (mCombat.CombatPhase == MRCombatManager.eCombatPhase.SelectTarget)
 			{
 				MRCombatManager.eDefenseType defenseType;
@@ -497,6 +425,11 @@ public class MRCombatSheet : MonoBehaviour, MRITouchable
 		return true;
 	}
 
+	public virtual bool OnTouchMove(GameObject touchedObject, float delta_x, float delta_y)
+	{
+		return true;
+	}
+
 	public virtual bool OnButtonActivate(GameObject touchedObject)
 	{
 		// test for changing character sheets
@@ -518,58 +451,52 @@ public class MRCombatSheet : MonoBehaviour, MRITouchable
 		}
 		else if (touchedObject.name == "endPhase")
 		{
-			MRGame.TheGame.CombatManager.EndPhase();
+			MRGame.TheGame.CombatManager.RunPhase();
 		}
 
-		if (mCombatData.SheetOwner is MRCharacter)
+		if (mCombatData != null && mCombatData.SheetOwner is MRCharacter)
 		{
 			MRCharacter character = mCombatData.SheetOwner as MRCharacter;
 
 			if (mCombat.CombatPhase == MRCombatManager.eCombatPhase.SelectAttackAndManeuver)
 			{
-				// test shield interaction
-				foreach (MRCombatManager.eAttackType attackType in Enum.GetValues(typeof(MRCombatManager.eAttackType)))
+				// test weapon interaction - can't use if cast a spell
+				if (this.CombatData.CharacterData.spell == null)
 				{
-					if (mAttackerShields.ContainsKey(attackType) && touchedObject == mAttackerShields[attackType])
+					foreach (MRCombatManager.eAttackType attackType in Enum.GetValues(typeof(MRCombatManager.eAttackType)))
 					{
-						mCombatData.CharacterData.shieldType = attackType;
-						break;
-					}
-				}
-				// test weapon interaction
-				foreach (MRCombatManager.eAttackType attackType in Enum.GetValues(typeof(MRCombatManager.eAttackType)))
-				{
-					if (mAttackerAttacks.ContainsKey(attackType) && touchedObject == mAttackerAttacks[attackType])
-					{
-						if (mCombatData.CharacterData.attackChit == null || mCombatData.CharacterData.attackType == attackType)
+						if (mAttackerAttacks.ContainsKey(attackType) && touchedObject == mAttackerAttacks[attackType])
 						{
-							// select fight chit
-							MRGame.TheGame.CharacterMat.Controllable = character;
-							MRActionChit.eAction actionType = MRActionChit.eAction.Attack;
-							switch (attackType)
+							if (mCombatData.CharacterData.attackChit == null || mCombatData.CharacterData.attackType == attackType)
 							{
-								case MRCombatManager.eAttackType.Smash:
-									actionType = MRActionChit.eAction.Smash;
-									break;
-								case MRCombatManager.eAttackType.Swing:
-									actionType = MRActionChit.eAction.Swing;
-									break;
-								case MRCombatManager.eAttackType.Thrust:
-									actionType = MRActionChit.eAction.Thrust;
-									break;
-								default:
-									break;
+								// select fight chit
+								MRGame.TheGame.CharacterMat.Controllable = character;
+								MRActionChit.eAction actionType = MRActionChit.eAction.Attack;
+								switch (attackType)
+								{
+									case MRCombatManager.eAttackType.Smash:
+										actionType = MRActionChit.eAction.Smash;
+										break;
+									case MRCombatManager.eAttackType.Swing:
+										actionType = MRActionChit.eAction.Swing;
+										break;
+									case MRCombatManager.eAttackType.Thrust:
+										actionType = MRActionChit.eAction.Thrust;
+										break;
+									default:
+										break;
+								}
+								character.SelectChitFilter = new MRSelectChitEvent.MRSelectChitFilter(actionType);
+								MRGame.TheGame.CombatManager.LastSelectedAttackType = attackType;
+								MRGame.TheGame.PushView(MRGame.eViews.SelectAttack);
 							}
-							character.SelectChitFilter = new MRSelectChitEvent.MRSelectChitFilter(actionType);
-							MRGame.TheGame.CombatManager.LastSelectedAttackType = attackType;
-							MRGame.TheGame.PushView(MRGame.eViews.SelectAttack);
+							else
+							{
+								// change attack type
+								mCombatData.CharacterData.attackType = attackType;
+							}
+							break;
 						}
-						else
-						{
-							// change attack type
-							mCombatData.CharacterData.attackType = attackType;
-						}
-						break;
 					}
 				}
 				// test maneuver interaction
@@ -688,3 +615,4 @@ public class MRCombatSheet : MonoBehaviour, MRITouchable
 	#endregion
 }
 
+}

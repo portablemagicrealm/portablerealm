@@ -39,7 +39,7 @@ using System.Text;
 
 namespace AssemblyCSharp
 {
-	public class JSONObject : JSONValue
+	public class JSONObject : JSONValue, IEnumerable<KeyValuePair<string, JSONValue>>
 	{
 		#region Properties
 
@@ -130,6 +130,25 @@ namespace AssemblyCSharp
 				++i;
 			}
 			data.Append('}');
+		}
+
+		/// <summary>
+		/// Returns an enumerator that iterates through a collection.
+		/// </summary>
+		/// <returns>The enumerator.</returns>
+		public IEnumerator<KeyValuePair<string, JSONValue>> GetEnumerator()
+		{
+			return mValue.GetEnumerator();
+		}
+
+		private IEnumerator GetEnumerator1()
+		{
+			return this.GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator1();
 		}
 
 		#endregion

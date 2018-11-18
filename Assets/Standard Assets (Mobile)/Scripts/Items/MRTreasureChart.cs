@@ -30,7 +30,10 @@ using System.Collections.Generic;
 using System.Text;
 using AssemblyCSharp;
 
-public class MRTreasureChart : MonoBehaviour
+namespace PortableRealm
+{
+	
+public class MRTreasureChart : MonoBehaviour, MRISerializable
 {
 	#region Properties
 
@@ -77,7 +80,7 @@ public class MRTreasureChart : MonoBehaviour
 			stack.transform.parent = transform;
 			mSiteTreasures.Add(site, stack);
 		}
-		foreach (MRNative.eGroup native in Enum.GetValues(typeof(MRNative.eGroup)))
+		foreach (MRGame.eNatives native in Enum.GetValues(typeof(MRGame.eNatives)))
 		{
 			stack = MRGame.TheGame.NewGamePieceStack();
 			stack.Layer = gameObject.layer;
@@ -115,6 +118,7 @@ public class MRTreasureChart : MonoBehaviour
 		IList<MRItem> smallTreasures = new List<MRItem>();
 		IDictionary<string, int> armorTracker = new Dictionary<string, int>();
 		IDictionary<string, int> weaponTracker = new Dictionary<string, int>();
+		IDictionary<int, IList<MRSpell>> spells = new Dictionary<int, IList<MRSpell>>();
 
 		ICollection<MRTreasure> treasures = MRItemManager.Treasure.Values;
 		foreach (MRTreasure treasure in treasures)
@@ -131,6 +135,15 @@ public class MRTreasureChart : MonoBehaviour
 		MRUtility.Shuffle(largeTreasures);
 		MRUtility.Shuffle(largeTreasures);
 
+		for (int i = 1; i <= 8; ++i)
+		{
+			var spellList = MRSpellManager.SpellsByType[i];
+			List<MRSpell> newList = new List<MRSpell>(spellList);
+			MRUtility.Shuffle(newList);
+			MRUtility.Shuffle(newList);
+			spells[i] = newList;
+		}
+
 		// get the treasure chart json data
 		TextAsset itemsList = (TextAsset)Resources.Load("treasurechart");
 		StringBuilder jsonText = new StringBuilder(itemsList.text);
@@ -146,7 +159,7 @@ public class MRTreasureChart : MonoBehaviour
 				if (twit.Name.StartsWith(((JSONString)twitTreasure["name"]).Value))
 				{
 					AddTreasuresToStack(twitTreasure, mTwitTreasures[twit.Id], 
-					                    smallTreasures, largeTreasures,
+						                smallTreasures, largeTreasures, spells,
 					                    armorTracker, weaponTracker,
 					                    null);
 					break;
@@ -170,7 +183,7 @@ public class MRTreasureChart : MonoBehaviour
 			JSONObject siteTreasure = (JSONObject)treasuresData[i];
 			AddTreasuresToStack(siteTreasure, 
 			                    mSiteTreasures[(MRMapChit.eSiteChitType)(((JSONNumber)siteTreasure["id"]).IntValue)],
-			                    smallTreasures, largeTreasures,
+				                smallTreasures, largeTreasures, spells,
 			                    armorTracker, weaponTracker,
 			                    null);
 		}
@@ -180,12 +193,48 @@ public class MRTreasureChart : MonoBehaviour
 		for (int i = 0; i < treasuresData.Count; ++i)
 		{
 			JSONObject nativeTreasure = (JSONObject)treasuresData[i];
-			MRNative.eGroup nativeGroup = (MRNative.eGroup)(((JSONNumber)nativeTreasure["id"]).IntValue);
+			MRGame.eNatives nativeGroup = (MRGame.eNatives)(((JSONNumber)nativeTreasure["id"]).IntValue);
 			AddTreasuresToStack(nativeTreasure, 
 			                    mNativeTreasures[nativeGroup],
-			                    smallTreasures, largeTreasures,
+			                    smallTreasures, largeTreasures, spells,
 			                    armorTracker, weaponTracker,
 			                    nativeGroup);
+		}
+
+		treasuresData = (JSONArray)jsonData["books"];
+		for (int i = 0; i < treasuresData.Count; ++i)
+		{
+			JSONObject bookTreasure = (JSONObject)treasuresData[i];
+			uint id = MRUtility.IdForName(((JSONString)bookTreasure["name"]).Value);
+
+			MRGamePieceStack stack = MRGame.TheGame.NewGamePieceStack();
+			stack.Layer = gameObject.layer;
+			stack.transform.parent = transform;
+			mBookTreasures.Add(id, stack);
+
+			AddTreasuresToStack(bookTreasure, 
+				mBookTreasures[id],
+				smallTreasures, largeTreasures, spells,
+				armorTracker, weaponTracker,
+				null);
+		}
+
+		treasuresData = (JSONArray)jsonData["artifacts"];
+		for (int i = 0; i < treasuresData.Count; ++i)
+		{
+			JSONObject artifactTreasure = (JSONObject)treasuresData[i];
+			uint id = MRUtility.IdForName(((JSONString)artifactTreasure["name"]).Value);
+
+			MRGamePieceStack stack = MRGame.TheGame.NewGamePieceStack();
+			stack.Layer = gameObject.layer;
+			stack.transform.parent = transform;
+			mArtifactTreasures.Add(id, stack);
+
+			AddTreasuresToStack(artifactTreasure, 
+				mArtifactTreasures[id],
+				smallTreasures, largeTreasures, spells,
+				armorTracker, weaponTracker,
+				null);
 		}
 
 		// temp - hide any leftover treasures
@@ -203,9 +252,10 @@ public class MRTreasureChart : MonoBehaviour
 	                                 MRGamePieceStack stack, 
 	                                 IList<MRItem> smallTreasures, 
 	                                 IList<MRItem> largeTreasures,
+	                                 IDictionary<int, IList<MRSpell>> spells,
 	                                 IDictionary<string, int> armorTracker,
 	                                 IDictionary<string, int> weaponTracker,
-	                                 Nullable<MRNative.eGroup> nativeOwner)
+	                                 Nullable<MRGame.eNatives> nativeOwner)
 	{
 		// place the stack at its location on the treasure chart
 		MRTreasureChartLocation stackLocation = null;
@@ -246,6 +296,26 @@ public class MRTreasureChart : MonoBehaviour
 				MRItem treasure = largeTreasures[largeTreasures.Count - 1];
 				largeTreasures.RemoveAt(largeTreasures.Count - 1);
 				stack.AddPieceToTop(treasure);
+			}
+		}
+
+		// add spells
+		JSONArray spellsList = (JSONArray)treasureData["spells"];
+		for (int i = 0; i < spellsList.Count; ++i)
+		{
+			JSONObject spellData = (JSONObject)spellsList[i];
+			int type = ((JSONNumber)spellData["type"]).IntValue;
+			int count = ((JSONNumber)spellData["count"]).IntValue;
+			IList<MRSpell> spellList = spells[type];
+			for (int j = 0; j < count; ++j)
+			{
+				if (spellList.Count > 0)
+				{
+					MRSpell spell = spellList[0];
+					spellList.RemoveAt(0);
+					MRSpellCard card = new MRSpellCard(spell);
+					stack.AddPieceToTop(card);
+				}
 			}
 		}
 
@@ -326,7 +396,7 @@ public class MRTreasureChart : MonoBehaviour
 		return mSiteTreasures[site];
 	}
 
-	public MRGamePieceStack GetNativeTreasures(MRNative.eGroup group)
+	public MRGamePieceStack GetNativeTreasures(MRGame.eNatives group)
 	{
 		return mNativeTreasures[group];
 	}
@@ -385,7 +455,7 @@ public class MRTreasureChart : MonoBehaviour
 		// pick a random armor from the ones found
 		if (armors.Count > 0)
 		{
-			int index = MRRandom.Range(0, armors.Count);
+			int index = MRRandom.Range(0, armors.Count, true);
 			return armors[index];
 		}
 
@@ -398,7 +468,7 @@ public class MRTreasureChart : MonoBehaviour
 	/// <returns>The armor from natives.</returns>
 	/// <param name="armorName">Armor name.</param>
 	/// <param name="group">Native group.</param>
-	public MRArmor GetArmorFromNatives(string armorName, MRNative.eGroup group)
+	public MRArmor GetArmorFromNatives(string armorName, MRGame.eNatives group)
 	{
 		MRGamePieceStack stack = mNativeTreasures[group];
 		foreach (MRIGamePiece piece in stack.Pieces)
@@ -442,16 +512,135 @@ public class MRTreasureChart : MonoBehaviour
 			return;
 	}
 
+	public virtual bool Load(JSONObject root)
+	{
+		if (root["sites"] != null)
+		{
+			JSONObject sites = (JSONObject)root["sites"];
+			foreach (var iter in sites)
+			{
+				MRMapChit.eSiteChitType site = iter.Key.Site();
+				MRGamePieceStack stack = mSiteTreasures[site];
+				stack.Load((JSONObject)iter.Value);
+			}
+		}
+		if (root["natives"] != null)
+		{
+			JSONObject natives = (JSONObject)root["natives"];
+			foreach (var iter in natives)
+			{
+				MRGame.eNatives native = iter.Key.Native();
+				MRGamePieceStack stack = mNativeTreasures[native];
+				stack.Load((JSONObject)iter.Value);
+			}
+		}
+		if (root["twits"] != null)
+		{
+			JSONObject twits = (JSONObject)root["twits"];
+			foreach (var iter in twits)
+			{
+				MRIGamePiece piece = MRGame.TheGame.GetGamePiece(iter.Key);
+				if (piece != null)
+				{
+					MRGamePieceStack stack = mTwitTreasures[piece.Id];
+					stack.Load((JSONObject)iter.Value);
+				}
+			}
+		}
+		if (root["books"] != null)
+		{
+			JSONObject books = (JSONObject)root["books"];
+			foreach (var iter in books)
+			{
+				MRIGamePiece piece = MRGame.TheGame.GetGamePiece(iter.Key);
+				if (piece != null)
+				{
+					MRGamePieceStack stack = mBookTreasures[piece.Id];
+					stack.Load((JSONObject)iter.Value);
+				}
+			}
+		}
+		if (root["artifacts"] != null)
+		{
+			JSONObject artifacts = (JSONObject)root["artifacts"];
+			foreach (var iter in artifacts)
+			{
+				MRIGamePiece piece = MRGame.TheGame.GetGamePiece(iter.Key);
+				if (piece != null)
+				{
+					MRGamePieceStack stack = mArtifactTreasures[piece.Id];
+					stack.Load((JSONObject)iter.Value);
+				}
+			}
+		}
+		if (root["destroyed"] != null)
+		{
+			JSONObject destroyed = (JSONObject)root["destroyed"];
+			mDestroyedItems.Load(destroyed);
+		}
+		return true;
+	}
+
+	public virtual void Save(JSONObject root)
+	{
+		JSONObject sites = new JSONObject();
+		foreach (var iter in mSiteTreasures)
+		{
+			JSONObject stack = new JSONObject();
+			iter.Value.Save(stack);
+			sites[iter.Key.ToString()] = stack;
+		}
+		root["sites"] = sites;
+		JSONObject natives = new JSONObject();
+		foreach (var iter in mNativeTreasures)
+		{
+			JSONObject stack = new JSONObject();
+			iter.Value.Save(stack);
+			natives[iter.Key.ToString()] = stack;
+		}
+		root["natives"] = natives;
+		JSONObject twits = new JSONObject();
+		foreach (var iter in mTwitTreasures)
+		{
+			JSONObject stack = new JSONObject();
+			iter.Value.Save(stack);
+			twits[iter.Key.ToString()] = stack;
+		}
+		root["twits"] = twits;
+		JSONObject books = new JSONObject();
+		foreach (var iter in mBookTreasures)
+		{
+			JSONObject stack = new JSONObject();
+			iter.Value.Save(stack);
+			books[iter.Key.ToString()] = stack;
+		}
+		root["books"] = books;
+		JSONObject artifacts = new JSONObject();
+		foreach (var iter in mArtifactTreasures)
+		{
+			JSONObject stack = new JSONObject();
+			iter.Value.Save(stack);
+			artifacts[iter.Key.ToString()] = stack;
+		}
+		root["artifacts"] = artifacts;
+		JSONObject destroyed = new JSONObject();
+		mDestroyedItems.Save(destroyed);
+		root["destroyed"] = destroyed;
+	}
+
 	#endregion
 
 	#region Members
 
 	private Camera mCamera;
 	private IDictionary<MRMapChit.eSiteChitType, MRGamePieceStack> mSiteTreasures = new Dictionary<MRMapChit.eSiteChitType, MRGamePieceStack>();
-	private IDictionary<MRNative.eGroup, MRGamePieceStack> mNativeTreasures = new Dictionary<MRNative.eGroup, MRGamePieceStack>();
+	private IDictionary<MRGame.eNatives, MRGamePieceStack> mNativeTreasures = new Dictionary<MRGame.eNatives, MRGamePieceStack>();
 	private IDictionary<uint, MRGamePieceStack> mTwitTreasures = new Dictionary<uint, MRGamePieceStack>();
+	private IDictionary<uint, MRGamePieceStack> mBookTreasures = new Dictionary<uint, MRGamePieceStack>();
+	private IDictionary<uint, MRGamePieceStack> mArtifactTreasures = new Dictionary<uint, MRGamePieceStack>();
 	private MRGamePieceStack mDestroyedItems;
 
 	#endregion
 }
 
+}

@@ -30,6 +30,9 @@ using System.IO;
 using System.Text;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRLoadSaveGameSelectDialog : MonoBehaviour
 {
 	#region Constants
@@ -273,4 +276,6 @@ public class MRLoadSaveGameSelectDialog : MonoBehaviour
 	private static string[] msGameNames = null;
 
 	#endregion
+}
+
 }

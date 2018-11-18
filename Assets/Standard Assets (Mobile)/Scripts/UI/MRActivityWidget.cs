@@ -28,6 +28,9 @@ using UnityEngine;
 using System;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRActivityWidget : MonoBehaviour, MRITouchable
 {
 	#region Properties
@@ -307,12 +310,17 @@ public class MRActivityWidget : MonoBehaviour, MRITouchable
 		return true;
 	}
 
+	public bool OnTouchMove(GameObject touchedObject, float delta_x, float delta_y)
+	{
+		return true;
+	}
+
 	public bool OnTouchHeld(GameObject touchedObject)
 	{
 		return true;
 	}
 
-	public virtual bool OnButtonActivate(GameObject touchedObject)
+	public bool OnButtonActivate(GameObject touchedObject)
 	{
 		return true;
 	}
@@ -385,3 +393,4 @@ public class MRActivityWidget : MonoBehaviour, MRITouchable
 	#endregion
 }
 
+}

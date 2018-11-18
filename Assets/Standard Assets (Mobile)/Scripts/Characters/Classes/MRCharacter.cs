@@ -30,6 +30,9 @@ using System.Collections;
 using System.Collections.Generic;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public abstract class MRCharacter : MRControllable, MRISerializable
 {
 	#region Properties
@@ -97,6 +100,17 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 				SelectChitFilter = mSelectChitData.Filter;
 			else
 				SelectChitFilter = null;
+		}
+	}
+
+	public MRSelectSpellEvent SelectSpellData
+	{
+		get{
+			return mSelectSpellData;
+		}
+
+		set{
+			mSelectSpellData = value;
 		}
 	}
 
@@ -404,6 +418,21 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		}
 	}
 
+	public IList<MRMagicChit> EnchantedChits
+	{
+		get{
+			List<MRMagicChit> chits = new List<MRMagicChit>();
+			foreach (var chit in mMagicChits)
+			{
+				if (((MRMagicChit)chit).IsEnchanted)
+				{
+					chits.Add((MRMagicChit)chit);
+				}
+			}
+			return chits;
+		}
+	}
+
 	public int FatigueBalance
 	{
 		get{
@@ -422,6 +451,17 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	{
 		get{
 			return mHealBalance;
+		}
+	}
+
+	public bool CastingSpell
+	{
+		get {
+			return mCastingSpell;
+		}
+
+		set {
+			mCastingSpell = value;
 		}
 	}
 
@@ -445,6 +485,13 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	{
 		get{
 			return mInactiveItems;
+		}
+	}
+
+	public IList<MRSpell> LearnedSpells
+	{
+		get{
+			return mLearnedSpells;
 		}
 	}
 
@@ -543,6 +590,24 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		}
 	}
 
+	public bool HasMeditated
+	{
+		get{
+			return mHasMeditated;
+		}
+
+		set{
+			mHasMeditated = value;
+		}
+	}
+
+	public IDictionary<MRGame.eNatives, MRGame.eRelationship> Relationships
+	{
+		get {
+			return mRelationships;
+		}
+	}
+
 	/**********************/
 	// MRIGamePiece properties
 
@@ -566,7 +631,9 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	{
 		mIsDead = false;
 		mGold = 10;
+		mMaxSpells = 14;
 		mMoveType = MRGame.eMoveType.Walk;
+		mCastingSpell = false;
 		mDiscoveredSites = new BitArray(Enum.GetValues(typeof(MRMapChit.eSiteChitType)).Length);
 		mScore = new MRCharacterScore(this);
 		// temp - discover all sites
@@ -592,6 +659,25 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		for (int i = 0; i < abilities.Count; ++i)
 		{
 			mAbilities[i] = ((JSONString)abilities[i]).Value;
+		}
+
+		// set up relationships
+		foreach (MRGame.eNatives native in Enum.GetValues(typeof(MRGame.eNatives)))
+		{
+			mRelationships[native] = MRGame.eRelationship.Neutral;
+		}
+		JSONObject jsonRelationships = (JSONObject)(jsonData["relationships"]);
+		foreach (MRGame.eRelationship relationship in Enum.GetValues(typeof(MRGame.eRelationship)))
+		{
+			JSONArray relationships = (JSONArray)jsonRelationships[relationship.ToString().ToLower()];
+			if (relationships != null)
+			{
+				for (int i = 0; i < relationships.Count; ++i)
+				{
+					MRGame.eNatives native = ((JSONString)relationships[i]).Value.Native();
+					mRelationships[native] = relationship;
+				}
+			}
 		}
 
 		// decode chits
@@ -777,6 +863,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		mMoveChits.Clear();
 		mFightChits.Clear();
 		mMagicChits.Clear();
+		mLearnedSpells.Clear();
 
 		// remove the attention chit
 		if (mAttentionChit != null)
@@ -792,6 +879,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		mPonyMove = false;
 		mKillCountForDay = 0;
 		mLastClearingEntered = null;
+		mHasMeditated = false;
 		mNormalActivitiesAvailable = 2;
 		mDaylightActivitesAvailable = 2;
 
@@ -902,9 +990,32 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 				((MRHorse)piece).MoveType = MRHorse.eMoveType.Walk;
 			}
 		}
+
+		// fatigue alerted magic chits
+		List<MRMagicChit> toFatigue = new List<MRMagicChit>();
+		foreach (MRChit chit in mActiveChits)
+		{
+			if (chit is MRMagicChit)
+			{
+				MRMagicChit magicChit = (MRMagicChit)chit;
+				if (magicChit.CurrentTime == 0)
+				{
+					magicChit.CurrentTime = magicChit.BaseTime;
+					toFatigue.Add(magicChit);
+				}
+			}
+		}
+		foreach (MRMagicChit chit in toFatigue)
+		{
+			ForceFatigueChit(chit);
+		}
 	}
 
-	// Tests if the owner is allowed to do the activity.
+	/// <summary>
+	/// Tests if the owner is allowed to do the activity.
+	/// </summary>
+	/// <returns><c>true</c> if the character can do the activity; otherwise, <c>false</c>.</returns>
+	/// <param name="activity">Activity.</param>
 	public override bool CanExecuteActivity(MRActivity activity)
 	{
 		// check for curses
@@ -951,23 +1062,6 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		}
 	}
 
-	//public void OnClearingSelected(MRClearing clearing)
-	//{
-	//	if (MRGame.TimeOfDay == MRGame.eTimeOfDay.Daylight)
-	//	{
-	//		// tell the current activity a clearing was selected
-	//		MRActivityList activities = ActivitiesForDay(MRGame.DayOfMonth);
-	//		foreach (MRActivity activity in activities.Activities)
-	//		{
-	//			if (activity.Active && !activity.Executed)
-	//			{
-	//				activity.OnClearingSelected(clearing);
-	//				break;
-	//			}
-	//		}
-	//	}
-	//}
-
 	/// <summary>
 	/// Returns if a chit can be selected by the character for the current game mode.
 	/// </summary>
@@ -995,7 +1089,42 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 			default:
 				break;
 		}
-		return true;
+		return false;
+	}
+
+	/// <summary>
+	/// Returns if the character can cast a given spell.
+	/// </summary>
+	/// <returns><c>true</c> id the spell can be cast; otherwise, <c>false</c>.</returns>
+	/// <param name="spell">Spell.</param>
+	/// <param name="speed">Chit speed that must be met or beat.</param>
+	public bool CanCastSpell(MRSpell spell, int speed)
+	{
+		if (LearnedSpells.Contains(spell) && Location != null) 
+		{
+			HashSet<MRGame.eMagicColor> availableColors = new HashSet<MRGame.eMagicColor>(Location.MagicSupplied);
+			foreach (var chit in EnchantedChits)
+			{
+				availableColors.Add(chit.MagicColor);
+			}
+			if (availableColors.Contains(spell.Color))
+			{
+				MRSelectChitEvent.MRSelectChitFilter filter = new MRSelectChitEvent.MRSelectChitFilter(
+					MRActionChit.eAction.CastSpell, 
+					new int[] {spell.CurrentMagicType}, 
+					speed, MRSelectChitEvent.eCompare.LessThanEqualTo, 
+					false
+					);
+				foreach (var chit in ActiveChits)
+				{
+					if (filter.IsValidSelectChit(chit))
+					{
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	/// <summary>
@@ -1175,6 +1304,12 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 					else
 						fatigueType = MRActionChit.eAction.FatigueMove;
 					break;
+				case MRActionChit.eType.Magic:
+					if (makingChange)
+						fatigueType = MRActionChit.eAction.FatigueChangeMagic;
+					else
+						fatigueType = MRActionChit.eAction.FatigueMagic;
+					break;
 			}
 			if (action.CanBeUsedFor(fatigueType, strength))
 			{
@@ -1321,6 +1456,51 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	public void SetHealBalance(int count)
 	{
 		mHealBalance = count;
+	}
+
+	/// <summary>
+	/// Sets a chit active without checking for validity or adjusting the fatigue/wound balance.
+	/// </summary>
+	/// <param name="chit">chit to activate</param>
+	public void ForceActiveChit(MRActionChit chit)
+	{
+		if (!mActiveChits.Contains(chit))
+			mActiveChits.Add(chit);
+		if (mWoundedChits.Contains(chit))
+			mWoundedChits.Remove(chit);
+		if (mFatiguedChits.Contains(chit))
+			mFatiguedChits.Remove(chit);
+		chit.State = MRActionChit.eState.Active;
+	}
+
+	/// <summary>
+	/// Fatigues a chit without checking for validity or adjusting the fatigue balance.
+	/// </summary>
+	/// <param name="chit">chit to fatigue</param>
+	public void ForceFatigueChit(MRActionChit chit)
+	{
+		if (mActiveChits.Contains(chit))
+			mActiveChits.Remove(chit);
+		if (mWoundedChits.Contains(chit))
+			mWoundedChits.Remove(chit);
+		if (!mFatiguedChits.Contains(chit))
+			mFatiguedChits.Add(chit);
+		chit.State = MRActionChit.eState.Fatigued;
+	}
+
+	/// <summary>
+	/// Wounds a chit without checking for validity or adjusting the wound balance.
+	/// </summary>
+	/// <param name="chit">chit to activate</param>
+	public void ForceWoundChit(MRActionChit chit)
+	{
+		if (mActiveChits.Contains(chit))
+			mActiveChits.Remove(chit);
+		if (!mWoundedChits.Contains(chit))
+			mWoundedChits.Add(chit);
+		if (mFatiguedChits.Contains(chit))
+			mFatiguedChits.Remove(chit);
+		chit.State = MRActionChit.eState.Wounded;
 	}
 
 	/// <summary>
@@ -2099,18 +2279,31 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		}
 	}
 
+	public override bool IsValidTarget(MRSpell spell) 
+	{
+		return (spell.Targets.Contains(MRGame.eSpellTarget.Character) ||
+		spell.Targets.Contains(MRGame.eSpellTarget.Characters));
+	}
+
 	public override bool Load(JSONObject root)
 	{
 		if (!base.Load(root))
 			return false;
 
-		mFame = ((JSONNumber)root["fame"]).FloatValue;
-		mNotoriety = ((JSONNumber)root["notoriety"]).FloatValue;
-		mKillCountForDay = ((JSONNumber)root["kills"]).IntValue;
-		mPonyMove = ((JSONBoolean)root["pony"]).Value;
-		mStartedDayRiding = ((JSONBoolean)root["riding"]).Value;
-		mNormalActivitiesAvailable = ((JSONNumber)root["normalactivities"]).IntValue;
-		mDaylightActivitesAvailable = ((JSONNumber)root["dayactivities"]).IntValue;
+		if (root["fame"] != null)
+			mFame = ((JSONNumber)root["fame"]).FloatValue;
+		if (root["notoriety"] != null)
+			mNotoriety = ((JSONNumber)root["notoriety"]).FloatValue;
+		if (root["kills"] != null)
+			mKillCountForDay = ((JSONNumber)root["kills"]).IntValue;
+		if (root["pony"] != null)
+			mPonyMove = ((JSONBoolean)root["pony"]).Value;
+		if (root["riding"] != null)
+			mStartedDayRiding = ((JSONBoolean)root["riding"]).Value;
+		if (root["normalactivities"] != null)
+			mNormalActivitiesAvailable = ((JSONNumber)root["normalactivities"]).IntValue;
+		if (root["dayactivities"] != null)
+			mDaylightActivitesAvailable = ((JSONNumber)root["dayactivities"]).IntValue;
 		if (root["dead"] != null)
 			mIsDead = ((JSONBoolean)root["dead"]).Value;
 
@@ -2120,50 +2313,93 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		JSONArray chits = (JSONArray)root["activechits"];
 		for (int i = 0; i < chits.Count; ++i)
 		{
-			mActiveChits.Add(mChits[((JSONNumber)chits[i]).IntValue]);
+			MRActionChit chit = mChits[((JSONNumber)chits[i]).IntValue];
+			chit.State = MRActionChit.eState.Active;
+			mActiveChits.Add(chit);
 		}
 		chits = (JSONArray)root["fatiguedchits"];
 		for (int i = 0; i < chits.Count; ++i)
 		{
-			mFatiguedChits.Add(mChits[((JSONNumber)chits[i]).IntValue]);
+			MRActionChit chit = mChits[((JSONNumber)chits[i]).IntValue];
+			chit.State = MRActionChit.eState.Fatigued;
+			mFatiguedChits.Add(chit);
 		}
 		chits = (JSONArray)root["woundedchits"];
 		for (int i = 0; i < chits.Count; ++i)
 		{
-			mWoundedChits.Add(mChits[((JSONNumber)chits[i]).IntValue]);
+			MRActionChit chit = mChits[((JSONNumber)chits[i]).IntValue];
+			chit.State = MRActionChit.eState.Wounded;
+			mWoundedChits.Add(chit);
 		}
+		if (root["alertedmagicchits"] != null)
+		{
+			chits = (JSONArray)root["alertedmagicchits"];
+			for (int i = 0; i < chits.Count; ++i)
+			{
+				if (((JSONBoolean)chits[i]).Value)
+				{
+					((MRMagicChit)mMagicChits[i]).Alert(MRActionChit.eAction.Alert);
+				}
+			}
+		}
+		if (root["enchantedchits"] != null)
+		{
+			chits = (JSONArray)root["enchantedchits"];
+			for (int i = 0; i < chits.Count; ++i)
+			{
+				if (((JSONBoolean)chits[i]).Value)
+				{
+					((MRMagicChit)mMagicChits[i]).IsEnchanted = true;
+				}
+			}
+		}
+
 		chits = null;
 		// todo: remove current items
 		RemoveAllItems();
-		JSONArray items = (JSONArray)root["activeitems"];
-		for (int i = 0; i < items.Count; ++i)
+		if (root["activeitems"] != null)
 		{
-			JSONObject itemData = (JSONObject)items[i];
-			uint itemId = ((JSONNumber)itemData["id"]).UintValue;
-			MRItem item = MRItemManager.GetItem(itemId);
-			if (item != null)
+			JSONArray items = (JSONArray)root["activeitems"];
+			for (int i = 0; i < items.Count; ++i)
 			{
-				item.Load(itemData);
-				AddItem(item);
-				ActivateItem(item, true);
+				JSONObject itemData = (JSONObject)items[i];
+
+				MRIGamePiece piece =  MRGame.TheGame.GetGamePiece(itemData["id"]);
+				MRItem item = null;
+				if (piece != null)
+					item = MRItemManager.GetItem(piece.Id);
+				if (item != null)
+				{
+					item.Load(itemData);
+					AddItem(item);
+					ActivateItem(item, true);
+				}
 			}
 		}
-		items = (JSONArray)root["inactiveitems"];
-		for (int i = 0; i < items.Count; ++i)
+		if (root["inactiveitems"] != null)
 		{
-			JSONObject itemData = (JSONObject)items[i];
-			uint itemId = ((JSONNumber)itemData["id"]).UintValue;
-			MRItem item = MRItemManager.GetItem(itemId);
-			if (item != null)
+			JSONArray items = (JSONArray)root["inactiveitems"];
+			for (int i = 0; i < items.Count; ++i)
 			{
-				item.Load(itemData);
-				AddItem(item);
+				JSONObject itemData = (JSONObject)items[i];
+
+				MRIGamePiece piece =  MRGame.TheGame.GetGamePiece(itemData["id"]);
+				MRItem item = null;
+				if (piece != null)
+					item = MRItemManager.GetItem(piece.Id);
+				if (item != null)
+				{
+					item.Load(itemData);
+					AddItem(item);
+				}
 			}
 		}
-		items = null;
-		int[] curses = new int[1];
-		curses[0] = ((JSONNumber)root["curses"]).IntValue;
-		mCurses = new BitArray(curses);
+		if (root["curses"] != null)
+		{
+			int[] curses = new int[1];
+			curses[0] = ((JSONNumber)root["curses"]).IntValue;
+			mCurses = new BitArray(curses);
+		}
 		if (root["lastClearing"] != null)
 		{
 			uint id = ((JSONNumber)root["lastClearing"]).UintValue;
@@ -2172,6 +2408,36 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 				Debug.LogError("Character " + Name + " bad last clearing " + id);
 		}
 		mScore.Load(root);
+
+		if (root["meditated"] != null)
+			mHasMeditated = ((JSONBoolean)root["meditated"]).Value;
+
+		if (root["relationships"] != null)
+		{
+			JSONObject relationships = (JSONObject)root["relationships"];
+			foreach (MRGame.eNatives native in Enum.GetValues(typeof(MRGame.eNatives)))
+			{
+				if (relationships[native.ToString()] != null)
+				{
+					int value = ((JSONNumber)relationships[native.ToString()]).IntValue;
+					mRelationships[native] = (MRGame.eRelationship)value;
+				}
+			}
+		}
+
+		if (root["spells"] != null)
+		{
+			JSONArray spells = (JSONArray)root["spells"];
+			for (int i = 0; i < spells.Count; ++i)
+			{
+				uint spellId = MRGame.TheGame.GetPieceId(spells[i]);
+				MRSpell spell = MRSpellManager.GetSpell(spellId);
+				if (spell != null)
+				{
+					mLearnedSpells.Add(spell);
+				}
+			}
+		}
 
 		return true;
 	}
@@ -2187,6 +2453,7 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 		root["dead"] = new JSONBoolean(mIsDead);
 		root["pony"] = new JSONBoolean(mPonyMove);
 		root["riding"] = new JSONBoolean(mStartedDayRiding);
+		root["meditated"] = new JSONBoolean(mHasMeditated);
 		root["normalactivities"] = new JSONNumber(mNormalActivitiesAvailable);
 		root["dayactivities"] = new JSONNumber(mDaylightActivitesAvailable);
 		JSONArray chits = new JSONArray(mActiveChits.Count);
@@ -2207,6 +2474,18 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 			chits[i] = new JSONNumber(mChits.IndexOf(mWoundedChits[i]));
 		}
 		root["woundedchits"] = chits;
+		chits = new JSONArray(mMagicChits.Count);
+		for (int i = 0; i < mMagicChits.Count; ++i)
+		{
+			chits[i] = new JSONBoolean(((MRMagicChit)mMagicChits[i]).CurrentTime == 0);
+		}
+		root["alertedmagicchits"] = chits;
+		chits = new JSONArray(mMagicChits.Count);
+		for (int i = 0; i < mMagicChits.Count; ++i)
+		{
+			chits[i] = new JSONBoolean(((MRMagicChit)mMagicChits[i]).IsEnchanted);
+		}
+		root["enchantedchits"] = chits;
 		chits = null;
 		JSONArray items = new JSONArray(mActiveItems.Count);
 		for (int i = 0; i < mActiveItems.Count; ++i)
@@ -2233,6 +2512,23 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 			root["lastClearing"] = new JSONNumber(mLastClearingEntered.Id);
 		}
 		mScore.Save(root);
+
+		JSONObject relationships = new JSONObject();
+		foreach (MRGame.eNatives native in Enum.GetValues(typeof(MRGame.eNatives)))
+		{
+			relationships[native.ToString()] = new JSONNumber((int)mRelationships[native]);
+		}
+		root["relationships"] = relationships;
+
+		if (mLearnedSpells.Count > 0)
+		{
+			JSONArray spells = new JSONArray(mLearnedSpells.Count);
+			for (int i = 0; i < mLearnedSpells.Count; ++i)
+			{
+				spells[i] = new JSONNumber(mLearnedSpells[i].Id);
+			}
+			root["spells"] = spells;
+		}
 	}
 
 	#endregion
@@ -2259,19 +2555,25 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	protected int mWoundBalance;
 	protected int mHealBalance;
 	protected bool mFatigueChange;
+	protected bool mCastingSpell;
 	protected MRActionChit.eType mFatigueBalanceType;
 	protected MRGame.eStrength mFatigueBalanceStrength;
 	protected MRSelectChitEvent.MRSelectChitFilter mSelectChitFilter;
 	protected MRSelectChitEvent mSelectChitData;
+	protected MRSelectSpellEvent mSelectSpellData;
+
+	bool mHasMeditated;
 
 	protected float mFame;
 	protected float mNotoriety;
 	protected MRCharacterScore mScore;
 	protected int mKillCountForDay;
 	protected MRClearing mLastClearingEntered;
+	protected int mMaxSpells;
 
 	protected IList<MRItem> mActiveItems = new List<MRItem>();
 	protected IList<MRItem> mInactiveItems = new List<MRItem>();
+	protected IList<MRSpell> mLearnedSpells = new List<MRSpell>();
 
 	protected BitArray mCurses = new BitArray(Enum.GetValues(typeof(MRGame.eCurses)).Length);
 
@@ -2284,5 +2586,9 @@ public abstract class MRCharacter : MRControllable, MRISerializable
 	protected int mStartingLocationIndex;
 	protected MRILocation mStartingLocation;
 
+	protected IDictionary<MRGame.eNatives, MRGame.eRelationship> mRelationships = new Dictionary<MRGame.eNatives, MRGame.eRelationship>();
+
 	#endregion
+}
+
 }

@@ -27,6 +27,9 @@ using UnityEngine;
 using System.Collections;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public static class SoundChitExtensions
 {
 	public static int[] ClearingNumbers(this MRMapChit.eSoundChitType type)
@@ -133,7 +136,21 @@ public class MRSoundChit : MRMapChit
 	{
 		base.Load(root);
 		ClearingNumber = ((JSONNumber)root["clearing"]).IntValue;
-		SoundType = (MRMapChit.eSoundChitType)((JSONNumber)root["sound"]).IntValue;
+		if (root["sound"] is JSONNumber)
+		{
+			SoundType = (MRMapChit.eSoundChitType)((JSONNumber)root["sound"]).IntValue;
+		}
+		else if (root["sound"] is JSONString)
+		{
+			if (ChitSoundMap.TryGetValue(((JSONString)root["sound"]).Value, out mSoundType))
+			{
+				SoundType = mSoundType;
+			}
+			else
+			{
+				return false;
+			}
+		}
 		
 		return true;
 	}
@@ -155,3 +172,4 @@ public class MRSoundChit : MRMapChit
 	#endregion
 }
 
+}

@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRTabGroup : MonoBehaviour
 {
 	#region Properties
@@ -111,3 +114,4 @@ public class MRTabGroup : MonoBehaviour
 	#endregion
 }
 
+}

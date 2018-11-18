@@ -26,6 +26,9 @@
 
 using System.Collections;
 
+namespace PortableRealm
+{
+
 public class MRRestActivity : MRActivity
 {
 	public MRRestActivity() : base(MRGame.eActivity.Rest)
@@ -50,3 +53,4 @@ public class MRRestActivity : MRActivity
 	}
 }
 
+}

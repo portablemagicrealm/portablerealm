@@ -28,6 +28,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+namespace PortableRealm
+{
+	
 public class MRCombatSheetData
 {
 	#region Subclasses
@@ -41,6 +44,10 @@ public class MRCombatSheetData
 		public MRArmor fullArmor;
 		public MRFightChit attackChit;
 		public MRMoveChit maneuverChit;
+		public MRSpell spell;
+		public MRMagicChit spellMagic;
+		public MRIColorSource spellColor;
+		public List<MRISpellTarget> spellTargets = new List<MRISpellTarget>();
 		public MRCombatManager.eAttackType attackType = MRCombatManager.eAttackType.None;
 		public MRCombatManager.eDefenseType maneuverType = MRCombatManager.eDefenseType.None;
 		public MRCombatManager.eAttackType shieldType = MRCombatManager.eAttackType.None;
@@ -122,6 +129,7 @@ public class MRCombatSheetData
 		MRCombatManager.eDefenseType pick = MRCombatManager.eDefenseType.None;
 		do
 		{
+			Debug.Log("Pick random defense location roll");
 			int rnd = MRRandom.Range(0, Enum.GetValues(typeof(MRCombatManager.eDefenseType)).Length);
 			pick = (MRCombatManager.eDefenseType)Enum.GetValues(typeof(MRCombatManager.eDefenseType)).GetValue(rnd);
 		} while (pick == MRCombatManager.eDefenseType.None || slots[pick] != lowestCount);
@@ -279,3 +287,4 @@ public class MRCombatSheetData
 	#endregion
 }
 
+}

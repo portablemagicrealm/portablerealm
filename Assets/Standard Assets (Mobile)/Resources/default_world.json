@@ -1,0 +1,21 @@
+{
+	"game_days": 28,
+	"magic_supply": [
+		{
+			"day":7,
+			"colors": ["white", "black"]
+		},
+		{
+			"day":14,
+			"colors": ["grey"]
+		},
+		{
+			"day":21,
+			"colors": ["purple"]
+		},
+		{
+			"day":28,
+			"colors": ["gold"]
+		}
+	]
+}

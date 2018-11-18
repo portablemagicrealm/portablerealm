@@ -27,6 +27,9 @@ using UnityEngine;
 using System;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRViewButton : MRButton
 {
 	#region Constants
@@ -125,3 +128,4 @@ public class MRViewButton : MRButton
 	#endregion
 }
 
+}

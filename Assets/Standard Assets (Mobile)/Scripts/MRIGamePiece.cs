@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public interface MRIGamePiece
 {
 	uint Id { get; }
@@ -45,3 +48,4 @@ public interface MRIGamePiece
 	void Update();
 }
 
+}

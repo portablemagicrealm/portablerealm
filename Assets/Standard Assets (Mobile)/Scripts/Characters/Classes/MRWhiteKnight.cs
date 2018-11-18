@@ -27,6 +27,9 @@ using UnityEngine;
 using System.Collections;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRWhiteKnight : MRCharacter
 {
 	#region Properties
@@ -105,3 +108,4 @@ public class MRWhiteKnight : MRCharacter
 	#endregion
 }
 
+}

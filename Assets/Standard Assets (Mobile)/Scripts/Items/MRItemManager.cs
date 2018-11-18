@@ -37,215 +37,218 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using AssemblyCSharp;
 
-namespace AssemblyCSharp
+namespace PortableRealm
 {
-	public class MRItemManager
+	
+public class MRItemManager
+{
+	#region Properties
+
+	public static IDictionary<uint, MRItem> Items
 	{
-		#region Properties
-
-		public static IDictionary<uint, MRItem> Items
-		{
-			get{
-				return msItems;
-			}
+		get{
+			return msItems;
 		}
-
-		public static IDictionary<uint, MRWeapon> Weapons
-		{
-			get{
-				return msWeapons;
-			}
-		}
-
-		public static IDictionary<uint, MRArmor> Armor
-		{
-			get{
-				return msArmor;
-			}
-		}
-
-		public static IDictionary<uint, MRTreasure> Treasure
-		{
-			get{
-				return msTreasure;
-			}
-		}
-
-		public static IDictionary<uint, MRHorse> Horses
-		{
-			get{
-				return msHorses;
-			}
-		}
-
-		#endregion
-
-		#region Methods
-
-		public MRItemManager ()
-		{
-			try
-			{
-				TextAsset itemsList = (TextAsset)Resources.Load("Items");
-				StringBuilder jsonText = new StringBuilder(itemsList.text);
-				JSONObject jsonData = (JSONObject)JSONDecoder.CreateJSONValue(jsonText);
-
-				// parse the weapon data
-				JSONArray weaponsData = (JSONArray)jsonData["weapons"];
-				int count = weaponsData.Count;
-				for (int i = 0; i < count; ++i)
-				{
-					object[] weapons = JSONDecoder.DecodeObjects((JSONObject)weaponsData[i]);
-					if (weapons != null)
-					{
-						foreach (object weapon in weapons)
-						{
-							msItems.Add(((MRWeapon)weapon).Id, (MRWeapon)weapon);
-							msWeapons.Add(((MRWeapon)weapon).Id, (MRWeapon)weapon);
-						}
-					}
-				}
-
-				// parse the armor data
-				JSONArray armorData = (JSONArray)jsonData["armor"];
-				count = armorData.Count;
-				for (int i = 0; i < count; ++i)
-				{
-					object[] armor = JSONDecoder.DecodeObjects((JSONObject)armorData[i]);
-					if (armor != null)
-					{
-						foreach (object piece in armor)
-						{
-							msItems.Add(((MRArmor)piece).Id, (MRArmor)piece);
-							msArmor.Add(((MRArmor)piece).Id, (MRArmor)piece);
-						}
-					}
-				}
-
-				// parse the treasure data
-				JSONArray treasureData = (JSONArray)jsonData["treasure"];
-				count = treasureData.Count;
-				for (int i = 0; i < count; ++i)
-				{
-					object[] treasures = JSONDecoder.DecodeObjects((JSONObject)treasureData[i]);
-					if (treasures != null)
-					{
-						foreach (object treasure in treasures)
-						{
-							msItems.Add(((MRTreasure)treasure).Id, (MRTreasure)treasure);
-							msTreasure.Add(((MRTreasure)treasure).Id, (MRTreasure)treasure);
-						}
-					}
-				}
-
-				// parse the horse data
-				JSONArray horsesData = (JSONArray)jsonData["horses"];
-				count = horsesData.Count;
-				for (int i = 0; i < count; ++i)
-				{
-					object[] horses = JSONDecoder.DecodeObjects((JSONObject)horsesData[i]);
-					if (horses != null)
-					{
-						foreach (object horse in horses)
-						{
-							msItems.Add(((MRHorse)horse).Id, (MRHorse)horse);
-							msHorses.Add(((MRHorse)horse).Id, (MRHorse)horse);
-						}
-					}
-				}
-			}
-			catch (Exception err)
-			{
-				Debug.LogError("Error parsing items: " + err);
-			}
-		}
-
-		/// <summary>
-		/// Removes all items from their current stacks and set their start stack to null.
-		/// </summary>
-		public static void ResetItems()
-		{
-			foreach(MRItem item in msItems.Values)
-			{
-				if (item.Stack != null)
-					item.Stack.RemovePiece(item);
-				item.StartStack = null;
-			}
-		}
-
-		/// <summary>
-		/// Returns the item with a given id.
-		/// </summary>
-		/// <returns>The item.</returns>
-		/// <param name="id">Identifier.</param>
-		public static MRItem GetItem(uint id)
-		{
-			MRItem item;
-			if (msItems.TryGetValue(id, out item))
-				return item;
-			Debug.LogError("Request for unknown item id " + id);
-			return null;
-		}
-
-		/// <summary>
-		/// Returns a named weapon.
-		/// </summary>
-		/// <returns>The weapon, or null if none exists.</returns>
-		/// <param name="name">weapon name. This can be the first unique part of the name.</param>
-		/// <param name="index">optional weapon index, for non-unique weapons. Pass -1 to return any valid weapon.</param>
-		public static MRWeapon GetWeapon(string name, int index)
-		{
-			foreach (MRWeapon weapon in msWeapons.Values)
-			{
-				if (weapon.Name.StartsWith(name) && (index < 0 || weapon.Index == index))
-					return weapon;
-			}
-			return null;
-		}
-
-		/// <summary>
-		/// Returns a named armor.
-		/// </summary>
-		/// <returns>The armor, or null if none exists.</returns>
-		/// <param name="name">armor name. This can be the first unique part of the name.</param>
-		/// <param name="index">optional armor index, for non-unique armor. Pass -1 to return any valid armor.</param>
-		public static MRArmor GetArmor(string name, int index)
-		{
-			foreach (MRArmor armor in msArmor.Values)
-			{
-				if (armor.Name.StartsWith(name) && (index < 0 || armor.Index == index))
-					return armor;
-			}
-			return null;
-		}
-
-		/// <summary>
-		/// Returns a treasure with the given name.
-		/// </summary>
-		/// <returns>The treasure.</returns>
-		/// <param name="name">Name.</param>
-		public static MRTreasure GetTreasure(string name)
-		{
-			foreach (MRTreasure item in msTreasure.Values)
-			{
-				if (item.Name.Equals(name))
-					return item;
-			}
-			return null;
-		}
-
-		#endregion
-
-		#region Members
-
-		private static IDictionary<uint, MRItem> msItems = new Dictionary<uint, MRItem>();
-		private static IDictionary<uint, MRWeapon> msWeapons = new Dictionary<uint, MRWeapon>();
-		private static IDictionary<uint, MRArmor> msArmor = new Dictionary<uint, MRArmor>();
-		private static IDictionary<uint, MRTreasure> msTreasure = new Dictionary<uint, MRTreasure>();
-		private static IDictionary<uint, MRHorse> msHorses = new Dictionary<uint, MRHorse>();
-
-		#endregion
 	}
+
+	public static IDictionary<uint, MRWeapon> Weapons
+	{
+		get{
+			return msWeapons;
+		}
+	}
+
+	public static IDictionary<uint, MRArmor> Armor
+	{
+		get{
+			return msArmor;
+		}
+	}
+
+	public static IDictionary<uint, MRTreasure> Treasure
+	{
+		get{
+			return msTreasure;
+		}
+	}
+
+	public static IDictionary<uint, MRHorse> Horses
+	{
+		get{
+			return msHorses;
+		}
+	}
+
+	#endregion
+
+	#region Methods
+
+	public MRItemManager ()
+	{
+		try
+		{
+			TextAsset itemsList = (TextAsset)Resources.Load("Items");
+			StringBuilder jsonText = new StringBuilder(itemsList.text);
+			JSONObject jsonData = (JSONObject)JSONDecoder.CreateJSONValue(jsonText);
+
+			// parse the weapon data
+			JSONArray weaponsData = (JSONArray)jsonData["weapons"];
+			int count = weaponsData.Count;
+			for (int i = 0; i < count; ++i)
+			{
+				object[] weapons = JSONDecoder.DecodeObjects((JSONObject)weaponsData[i]);
+				if (weapons != null)
+				{
+					foreach (object weapon in weapons)
+					{
+						msItems.Add(((MRWeapon)weapon).Id, (MRWeapon)weapon);
+						msWeapons.Add(((MRWeapon)weapon).Id, (MRWeapon)weapon);
+					}
+				}
+			}
+
+			// parse the armor data
+			JSONArray armorData = (JSONArray)jsonData["armor"];
+			count = armorData.Count;
+			for (int i = 0; i < count; ++i)
+			{
+				object[] armor = JSONDecoder.DecodeObjects((JSONObject)armorData[i]);
+				if (armor != null)
+				{
+					foreach (object piece in armor)
+					{
+						msItems.Add(((MRArmor)piece).Id, (MRArmor)piece);
+						msArmor.Add(((MRArmor)piece).Id, (MRArmor)piece);
+					}
+				}
+			}
+
+			// parse the treasure data
+			JSONArray treasureData = (JSONArray)jsonData["treasure"];
+			count = treasureData.Count;
+			for (int i = 0; i < count; ++i)
+			{
+				object[] treasures = JSONDecoder.DecodeObjects((JSONObject)treasureData[i]);
+				if (treasures != null)
+				{
+					foreach (object treasure in treasures)
+					{
+						msItems.Add(((MRTreasure)treasure).Id, (MRTreasure)treasure);
+						msTreasure.Add(((MRTreasure)treasure).Id, (MRTreasure)treasure);
+					}
+				}
+			}
+
+			// parse the horse data
+			JSONArray horsesData = (JSONArray)jsonData["horses"];
+			count = horsesData.Count;
+			for (int i = 0; i < count; ++i)
+			{
+				object[] horses = JSONDecoder.DecodeObjects((JSONObject)horsesData[i]);
+				if (horses != null)
+				{
+					foreach (object horse in horses)
+					{
+						msItems.Add(((MRHorse)horse).Id, (MRHorse)horse);
+						msHorses.Add(((MRHorse)horse).Id, (MRHorse)horse);
+					}
+				}
+			}
+		}
+		catch (Exception err)
+		{
+			Debug.LogError("Error parsing items: " + err);
+		}
+	}
+
+	/// <summary>
+	/// Removes all items from their current stacks and set their start stack to null.
+	/// </summary>
+	public static void ResetItems()
+	{
+		foreach(MRItem item in msItems.Values)
+		{
+			if (item.Stack != null)
+				item.Stack.RemovePiece(item);
+			item.StartStack = null;
+		}
+	}
+
+	/// <summary>
+	/// Returns the item with a given id.
+	/// </summary>
+	/// <returns>The item.</returns>
+	/// <param name="id">Identifier.</param>
+	public static MRItem GetItem(uint id)
+	{
+		MRItem item;
+		if (msItems.TryGetValue(id, out item))
+			return item;
+		Debug.LogError("Request for unknown item id " + id);
+		return null;
+	}
+
+	/// <summary>
+	/// Returns a named weapon.
+	/// </summary>
+	/// <returns>The weapon, or null if none exists.</returns>
+	/// <param name="name">weapon name. This can be the first unique part of the name.</param>
+	/// <param name="index">optional weapon index, for non-unique weapons. Pass -1 to return any valid weapon.</param>
+	public static MRWeapon GetWeapon(string name, int index)
+	{
+		foreach (MRWeapon weapon in msWeapons.Values)
+		{
+			if (weapon.Name.StartsWith(name) && (index < 0 || weapon.Index == index))
+				return weapon;
+		}
+		return null;
+	}
+
+	/// <summary>
+	/// Returns a named armor.
+	/// </summary>
+	/// <returns>The armor, or null if none exists.</returns>
+	/// <param name="name">armor name. This can be the first unique part of the name.</param>
+	/// <param name="index">optional armor index, for non-unique armor. Pass -1 to return any valid armor.</param>
+	public static MRArmor GetArmor(string name, int index)
+	{
+		foreach (MRArmor armor in msArmor.Values)
+		{
+			if (armor.Name.StartsWith(name) && (index < 0 || armor.Index == index))
+				return armor;
+		}
+		return null;
+	}
+
+	/// <summary>
+	/// Returns a treasure with the given name.
+	/// </summary>
+	/// <returns>The treasure.</returns>
+	/// <param name="name">Name.</param>
+	public static MRTreasure GetTreasure(string name)
+	{
+		foreach (MRTreasure item in msTreasure.Values)
+		{
+			if (item.Name.Equals(name))
+				return item;
+		}
+		return null;
+	}
+
+	#endregion
+
+	#region Members
+
+	private static IDictionary<uint, MRItem> msItems = new Dictionary<uint, MRItem>();
+	private static IDictionary<uint, MRWeapon> msWeapons = new Dictionary<uint, MRWeapon>();
+	private static IDictionary<uint, MRArmor> msArmor = new Dictionary<uint, MRArmor>();
+	private static IDictionary<uint, MRTreasure> msTreasure = new Dictionary<uint, MRTreasure>();
+	private static IDictionary<uint, MRHorse> msHorses = new Dictionary<uint, MRHorse>();
+
+	#endregion
+}
+
 }
 

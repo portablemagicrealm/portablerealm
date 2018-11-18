@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRFatigueCharacterEvent : MRUpdateEvent
 {
 	#region Properties
@@ -101,3 +104,4 @@ public class MRFatigueCharacterEvent : MRUpdateEvent
 	#endregion
 }
 
+}

@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRMonsterChartLocation : MonoBehaviour, MRITouchable
 {
 	#region Properties
@@ -137,6 +140,11 @@ public class MRMonsterChartLocation : MonoBehaviour, MRITouchable
 		return true;
 	}
 
+	public virtual bool OnTouchMove(GameObject touchedObject, float delta_x, float delta_y)
+	{
+		return true;
+	}
+
 	public virtual bool OnButtonActivate(GameObject touchedObject)
 	{
 		return true;
@@ -161,3 +169,4 @@ public class MRMonsterChartLocation : MonoBehaviour, MRITouchable
 	#endregion
 }
 
+}

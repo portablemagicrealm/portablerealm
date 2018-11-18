@@ -26,9 +26,13 @@
 using UnityEngine;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 /// <summary>
 /// Random number generator. Uses Xorshift* from http://en.wikipedia.org/wiki/Xorshift.
 /// </summary>
@@ -93,8 +97,28 @@ public class MRRandom
 	/// <param name="max">Max value.</param>
 	public static int Range(int min, int max)
 	{
-		float r = ((float)(xorshift1024star())) / ((float)(ulong.MaxValue));
-		return min + (int)(r * (max - min));
+		return Range(min, max, false);
+	}
+
+	/// <summary>
+	/// Returns a random integer number between min [inclusive] and max [exclusive].
+	/// </summary>
+	/// <param name="min">Min value.</param>
+	/// <param name="max">Max value.</param>
+	/// <param name="ignoreSequence">Flag to ignore the pregenerated sequence.</param>
+	public static int Range(int min, int max, bool ignoreSequence)
+	{
+		if (!ignoreSequence && mPregeneratedSequence.Count > 0)
+		{
+			int value = mPregeneratedSequence.Dequeue() - 1;
+			Debug.Log("Pregen roll " + value);
+			return value;
+		}
+		else
+		{
+			float r = ((float)(xorshift1024star())) / ((float)(ulong.MaxValue));
+			return min + (int)(r * (max - min));
+		}
 	}
 
 	private static ulong xorshift1024star()
@@ -119,12 +143,24 @@ public class MRRandom
 
 	public static bool Load(JSONObject root)
 	{
-		mSeed = ((JSONNumber)root["seed"]).ULongValue;
-		mRandomizer = ((JSONNumber)root["rnd"]).ULongValue;
-		mIndex = ((JSONNumber)root["index"]).IntValue;
+		if (root["seed"] != null)
+			mSeed = ((JSONNumber)root["seed"]).ULongValue;
+		if (root["rnd"] != null)
+			mRandomizer = ((JSONNumber)root["rnd"]).ULongValue;
+		if (root["index"] != null)
+			mIndex = ((JSONNumber)root["index"]).IntValue;
 		for (int i = 0; i < 16; ++i)
 		{
-			mS[i] = ((JSONNumber)root["s" + i]).ULongValue;
+			if (root["s" + i] != null)
+				mS[i] = ((JSONNumber)root["s" + i]).ULongValue;
+		}
+		if (root["sequence"] != null)
+		{
+			JSONArray sequence = (JSONArray)root["sequence"];
+			for (int i = 0; i < sequence.Count; ++i)
+			{
+				mPregeneratedSequence.Enqueue(((JSONNumber)sequence[i]).IntValue);
+			}
 		}
 		return true;
 	}
@@ -138,6 +174,16 @@ public class MRRandom
 		{
 			root["s" + i] = new JSONNumber(mS[i]);
 		}
+		if (mPregeneratedSequence.Count > 0)
+		{
+			JSONArray sequence = new JSONArray(mPregeneratedSequence.Count);
+			int[] values = mPregeneratedSequence.ToArray();
+			for (int i = 0; i < values.Length; ++i)
+			{
+				sequence[i] = new JSONNumber(values[i]);
+			}
+			root["sequence"] = sequence;
+		}
 	}
 
 	#endregion
@@ -148,7 +194,9 @@ public class MRRandom
 	private static ulong mRandomizer;
 	private static ulong[] mS = new ulong[16];
 	private static int mIndex;
+	private static Queue<int> mPregeneratedSequence = new Queue<int>();
 
 	#endregion
 }
 
+}

@@ -27,6 +27,9 @@ using UnityEngine;
 using System;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public abstract class MRUpdateEvent : IComparable
 {
 	#region Constants
@@ -38,9 +41,11 @@ public abstract class MRUpdateEvent : IComparable
 		CreateCharacterEvent,
 		RollForCurseEvent,
 		UpdateViewEvent,
+		TradeEvent,
 		FatigueCharacterEvent,
 		AlertEvent,
 		SelectChitEvent,
+		SelectSpellEvent,
 		SelectClearingEvent,
 		CombatEvent,
 		MonsterRollEvent,
@@ -90,3 +95,4 @@ public abstract class MRUpdateEvent : IComparable
 	#endregion
 }
 
+}

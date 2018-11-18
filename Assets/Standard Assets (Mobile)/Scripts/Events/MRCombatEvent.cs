@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRCombatEvent : MRUpdateEvent
 {
 	#region Constants
@@ -139,3 +142,4 @@ public class MRCombatEvent : MRUpdateEvent
 	#endregion
 }
 
+}

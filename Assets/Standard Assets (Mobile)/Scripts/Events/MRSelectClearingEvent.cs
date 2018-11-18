@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRSelectClearingEvent : MRUpdateEvent
 {
 	#region Callback delegate
@@ -119,3 +122,4 @@ public class MRSelectClearingEvent : MRUpdateEvent
 	#endregion
 }
 
+}

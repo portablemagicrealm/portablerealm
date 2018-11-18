@@ -26,6 +26,9 @@
 
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRFollowActivity : MRActivity
 {
 	public MRFollowActivity() : base(MRGame.eActivity.Follow)
@@ -38,3 +41,4 @@ public class MRFollowActivity : MRActivity
 	}
 }
 
+}

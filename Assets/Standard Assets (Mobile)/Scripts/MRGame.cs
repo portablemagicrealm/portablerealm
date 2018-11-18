@@ -28,7 +28,11 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using AssemblyCSharp;
+
+namespace PortableRealm
+{
 
 public class MRGame : MonoBehaviour, MRISerializable
 {
@@ -41,7 +45,14 @@ public class MRGame : MonoBehaviour, MRISerializable
 		Single,
 		Double,
 		Held,
+		Move,
 		PinchZoom
+	}
+
+	public enum eGameType
+	{
+		Default,
+		BookOfLearning
 	}
 
 	public enum eGameState
@@ -146,9 +157,18 @@ public class MRGame : MonoBehaviour, MRISerializable
 		Lancers,
 		Order,
 		Patrol,
-		Rouges,
+		Rogues,
 		Soldiers,
 		Woodfolk
+	}
+
+	public enum eRelationship
+	{
+		Enemy,
+		Unfriendly,
+		Neutral,
+		Friendly,
+		Ally
 	}
 
 	public enum eCurses
@@ -179,8 +199,10 @@ public class MRGame : MonoBehaviour, MRISerializable
 		SelectAttack,		// not accessable through view tabs
 		SelectManeuver,		// not accessable through view tabs
 		SelectChit,			// not accessable through view tabs
+		SelectSpell,		// not accessable through view tabs
 		SelectClearing,		// not accessable through view tabs
 		Alert,				// not accessable through view tabs
+		Trade,				// not accessable through view tabs
 	}
 	public const int ViewTabCount = 5;
 
@@ -194,9 +216,76 @@ public class MRGame : MonoBehaviour, MRISerializable
 		Weapon,
 		SmallArmor,
 		LargeArmor,
+		Spell,
 		Item,
 		Dwelling,
 		Treasure
+	}
+
+	public enum eMagicColor
+	{
+		White,
+		Grey,
+		Gold,
+		Purple,
+		Black,
+		Any,
+		None
+	}
+
+	public enum eSpellDuration
+	{
+		Attack,
+		Combat,
+		Day,
+		Fly,
+		Instant,
+		Permanent,
+		Phase,
+		None
+	}
+
+	public enum eSpellTarget
+	{
+		Artifact,
+		Bats,
+		CaveClearing,
+		Character,
+		Characters,
+		Clearing,
+		ControlledMonster,
+		Curse,
+		Demon,
+		Giants,
+		Goblin,
+		Goblins,
+		Hex,
+		HiredLeader,
+		LightCharacter,
+		Monster,
+		Monsters,
+		Native,
+		Natives,
+		NativeGroup,
+		Octopus,
+		Ogre,
+		Ogres,
+		SoundChit,
+		Spell,
+		SpellBook,
+		SpellChitAny,
+		SpellChit1,
+		SpellChit2,
+		SpellChit3,
+		SpellChit4,
+		SpellChit5,
+		SpellChit6,
+		SpellChit7,
+		SpellChit8,
+		Spider,
+		Weapon,
+		WingedDemon,
+		None
 	}
 
 	public static readonly Color tan = new Color(248f / 255f, 207f / 255f, 127f / 255f);
@@ -209,13 +298,37 @@ public class MRGame : MonoBehaviour, MRISerializable
 	public static readonly Color yellowGreen = new Color(208f / 255f, 184f / 255f, 0 / 255f);
 	public static readonly Color lightBlue = new Color(203f / 255f, 223f / 255f, 227f / 255f);
 	public static readonly Color darkBlue = new Color(131f / 255f, 196f / 255f, 214f / 255f);
-	public static readonly Color purple = new Color(198f / 255f, 168f / 255f, 195f / 255f);
+	public static readonly Color lightPurple = new Color(198f / 255f, 168f / 255f, 195f / 255f);
+	public static readonly Color darkPurple = new Color(189f / 255f, 55f / 255f, 181f / 255f);
 	public static readonly Color lightGrey2 = new Color(194f / 255f, 193f / 255f, 192f / 255f);
 	public static readonly Color darkGrey = new Color(164f / 255f, 159f / 255f, 167f / 255f);
 	public static readonly Color pink = new Color(228f / 255f, 177f / 255f, 195f / 255f);
 	public static readonly Color lightGreen = new Color(206f / 255f, 210f / 255f, 114f / 255f);
 	public static readonly Color darkGreen = new Color(146f / 255f, 193f / 255f, 4f / 255f);
 	public static readonly Color white = new Color(255f / 255f, 255f / 255f, 255f / 255f);
+	public static readonly Color black = new Color(0f / 255f, 0f / 255f, 0f / 255f);
+	public static readonly Color almostBlack = new Color(60f / 255f, 60f / 255f, 60f / 255f);
+
+	public static Dictionary<eMagicColor, Color> MagicColorMap = new Dictionary<eMagicColor, Color>()
+	{
+		{eMagicColor.White, white},
+		{eMagicColor.Grey, lightGrey},
+		{eMagicColor.Gold, gold},
+		{eMagicColor.Purple, darkPurple},
+		{eMagicColor.Black, almostBlack},
+		{eMagicColor.None, pink},
+	};
+
+	public static Dictionary<MRGame.eRelationship, String> NativeRelationshipIconMap = new Dictionary<MRGame.eRelationship, String>()
+	{
+		{eRelationship.Enemy, "Textures/enemy"},
+		{eRelationship.Unfriendly, "Textures/unfriendly"},
+		{eRelationship.Neutral, "Textures/neutral"},
+		{eRelationship.Friendly, "Textures/friendly"},
+		{eRelationship.Ally, "Textures/ally"}
+	};
+
+	public const int MAX_LEARNABLE_SPELLS = 14;
 
 	public const float MAP_CAMERA_FAR_SIZE = 5.0f;
 	public const float MAP_CAMERA_NEAR_SIZE = 2.2f;
@@ -235,20 +348,24 @@ public class MRGame : MonoBehaviour, MRISerializable
 	public MRCharacterMat characterMatPrototype;
 	public MRActivityListWidget activityListPrototype;
 	public MRCombatSheet combatSheetPrototype;
+	public MRTradeWindow tradeWindowPrototype;
 	public MRMain mainPrototype;
 	public GameObject characterCounterPrototype;
 	public GameObject mediumMonsterCounterPrototype;
 	public GameObject heavyMonsterCounterPrototype;
 	public GameObject tremendousMonsterCounterPrototype;
+	public GameObject nativeCounterPrototype;
 	public GameObject smallChitPrototype;
 	public GameObject mediumChitPrototype;
 	public GameObject mediumLargeChitPrototype;
 	public GameObject largeChitPrototype;
+	public GameObject actionChitPrototype;
 	public GameObject attentionChitPrototype;
 	public GameObject smallCounterPrototype;
 	public GameObject mediumCounterPrototype;
 	public GameObject largeCounterPrototype;
 	public GameObject treasureCardPrototype;
+	public GameObject spellCardPrototype;
 	public GameObject gamePieceStackPrototype;
 	public MRClock gameClock;
 	public GUISkin skin;
@@ -355,6 +472,13 @@ public class MRGame : MonoBehaviour, MRISerializable
 
 		set{
 			mInCombat = value;
+		}
+	}
+
+	public MRTables Tables
+	{
+		get{
+			return mTables;
 		}
 	}
 
@@ -475,6 +599,13 @@ public class MRGame : MonoBehaviour, MRISerializable
 		}
 	}
 
+	public IList<eMagicColor> WorldMagic
+	{
+		get{
+			return mWorldMagic.AsReadOnly();
+		}
+	}
+
 	#endregion
 
 	#region Methods
@@ -514,6 +645,8 @@ public class MRGame : MonoBehaviour, MRISerializable
 		mInCombat = false;
 		mGameState = eGameState.NoGame;
 
+		mTables = new MRTables();
+
 		// static class initialization
 		MRSiteChit.Init();
 		MRSoundChit.Init();
@@ -529,6 +662,9 @@ public class MRGame : MonoBehaviour, MRISerializable
 		// create the options screen
 		mOptions = (MRMain)Instantiate(mainPrototype);
 		mOptions.transform.parent = transform;
+
+		// create the spells
+		mSpellManager = new MRSpellManager();
 
 		// create all the game objects
 		mItemManager = new MRItemManager();
@@ -660,11 +796,102 @@ public class MRGame : MonoBehaviour, MRISerializable
 		return ((GameObject)Instantiate(gamePieceStackPrototype)).GetComponentInChildren<MRGamePieceStack>();
 	}
 
+	/// <summary>
+	/// Gets a piece id from json data.
+	/// </summary>
+	/// <returns>The piece id.</returns>
+	/// <param name="data">Data.</param>
+	public uint GetPieceId(JSONValue data)
+	{
+		uint id = 0;
+		if (data is JSONNumber)
+		{
+			id = ((JSONNumber)data).UintValue;
+		}
+		else if (data is JSONString)
+		{
+			string name = ((JSONString)data).Value;
+			id = GetPieceId (name);
+		}
+		else
+		{
+			Debug.LogError("GetPieceId unknown json type");
+		}
+		return id;
+	}
+
+	/// <summary>
+	/// Gets a piece id from json data.
+	/// </summary>
+	/// <returns>The piece id.</returns>
+	/// <param name="name">Name.</param>
+	public uint GetPieceId(string name)
+	{
+		uint id = 0;
+		string[] splitData = name.Split(new char[]{','});
+		if (splitData.Length <= 2)
+		{
+			name = splitData[0];
+			int index = 0;
+			if (splitData.Length == 2)
+			{
+				index = int.Parse(splitData[1]);
+			}
+			id = MRUtility.IdForName(name, index);
+		}
+		return id;
+	}
+
+	/// <summary>
+	/// Gets a game piece from json data.
+	/// </summary>
+	/// <returns>The game piece.</returns>
+	/// <param name="data">Data.</param>
+	public MRIGamePiece GetGamePiece(JSONValue data)
+	{
+		MRIGamePiece piece = null;
+		uint id = GetPieceId(data);
+		piece = GetGamePiece(id);
+		if (piece == null)
+		{
+			Debug.LogError("GetGamePiece unknown piece id " + id);
+		}
+		return piece;
+	}
+
+	/// <summary>
+	/// Gets a game piece for a give id.
+	/// </summary>
+	/// <returns>The game piece.</returns>
+	/// <param name="id">Identifier.</param>
 	public MRIGamePiece GetGamePiece(uint id)
 	{
 		MRIGamePiece piece = null;
 		mGamePieces.TryGetValue(id, out piece);
 		return piece;
+	}
+
+	/// <summary>
+	/// Gets a game piece from a name.
+	/// </summary>
+	/// <returns>The game piece.</returns>
+	/// <param name="name">Name.</param>
+	public MRIGamePiece GetGamePiece(string name)
+	{
+		uint id = GetPieceId(name);
+		return GetGamePiece(id);
+	}
+
+	/// <summary>
+	/// Gets a game piece from a name and index.
+	/// </summary>
+	/// <returns>The game piece.</returns>
+	/// <param name="name">Name.</param>
+	/// <param name="index">Index.</param>
+	public MRIGamePiece GetGamePiece(string name, int index)
+	{
+		uint id = MRUtility.IdForName(name, index);
+		return GetGamePiece(id);
 	}
 
 	public void AddGamePiece(MRIGamePiece piece)
@@ -679,6 +906,37 @@ public class MRGame : MonoBehaviour, MRISerializable
 	public void RemoveGamePiece(MRIGamePiece piece)
 	{
 		mGamePieces.Remove(piece.Id);
+	}
+
+	/// <summary>
+	/// Gets a clearing from json data.
+	/// </summary>
+	/// <returns>The game piece.</returns>
+	/// <param name="data">Data.</param>
+	public MRClearing GetClearing(JSONValue data)
+	{
+		MRClearing clearing = null;
+		uint id = 0;
+		if (data is JSONNumber)
+		{
+			id = ((JSONNumber)data).UintValue;
+		}
+		else if (data is JSONString)
+		{
+			string name = ((JSONString)data).Value;
+			id = MRUtility.IdForName(name);
+		}
+		else
+		{
+			Debug.LogError("GetClearing unknown json type");
+			return null;
+		}
+		clearing = GetClearing(id);
+		if (clearing == null)
+		{
+			Debug.LogError("GetClearing unknown id " + id);
+		}
+		return clearing;
 	}
 
 	/// <summary>
@@ -710,6 +968,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 	public void AddClearing(MRClearing clearing)
 	{
 		uint id = clearing.Id;
+		//Debug.Log("Clearing " + clearing.Name + " id = " + id);
 		if (!mClearings.ContainsKey(id))
 			mClearings.Add(id, clearing);
 		else
@@ -863,7 +1122,13 @@ public class MRGame : MonoBehaviour, MRISerializable
 		{
 			++DayOfMonth;
 			if (DayOfMonth <= 28)
+			{
 				TimeOfDay = eTimeOfDay.Birdsong;
+				mWorldMagic.Clear();
+				List<eMagicColor> worldMagic;
+				if (mWorldMagicSupply.TryGetValue(DayOfMonth, out worldMagic))
+					mWorldMagic = worldMagic;
+			}
 			else
 			{
 				// for now we only allow 4-week games
@@ -1082,6 +1347,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 						msIsTouching = true;
 						msLastTouchPos = msTouchPos;
 						msTouchPos = msTouch.position;
+						HandleTouch(eTouchType.Move, msTouchPos.x - msLastTouchPos.x, msTouchPos.y - msLastTouchPos.y);
 						break;
 					case TouchPhase.Ended:
 //						HandleRelease();
@@ -1162,6 +1428,7 @@ public class MRGame : MonoBehaviour, MRISerializable
 						HandleTouch(eTouchType.Held);
 					}
 				}
+				HandleTouch(eTouchType.Move, msTouchPos.x - msLastTouchPos.x, msTouchPos.y - msLastTouchPos.y);
 			}
 			else if (justReleased)
 			{
@@ -1277,8 +1544,19 @@ public class MRGame : MonoBehaviour, MRISerializable
 	/// Determines which widget(s) were touched by a tap/click, and tells them to activate.
 	/// </summary>
 	/// <param name="touchType">Touch type.</param>
-	/// <param name="pinchZoomDelta">Amount to zoom if touch type is pinch zoom</param>
-	private void HandleTouch(eTouchType touchType, float pinchZoomDelta)
+	/// <param name="delta">Position delta for move or zoom</param>
+	private void HandleTouch(eTouchType touchType, float delta)
+	{
+		HandleTouch(touchType, delta, 0);
+	}
+
+	/// <summary>
+	/// Determines which widget(s) were touched by a tap/click, and tells them to activate.
+	/// </summary>
+	/// <param name="touchType">Touch type.</param>
+	/// <param name="delta1">Position delta 1 for move or zoom</param>
+	/// <param name="delta1">Position delta 2 for move or zoom</param>
+	private void HandleTouch(eTouchType touchType, float delta1,  float delta2)
 	{
 //		Debug.Log("MRGame OnTouched enter");
 		// find the object touched
@@ -1333,8 +1611,10 @@ public class MRGame : MonoBehaviour, MRISerializable
 				}
 				else if (touchType == eTouchType.Held)
 					handled = touched[i].touched.OnTouchHeld(touched[i].hitObject);
+				else if (touchType == eTouchType.Move)
+					handled = touched[i].touched.OnTouchMove(touched[i].hitObject, delta1, delta2);
 				else if (touchType == eTouchType.PinchZoom)
-					handled = touched[i].touched.OnPinchZoom(pinchZoomDelta);
+					handled = touched[i].touched.OnPinchZoom(delta1);
 			}
 		}
 	}
@@ -1347,6 +1627,94 @@ public class MRGame : MonoBehaviour, MRISerializable
 		if (mLastTouched != null)
 			mLastTouched.OnReleased(null);
 		mLastTouched = null;
+	}
+
+	/// <summary>
+	/// Loads the world data.
+	/// @todo eventually this will be configurable for a given setup/scenario
+	/// </summary>
+	public void LoadWorldData(string worldName)
+	{
+		try
+		{
+			TextAsset worldData = (TextAsset)Resources.Load(worldName);
+			StringBuilder jsonText = new StringBuilder(worldData.text);
+			JSONObject root = (JSONObject)JSONDecoder.CreateJSONValue(jsonText);
+
+			// read the global magic supplied for various days
+			mWorldMagicSupply.Clear();
+			if (root["magic_supply"] != null)
+			{
+				JSONArray magicSupply = (JSONArray)root["magic_supply"];
+				for (int i = 0; i < magicSupply.Count; ++i)
+				{
+					JSONObject magicData = (JSONObject)magicSupply[i];
+					int day = ((JSONNumber)magicData["day"]).IntValue;
+					JSONArray colorData = (JSONArray)magicData["colors"];
+					List<eMagicColor> colors = new List<eMagicColor>();
+					for (int j = 0; j < colorData.Count; ++j)
+					{
+						colors.Add(((JSONString)colorData[j]).Value.ToColor());
+					}
+					mWorldMagicSupply[day] = colors;
+				}
+			}
+			if (root["map"] != null)
+			{
+				TheMap.Load((JSONObject)root["map"]);
+			}
+			if (root["characters"] != null)
+			{
+				JSONArray characters = (JSONArray)root["characters"];
+				for (int i = 0; i < characters.Count; ++i)
+				{
+					JSONObject characterData = (JSONObject)characters[i];
+					JSONString characterName = (JSONString)characterData["name"];
+					MRCharacter character = CharacterManager.CreateCharacter(characterName.Value);
+					character.Load(characterData);
+					AddCharacter(character);
+				}
+			}
+			if (root["clearings"] != null)
+			{
+				JSONArray clearings = (JSONArray)root["clearings"];
+				for (int i = 0; i < clearings.Count; ++i)
+				{
+					JSONObject clearingData = (JSONObject)clearings[i];
+					MRMap.eTileNames tileId;
+					if (!MRMap.TileNameMap.TryGetValue(((JSONString)clearingData["tile"]).Value, out tileId))
+					{
+						return;
+					}
+					MRTile tile = TheMap.MapTiles[tileId];
+					int clearingNumber = ((JSONNumber)clearingData["number"]).IntValue;
+					uint clearingId = MRUtility.IdForName(tile.FrontSide.ShortName + clearingNumber);
+					MRClearing clearing;
+					if (mClearings.TryGetValue(clearingId, out clearing))
+					{
+						clearing.Load(clearingData);
+					}
+				}
+			}
+			if (root["monsterChart"] != null)
+			{
+				mMonsterChart.Load(root);
+			}
+			if (root["treasures"] != null)
+			{
+				JSONObject treasures = (JSONObject)root["treasures"];
+				mTreasureChart.Load(treasures);
+			}
+			if (root["random"] != null)
+			{
+				JSONObject randomData = (JSONObject)root["random"];
+				MRRandom.Load(randomData);
+			}
+		}
+		catch (Exception err)
+		{
+			Debug.LogError("Error parsing world data:" + err);
+		}
 	}
 
 	/// <summary>
@@ -1498,6 +1866,18 @@ public class MRGame : MonoBehaviour, MRISerializable
 			}
 		}
 
+		if (root["monsterChart"] != null)
+		{
+			mMonsterChart.Load(root);
+		}
+
+		// load the treasure chart
+		if (root["treasures"] != null)
+		{
+			JSONObject treasures = (JSONObject)root["treasures"];
+			mTreasureChart.Load(treasures);
+		}
+
 		if (root["active"] != null)
 			mActiveControllableIndex = ((JSONNumber)root["active"]).IntValue;
 		MRActivityList currentActivityList = ActiveControllable.ActivitiesForDay(MRGame.DayOfMonth);
@@ -1505,6 +1885,12 @@ public class MRGame : MonoBehaviour, MRISerializable
 
 		if (root["monsterRoll"] != null)
 			mMonsterChart.MonsterRoll = ((JSONNumber)root["monsterRoll"]).IntValue;
+
+		mWorldMagic.Clear();
+		List<eMagicColor> worldMagic;
+		if (mWorldMagicSupply.TryGetValue(DayOfMonth, out worldMagic))
+			mWorldMagic = worldMagic;
+		TheGame.Clock.UpdateDate();
 
 #if UNITY_ANDROID || UNITY_IOS
 		Handheld.StopActivityIndicator();
@@ -1592,6 +1978,15 @@ public class MRGame : MonoBehaviour, MRISerializable
 			}
 			root["roads"] = roads;
 		}
+
+		// save the monster data
+		mMonsterChart.Save(root);
+
+		// save the treasure chart
+		JSONObject treasures = new JSONObject();
+		mTreasureChart.Save(treasures);
+		root["treasures"] = treasures;
+
 #if UNITY_ANDROID || UNITY_IOS
 		Handheld.StopActivityIndicator();
 #endif
@@ -1616,13 +2011,15 @@ public class MRGame : MonoBehaviour, MRISerializable
 
 	private MRActivityListWidget mActivityList;
 	private MRClock mClock;
-	private IDictionary<uint, MRClearing> mClearings = new Dictionary<uint, MRClearing>();
-	private IDictionary<uint, MRRoad> mRoads = new Dictionary<uint, MRRoad>();
-	private IDictionary<uint, MRIGamePiece> mGamePieces = new Dictionary<uint, MRIGamePiece>();
+	private Dictionary<uint, MRClearing> mClearings = new Dictionary<uint, MRClearing>();
+	private Dictionary<uint, MRRoad> mRoads = new Dictionary<uint, MRRoad>();
+	private Dictionary<uint, MRIGamePiece> mGamePieces = new Dictionary<uint, MRIGamePiece>();
+	private MRTables mTables;
 	private MRCharacterManager mCharacterManager;
 	private MRCharacterMat mCharacterMat;
 	private MRItemManager mItemManager;
 	private MRDenizenManager mDenizenManager;
+	private MRSpellManager mSpellManager;
 	private MRTreasureChart mTreasureChart;
 	private MRMonsterChart mMonsterChart;
 	private MRCombatSheet mCombatSheet;
@@ -1630,7 +2027,10 @@ public class MRGame : MonoBehaviour, MRISerializable
 	private MRGamePieceStack mInspectionStack;
 	private MRCombatManager mCombatManager;
 
-	private IList<MRIControllable> mControllables = new List<MRIControllable>();
+	private Dictionary<int, List<eMagicColor>> mWorldMagicSupply = new Dictionary<int, List<eMagicColor>>();
+	private List<eMagicColor> mWorldMagic = new List<eMagicColor>();
+
+	private List<MRIControllable> mControllables = new List<MRIControllable>();
 	private int mActiveControllableIndex;
 	private bool mClearingSelectedThisFrame;
 	private bool mTileSelectedThisFrame;
@@ -1658,3 +2058,4 @@ public class MRGame : MonoBehaviour, MRISerializable
 	#endregion
 }
 
+}

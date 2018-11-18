@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRCharacterScoreDisplay : MRTabItems
 {
 	#region Properties
@@ -145,3 +148,4 @@ public class MRCharacterScoreDisplay : MRTabItems
 	#endregion
 }
 
+}

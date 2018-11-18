@@ -27,6 +27,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRClearingSelector : MonoBehaviour
 {
 	#region Properties
@@ -157,3 +160,4 @@ public class MRClearingSelector : MonoBehaviour
 	#endregion
 }
 
+}

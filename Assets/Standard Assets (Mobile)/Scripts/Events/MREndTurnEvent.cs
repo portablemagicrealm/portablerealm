@@ -27,6 +27,9 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+namespace PortableRealm
+{
+
 public class MREndTurnEvent : MRUpdateEvent
 {
 	#region Properties
@@ -91,6 +94,7 @@ public class MREndTurnEvent : MRUpdateEvent
 				}
 			}
 
+			// check for prowling monsters
 			ArrayList chits = new ArrayList();
 			foreach (MRMapChit chit in currentTile.MapChits)
 			{
@@ -101,7 +105,7 @@ public class MREndTurnEvent : MRUpdateEvent
 			{
 				if (activeControllable.ActivatesChit(chit) && !chit.SummonedMonsters)
 				{
-					IList<MRDenizen> summoned = MRGame.TheGame.MonsterChart.GetSummonedDenizens(chit, warningType);
+					IList<MRMonster> summoned = MRGame.TheGame.MonsterChart.GetSummonedMonsters(chit, warningType);
 					if (summoned.Count > 0)
 					{
 						chit.SummonedMonsters = true;
@@ -120,11 +124,11 @@ public class MREndTurnEvent : MRUpdateEvent
 						}
 						if (summonClearing != null && summonClearing is MRClearing)
 						{
-							foreach (MRDenizen denizen in summoned)
+							foreach (MRMonster denizen in summoned)
 							{
 								Debug.Log("Chit " + chit.LongName + " summons " + denizen.Name);
 								denizen.Location = summonClearing;
-								if (denizen is MRMonster && currentClearing == summonClearing && !activeControllable.Hidden)
+								if (currentClearing == summonClearing && !activeControllable.Hidden)
 								{
 									// blocked
 									if (!activeControllable.Blocked)
@@ -144,6 +148,25 @@ public class MREndTurnEvent : MRUpdateEvent
 					}
 				}
 			}
+
+			// check for prowling natives
+			foreach (MRIGamePiece piece in currentClearing.Pieces.Pieces)
+			{
+				if (piece is MRDwelling)
+				{
+					MRDwelling dwelling = (MRDwelling)piece;
+					IList<MRNative> summoned = MRGame.TheGame.MonsterChart.GetSummonedNatives(dwelling);
+					if (summoned.Count > 0)
+					{
+						foreach (MRNative denizen in summoned)
+						{
+							denizen.Location = currentClearing;
+						}
+						currentClearing.Pieces.SortBySize();
+					}
+					break;
+				}
+			}
 		}
 		MRGame.TheGame.RemoveUpdateEvent(this);
 		return true;
@@ -152,3 +175,4 @@ public class MREndTurnEvent : MRUpdateEvent
 	#endregion
 }
 
+}

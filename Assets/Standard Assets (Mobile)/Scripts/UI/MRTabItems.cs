@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRTabItems : MonoBehaviour
 {
 	#region Properties
@@ -45,7 +48,7 @@ public class MRTabItems : MonoBehaviour
 				Renderer[] renderers = gameObject.GetComponentsInChildren<Renderer>();
 				for (int i = 0; i < renderers.Length; ++i)
 					renderers[i].enabled = true;
-				MonoBehaviour[] scripts = gameObject.GetComponentsInChildren<MonoBehaviour>();
+				Behaviour[] scripts = gameObject.GetComponentsInChildren<Behaviour>();
 				for (int i = 0; i < scripts.Length; ++i)
 					scripts[i].enabled = true;
 			}
@@ -55,7 +58,7 @@ public class MRTabItems : MonoBehaviour
 				Renderer[] renderers = gameObject.GetComponentsInChildren<Renderer>();
 				for (int i = 0; i < renderers.Length; ++i)
 					renderers[i].enabled = false;
-				MonoBehaviour[] scripts = gameObject.GetComponentsInChildren<MonoBehaviour>();
+				Behaviour[] scripts = gameObject.GetComponentsInChildren<Behaviour>();
 				for (int i = 0; i < scripts.Length; ++i)
 					scripts[i].enabled = false;
 			}
@@ -97,3 +100,4 @@ public class MRTabItems : MonoBehaviour
 	#endregion
 }
 
+}

@@ -28,6 +28,9 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+namespace PortableRealm
+{
+	
 public class MRSearchActivity : MRActivity
 {
 	#region Constants
@@ -58,6 +61,7 @@ public class MRSearchActivity : MRActivity
 		SelectCharacterLootDestination,
 		SelectDenizenLootDestination,
 		ShowTwitDiscovered,
+		ShowMessage,
 		Done
 	}
 
@@ -468,7 +472,6 @@ public class MRSearchActivity : MRActivity
 				case eSearchTable.EnchantedMeadow:
 					RollForLootEnchantedMeadow();
 					break;
-
 			}
 		}
 		else if (mState == eState.SelectedLocateRoll)
@@ -499,6 +502,7 @@ public class MRSearchActivity : MRActivity
 		if (roll > 0)
 		{
 			Debug.Log("Search Locate Table roll = " + roll);
+			mState = eState.ShowMessage;
 			switch (roll)
 			{
 				case 1:	// choice
@@ -506,21 +510,34 @@ public class MRSearchActivity : MRActivity
 					ShowSelectLocateResult();
 					break;
 				case 2:	// passages and clues
-					FindPassages();
-					FindClues();
-					Executed = true;
+					MRMainUI.TheUI.DisplayMessageDialog("Found Passages and Clues", "Locate Result", delegate (int buttonId) 
+						{
+							FindPassages();
+							FindClues();
+							Executed = true;		
+						});
 					break;
 				case 3:	// passages
-					FindPassages();
-					Executed = true;
+					MRMainUI.TheUI.DisplayMessageDialog("Found Passages", "Locate Result", delegate (int buttonId) 
+						{
+							FindPassages();
+							Executed = true;		
+						});
 					break;
 				case 4:	// discover chits
-					FindChits();
-					Executed = true;
+					MRMainUI.TheUI.DisplayMessageDialog("Discovered Chits", "Locate Result", delegate (int buttonId) 
+						{
+							FindChits();
+							Executed = true;		
+						});
 					break;
 				case 5:	// nothing
 				case 6:	// nothing
-					Executed = true;
+				default:
+					MRMainUI.TheUI.DisplayMessageDialog("Found nothing", "Locate Result", delegate (int buttonId) 
+						{
+							Executed = true;		
+						});
 					break;
 			}
 		}
@@ -861,6 +878,7 @@ public class MRSearchActivity : MRActivity
 		if (roll > 0)
 		{
 			Debug.Log("Search Peer Table roll = " + roll);
+			mState = eState.ShowMessage;
 			switch (roll)
 			{
 				case 1:	// choice
@@ -868,25 +886,41 @@ public class MRSearchActivity : MRActivity
 					//mState = eState.SelectPeerResult;
 					break;
 				case 2:	// clues and paths
-					FindClues();
-					FindPaths();
-					Executed = true;
+					MRMainUI.TheUI.DisplayMessageDialog("Found Clues and Paths", "Peer Result", delegate (int buttonId) 
+						{
+							FindClues();
+							FindPaths();
+							Executed = true;
+						});
 					break;
 				case 3:	// hidden enemies and paths
-					FindHiddenEnemies();
-					FindPaths();
-					Executed = true;
+					MRMainUI.TheUI.DisplayMessageDialog("Found Hidden Enemies and Paths", "Peer Result", delegate (int buttonId) 
+						{
+							FindHiddenEnemies();
+							FindPaths();
+							Executed = true;
+						});
 					break;
 				case 4:	// hidden enemies
-					FindHiddenEnemies();
-					Executed = true;
+					MRMainUI.TheUI.DisplayMessageDialog("Found Hidden Enemies", "Peer Result", delegate (int buttonId) 
+						{
+							FindHiddenEnemies();
+							Executed = true;
+						});
 					break;
 				case 5:	// clues
-					FindClues();
-					Executed = true;
+					MRMainUI.TheUI.DisplayMessageDialog("Found Clues", "Peer Result", delegate (int buttonId) 
+						{
+							FindClues();
+							Executed = true;
+						});
 					break;
 				case 6:	// nothing
-					Executed = true;
+				default:
+					MRMainUI.TheUI.DisplayMessageDialog("Found nothing", "Peer Result", delegate (int buttonId) 
+						{
+							Executed = true;
+						});
 					break;
 			}
 		}
@@ -1037,3 +1071,4 @@ public class MRSearchActivity : MRActivity
 	#endregion
 }
 
+}

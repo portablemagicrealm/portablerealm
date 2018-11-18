@@ -27,6 +27,9 @@ using UnityEngine;
 using System.Collections;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRInitGameTimeEvent : MRUpdateEvent
 {
 	#region Properties
@@ -102,3 +105,4 @@ public class MRInitGameTimeEvent : MRUpdateEvent
 	#endregion
 }
 
+}

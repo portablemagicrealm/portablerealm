@@ -28,6 +28,9 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+namespace PortableRealm
+{
+	
 // Interface for anything that has the potential to take activities (player characters, natives, monsters)
 public interface MRIControllable : MRIGamePiece
 {
@@ -251,3 +254,4 @@ public interface MRIControllable : MRIGamePiece
 	#endregion
 }
 
+}

@@ -28,6 +28,9 @@ using System.Collections;
 using System.Collections.Generic;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+
 /// <summary>
 /// A stack of pieces. Responsible for setting the pieces positions and layer.
 /// </summary>
@@ -266,7 +269,12 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable, MRITouchable
 		return true;
 	}
 
-	public virtual bool OnButtonActivate(GameObject touchedObject)
+	public virtual bool OnTouchMove(GameObject touchedObject, float delta_x, float delta_y)
+	{
+		return true;
+	}
+
+	public bool OnButtonActivate(GameObject touchedObject)
 	{
 		return true;
 	}
@@ -489,16 +497,10 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable, MRITouchable
 		JSONArray pieces = (JSONArray)root["pieces"];
 		for (int i = 0; i < pieces.Count; ++i)
 		{
-			uint id = ((JSONNumber)pieces[i]).UintValue;
-			MRIGamePiece piece = MRGame.TheGame.GetGamePiece(id);
+			MRIGamePiece piece = MRGame.TheGame.GetGamePiece(pieces[i]);
 			if (piece != null)
 			{
 				AddPieceToBottom(piece);
-			}
-			else
-			{
-				Debug.LogError("Game piece stack no piece for id " + id);
-				return false;
 			}
 		}
 
@@ -537,3 +539,4 @@ public class MRGamePieceStack : MonoBehaviour, MRISerializable, MRITouchable
 	#endregion
 }
 
+}

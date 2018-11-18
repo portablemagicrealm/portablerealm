@@ -27,6 +27,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MREdge : MonoBehaviour
 {
 	#region Properties
@@ -136,3 +139,4 @@ public class MREdge : MonoBehaviour
 	#endregion
 }
 
+}

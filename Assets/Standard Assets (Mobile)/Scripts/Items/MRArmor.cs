@@ -28,8 +28,13 @@ using System;
 using System.Collections;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRArmor : MRItem
 {
+	#region Constants
+
 	public enum eType
 	{
 		Shield,
@@ -44,6 +49,8 @@ public class MRArmor : MRItem
 		Damaged,
 		Destroyed
 	}
+
+	#endregion
 
 	#region Properties
 
@@ -79,7 +86,7 @@ public class MRArmor : MRItem
 		}
 	}
 
-	public int CurrentPrice
+	public override int CurrentPrice
 	{
 		get{
 			int price = BasePrice;
@@ -98,7 +105,7 @@ public class MRArmor : MRItem
 		}
 	}
 
-	public Nullable<MRNative.eGroup> NativeOwner
+	public Nullable<MRGame.eNatives> NativeOwner
 	{
 		get{
 			return mNativeOwner;
@@ -203,8 +210,9 @@ public class MRArmor : MRItem
 	private eState mState;
 	private int mDamagedPrice;
 	private int mDestroyedPrice;
-	private Nullable<MRNative.eGroup> mNativeOwner;
+	private Nullable<MRGame.eNatives> mNativeOwner;
 
 	#endregion
 }
 
+}

@@ -29,105 +29,109 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using AssemblyCSharp;
 
-namespace AssemblyCSharp
+namespace PortableRealm
 {
-	public class MRCharacterManager
+
+public class MRCharacterManager
+{
+	#region constants
+
+	private static readonly IDictionary<MRGame.eCharacters, string> CharacterMap = new Dictionary<MRGame.eCharacters, string>
 	{
-		#region constants
+		{MRGame.eCharacters.Amazon, "amazon"},
+		{MRGame.eCharacters.Berserker, "berserker"},
+		{MRGame.eCharacters.BlackKnight, "black knight"},
+		{MRGame.eCharacters.Captain, "captain"},
+		{MRGame.eCharacters.Druid, "druid"},
+		{MRGame.eCharacters.Dwarf, "dwarf"},
+		{MRGame.eCharacters.Elf, "elf"},
+		{MRGame.eCharacters.Magician, "magician"},
+		{MRGame.eCharacters.Pilgrim, "pilgrim"},
+		{MRGame.eCharacters.Sorceror, "sorceror"},
+		{MRGame.eCharacters.Swordsman, "swordsman"},
+		{MRGame.eCharacters.WhiteKnight, "white knight"},
+		{MRGame.eCharacters.Witch, "witch"},
+		{MRGame.eCharacters.WitchKing, "witch king"},
+		{MRGame.eCharacters.Wizard, "wizard"},
+		{MRGame.eCharacters.WoodsGirl, "woods girl"}
+	};
 
-		private static readonly IDictionary<MRGame.eCharacters, string> CharacterMap = new Dictionary<MRGame.eCharacters, string>
+	#endregion
+
+	#region Methods
+
+	public MRCharacterManager()
+	{
+		try
 		{
-			{MRGame.eCharacters.Amazon, "amazon"},
-			{MRGame.eCharacters.Berserker, "berserker"},
-			{MRGame.eCharacters.BlackKnight, "black knight"},
-			{MRGame.eCharacters.Captain, "captain"},
-			{MRGame.eCharacters.Druid, "druid"},
-			{MRGame.eCharacters.Dwarf, "dwarf"},
-			{MRGame.eCharacters.Elf, "elf"},
-			{MRGame.eCharacters.Magician, "magician"},
-			{MRGame.eCharacters.Pilgrim, "pilgrim"},
-			{MRGame.eCharacters.Sorceror, "sorceror"},
-			{MRGame.eCharacters.Swordsman, "swordsman"},
-			{MRGame.eCharacters.WhiteKnight, "white knight"},
-			{MRGame.eCharacters.Witch, "witch"},
-			{MRGame.eCharacters.WitchKing, "witch king"},
-			{MRGame.eCharacters.Wizard, "wizard"},
-			{MRGame.eCharacters.WoodsGirl, "woods girl"}
-		};
+			TextAsset charactersList = (TextAsset)Resources.Load("characters");
+			StringBuilder jsonText = new StringBuilder(charactersList.text);
+			JSONObject jsonData = (JSONObject)JSONDecoder.CreateJSONValue(jsonText);
 
-		#endregion
-
-		#region Methods
-
-		public MRCharacterManager()
-		{
-			try
+			JSONArray charactersData = (JSONArray)jsonData["characters"];
+			int count = charactersData.Count;
+			for (int i = 0; i < count; ++i)
 			{
-				TextAsset charactersList = (TextAsset)Resources.Load("characters");
-				StringBuilder jsonText = new StringBuilder(charactersList.text);
-				JSONObject jsonData = (JSONObject)JSONDecoder.CreateJSONValue(jsonText);
-
-				JSONArray charactersData = (JSONArray)jsonData["characters"];
-				int count = charactersData.Count;
-				for (int i = 0; i < count; ++i)
-				{
-					JSONObject characterData = (JSONObject)charactersData[i];
-					String characterName = ((JSONString)characterData["name"]).Value;
-					mCharactersData.Add(characterName.ToLower(), characterData);
-				}
-			}
-			catch (Exception err)
-			{
-				Debug.LogError("Error parsing character data:" + err);
+				JSONObject characterData = (JSONObject)charactersData[i];
+				String characterName = ((JSONString)characterData["name"]).Value;
+				mCharactersData.Add(characterName.ToLower(), characterData);
 			}
 		}
-
-		public MRCharacter CreateCharacter(MRGame.eCharacters characterId)
+		catch (Exception err)
 		{
-			return CreateCharacter(CharacterMap[characterId]);
+			Debug.LogError("Error parsing character data:" + err);
 		}
-
-		public MRCharacter CreateCharacter(string name)
-		{
-			MRCharacter character = null;
-			try
-			{
-				JSONObject characterData;
-				if (!mCharactersData.TryGetValue(name.ToLower(), out characterData))
-				{
-					Debug.LogError("No character data for " + name);
-					return null;
-				}
-
-				string className = ((JSONString)characterData["class"]).Value;
-				Type t = Type.GetType(className);
-				if (t == null)
-				{
-					Debug.LogError("Unable to find character class " + className);
-					return null;
-				}
-				ConstructorInfo cinfo = t.GetConstructor(new Type[] {typeof(JSONObject), typeof(int)});
-				if (cinfo == null)
-				{
-					Debug.LogError("Unable to construct character class " + className);
-					return null;
-				}
-				character = (MRCharacter)cinfo.Invoke(new object[] {characterData, 0});
-			}
-			catch (Exception err)
-			{
-				Debug.LogError(err.ToString());
-			}
-			return character;
-		}
-
-		#endregion
-
-		#region Members
-
-		private IDictionary<string, JSONObject> mCharactersData = new Dictionary<string, JSONObject>();
-
-		#endregion
 	}
+
+	public MRCharacter CreateCharacter(MRGame.eCharacters characterId)
+	{
+		return CreateCharacter(CharacterMap[characterId]);
+	}
+
+	public MRCharacter CreateCharacter(string name)
+	{
+		MRCharacter character = null;
+		try
+		{
+			JSONObject characterData;
+			if (!mCharactersData.TryGetValue(name.ToLower(), out characterData))
+			{
+				Debug.LogError("No character data for " + name);
+				return null;
+			}
+
+			string className = ((JSONString)characterData["class"]).Value;
+			className = "PortableRealm." + className;
+			Type t = Type.GetType(className);
+			if (t == null)
+			{
+				Debug.LogError("Unable to find character class " + className);
+				return null;
+			}
+			ConstructorInfo cinfo = t.GetConstructor(new Type[] {typeof(JSONObject), typeof(int)});
+			if (cinfo == null)
+			{
+				Debug.LogError("Unable to construct character class " + className);
+				return null;
+			}
+			character = (MRCharacter)cinfo.Invoke(new object[] {characterData, 0});
+		}
+		catch (Exception err)
+		{
+			Debug.LogError(err.ToString());
+		}
+		return character;
+	}
+
+	#endregion
+
+	#region Members
+
+	private IDictionary<string, JSONObject> mCharactersData = new Dictionary<string, JSONObject>();
+
+	#endregion
+}
+
 }

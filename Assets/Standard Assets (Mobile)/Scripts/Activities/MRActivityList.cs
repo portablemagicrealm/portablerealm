@@ -28,6 +28,9 @@ using System.Collections;
 using System.Collections.Generic;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRActivityList : MRISerializable
 {
 	#region Properties
@@ -117,4 +120,6 @@ public class MRActivityList : MRISerializable
 	private MRIControllable mOwner;
 
 	#endregion
+}
+
 }

@@ -28,6 +28,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+namespace PortableRealm
+{
+	
 public class MRCharacterMat : MonoBehaviour
 {
 	#region Properties
@@ -36,7 +39,7 @@ public class MRCharacterMat : MonoBehaviour
 
 	public MRTabGroup tabs;
 	public MRCharacterItemsDisplay itemsDisplay;
-	public MRTabItems spellsDisplay;
+	public MRCharacterSpellsDisplay spellsDisplay;
 	public MRCharacterScoreDisplay scoreDisplay;
 
 	public Camera CharacterMatCamera
@@ -87,6 +90,7 @@ public class MRCharacterMat : MonoBehaviour
 
 		itemsDisplay.Parent = this;
 		scoreDisplay.Parent = this;
+		spellsDisplay.Parent = this;
 	}
 
 	// Update is called once per frame
@@ -103,7 +107,15 @@ public class MRCharacterMat : MonoBehaviour
 		    MRGame.TheGame.CurrentView == MRGame.eViews.Alert)
 		{
 			// force the selection of the items tab
+			tabs.Enabled = true;
 			tabs.SelectedTab = 0;
+			tabs.Enabled = false;
+		}
+		else if (MRGame.TheGame.CurrentView == MRGame.eViews.SelectSpell)
+		{
+			// force the selection of the spells tab
+			tabs.Enabled = true;
+			tabs.SelectedTab = 1;
 			tabs.Enabled = false;
 		}
 		else
@@ -122,11 +134,4 @@ public class MRCharacterMat : MonoBehaviour
 	#endregion
 }
 
-
-
-
-
-
-
-
-
+}

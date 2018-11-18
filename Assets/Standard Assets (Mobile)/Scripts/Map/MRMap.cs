@@ -31,6 +31,9 @@ using System.Collections.Generic;
 using System.Text;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRMap : MonoBehaviour, MRISerializable
 {
 	#region Constants
@@ -58,6 +61,30 @@ public class MRMap : MonoBehaviour, MRISerializable
 		pinewoods,
 		ruins,
 	}
+
+	public static Dictionary<string, eTileNames> TileNameMap = new Dictionary<string, eTileNames>() 
+	{
+		{"av", eTileNames.awfulvalley},
+		{"bv", eTileNames.badvalley},
+		{"bo", eTileNames.borderland},
+		{"cn", eTileNames.cavern},
+		{"cs", eTileNames.caves},
+		{"cl", eTileNames.cliff},
+		{"cr", eTileNames.crag},
+		{"cv", eTileNames.curstvalley},
+		{"dv", eTileNames.darkvalley},
+		{"dw", eTileNames.deepwoods},
+		{"ev", eTileNames.evilvalley},
+		{"hp", eTileNames.highpass},
+		{"le", eTileNames.ledges},
+		{"lw", eTileNames.lindenwoods},
+		{"mw", eTileNames.maplewoods},
+		{"mo", eTileNames.mountain},
+		{"nw", eTileNames.nutwoods},
+		{"ow", eTileNames.oakwoods},
+		{"pw", eTileNames.pinewoods},
+		{"ru", eTileNames.ruins}
+	};
 
 	public static readonly MRUtility.IntVector2[] EvenTileOffsets = {
 		new MRUtility.IntVector2(0, 1),
@@ -164,13 +191,6 @@ public class MRMap : MonoBehaviour, MRISerializable
 		get
 		{
 			return mRoads;
-		}
-	}
-
-	public MRClearing GhostStartClearing
-	{
-		get {
-			return mGhostStartClearing;
 		}
 	}
 
@@ -629,22 +649,18 @@ public class MRMap : MonoBehaviour, MRISerializable
 					clearing = tile.FrontSide.GetClearing(4);
 				if (clearing != null)
 				{
+					// add any denizens that start at the chit location
+					IList<MRDenizen> denizens = MRGame.TheGame.MonsterChart.GetOnBoardDenizens(chit, tile.type, clearing);
+					foreach (MRDenizen denizen in denizens)
+					{
+						denizen.Location = clearing;
+					}
 					if (chit.Substitute != MRDwelling.eDwelling.Ghosts)
 					{
 						MRDwelling dwelling = MRDwelling.Create();
 						dwelling.Parent = clearing.gameObject.transform;
 						dwelling.Type = chit.Substitute;
 						clearing.AddPieceToBottom(dwelling);
-					}
-					else
-					{
-						mGhostStartClearing = clearing;
-						for (int i = 0; i < 2; ++i)
-						{
-							MRMonster ghost = MRDenizenManager.GetMonster("ghost", i);
-							if (ghost != null)
-								ghost.Location = clearing;
-						}
 					}
 					mDwellings[chit.Substitute] = clearing;
 				}
@@ -768,6 +784,7 @@ public class MRMap : MonoBehaviour, MRISerializable
 		tile.Facing = facing;
 		tile.Coordinate = coordinate;
 
+		// make sure there are at least 2 tiles next to where we want to place the tile
 		int matches = 0;
 		MRUtility.IntVector2[] adjacentCoordinates = tile.AdjacentCoordinates();
 		for (int i = 0; i < adjacentCoordinates.Length; ++i)
@@ -788,6 +805,7 @@ public class MRMap : MonoBehaviour, MRISerializable
 		}
 		if (matches >= 2)
 		{
+			// pace the tile and connect it to its adjacent tiles
 			for (int i = 0; i < adjacentCoordinates.Length; ++i)
 			{
 				MRTile adjacentTile = TileForCoordinate(adjacentCoordinates[i]);
@@ -1010,7 +1028,19 @@ public class MRMap : MonoBehaviour, MRISerializable
 		for (int i = 0; i < tiles.Count; ++i)
 		{
 			JSONObject tileData = (JSONObject)tiles[i];
-			int tileId = ((JSONNumber)tileData["id"]).IntValue;
+			int tileId = -1;
+			if (tileData["id"] is JSONNumber)
+				tileId = ((JSONNumber)tileData["id"]).IntValue;
+			else if (tileData["id"] is JSONString)
+			{
+				eTileNames temp;
+				if (!TileNameMap.TryGetValue(((JSONString)tileData["id"]).Value, out temp))
+				{
+					Debug.LogError("MRMap.Load: invalid tile id " + ((JSONString)tileData["id"]).Value);
+					return false;
+				}
+				tileId = (int)temp;
+			}
 			MRTile tile = this[(eTileNames)tileId];
 			if (tile != null)
 			{
@@ -1022,6 +1052,21 @@ public class MRMap : MonoBehaviour, MRISerializable
 				Debug.LogError("MRMap.Load: no tile for id " + tileId);
 			}
 		}
+
+		// remove tiles not loaded
+		List<eTileNames> toRemove = new List<eTileNames>();
+		foreach (MRTile tile in mMapTiles.Values)
+		{
+			if (!tile.Loaded)
+				toRemove.Add(tile.Id);
+		}
+		foreach (var key in toRemove)
+		{
+			MRTile tile = mMapTiles[key];
+			mMapTiles.Remove(key);
+			Destroy(tile.gameObject);
+		}
+
 		// connect all the tile roads
 		foreach (MRTile tile in mMapTiles.Values)
 		{
@@ -1063,7 +1108,6 @@ public class MRMap : MonoBehaviour, MRISerializable
 	private Camera mMapCamera;
 	private bool mMapZoomed;
 	private bool mMoveStarted;
-	private MRClearing mGhostStartClearing;
 	private IDictionary<eTileNames, MRTile> mTilePool = new Dictionary<eTileNames, MRTile>();
 	private IDictionary<eTileNames, MRTile> mMapTiles = new Dictionary<eTileNames, MRTile>();
 	private IDictionary<string, MRRoad> mRoads = new Dictionary<string, MRRoad>();
@@ -1073,4 +1117,6 @@ public class MRMap : MonoBehaviour, MRISerializable
 	private IDictionary<MRMapChit.eMapChitType, IList<MRMapChit>> mMapChitsByType = new Dictionary<MRMapChit.eMapChitType, IList<MRMapChit>>();
 
 	#endregion
+}
+
 }

@@ -26,15 +26,40 @@
 
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRHireActivity : MRActivity
 {
+	#region Methods
+
 	public MRHireActivity() : base(MRGame.eActivity.Hire)
 	{
 	}
 
 	protected override void InternalUpdate()
 	{
-		Executed = true;
+		// do a fake die roll for the moment
+		if (mDiePool == null)
+		{
+			mDiePool = Owner.DiePool(MRGame.eRollTypes.MeetingHire);
+			mDiePool.RollDice();
+		}
+		if (mDiePool.RollReady)
+		{
+			MRMainUI.TheUI.DisplayDieRollResult(mDiePool);
+			mDiePool = null;
+			Executed = true;
+		}
 	}
+
+	#endregion
+
+	#region Members
+
+	private MRDiePool mDiePool;
+
+	#endregion
 }
 
+}

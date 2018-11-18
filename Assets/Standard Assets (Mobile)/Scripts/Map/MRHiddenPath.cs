@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRHiddenPath : MonoBehaviour
 {
 	#region Properties
@@ -59,3 +62,4 @@ public class MRHiddenPath : MonoBehaviour
 	#endregion
 }
 
+}

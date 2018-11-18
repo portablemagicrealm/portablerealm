@@ -29,6 +29,9 @@ using System.Collections;
 using System.Collections.Generic;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRCharacterScore : MRISerializable
 {
 	#region Constants
@@ -424,3 +427,4 @@ public class MRCharacterScore : MRISerializable
 	#endregion
 }
 
+}

@@ -28,6 +28,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+namespace PortableRealm
+{
+	
 public class MRCombatManager
 {
 	#region Constants
@@ -304,6 +307,13 @@ public class MRCombatManager
 		}
 	}
 
+	public MRSpell TargetingSpell
+	{
+		get{
+			return mTargetingSpell;
+		}
+	}
+
 	#endregion
 	
 	#region Methods
@@ -345,24 +355,23 @@ public class MRCombatManager
 		{
 			// this will happen after the character has fatigued their chits (fatigue event takes precidence over combat),
 			// so go to the next character/phase
-			EndPhase();
+			RunPhase();
 		}
 
 		return true;
 	}
 
 	/// <summary>
-	/// End the current combat phase;
+	/// Executes the current combat phase.
 	/// </summary>
-	public void EndPhase()
+	public void RunPhase()
 	{
-		Debug.Log("Combat EndPhase " + mCombatPhase);
+		Debug.Log("Combat RunPhase " + mCombatPhase);
 
 		// run combat phases that need to be executed by each character/denizen at a time
 		switch (mCombatPhase)
 		{
 			case eCombatPhase.Lure:
-			case eCombatPhase.SelectTarget:
 				// characters and controlled denizens can do these
 				++mCurrentCombatantIndex;
 				while (mCurrentCombatantIndex < mCombatants.Count)
@@ -370,6 +379,30 @@ public class MRCombatManager
 					MRControllable combatant = CurrentCombatant;
 					if (combatant is MRCharacter)
 						return;
+					else if (((MRDenizen)combatant).IsControlled)
+						return;
+					++mCurrentCombatantIndex;
+				}
+				break;
+			case eCombatPhase.SelectTarget:
+				// characters and controlled denizens can do these
+				mTargetingSpell = null;
+				++mCurrentCombatantIndex;
+				if (mCurrentCombatantIndex == 0)
+				{
+					FlipNativeHorses();
+					AssignUncontrolledTargets();
+				}
+				while (mCurrentCombatantIndex < mCombatants.Count)
+				{
+					MRControllable combatant = CurrentCombatant;
+					if (combatant is MRCharacter)
+					{
+						// if the character is casting a spell, targeting works differently
+						if (((MRCharacter)combatant).CastingSpell)
+							AssignSpellTargets();
+						return;
+					}
 					else if (((MRDenizen)combatant).IsControlled)
 						return;
 					++mCurrentCombatantIndex;
@@ -389,6 +422,9 @@ public class MRCombatManager
 					++mCurrentCombatantIndex;
 				}
 				break;
+			case eCombatPhase.ActivateSpells:
+				ActivateNextSpell();
+				return;
 			case eCombatPhase.SelectAttackAndManeuver:
 				// characters can do these
 				++mCurrentCombatantIndex;
@@ -396,7 +432,11 @@ public class MRCombatManager
 				{
 					MRControllable combatant = CurrentCombatant;
 					if (combatant is MRCharacter)
-						return;
+					{
+						// if the chararacter cast a spell, skip them
+						if (!((MRCharacter)combatant).CastingSpell)
+							return;
+					}
 					++mCurrentCombatantIndex;
 				}
 				break;
@@ -441,7 +481,17 @@ public class MRCombatManager
 				break;
 		}
 
-		// update the phase
+		EndPhase();
+	}
+
+	/// <summary>
+	/// End the current combat phase.
+	/// </summary>
+	public void EndPhase()
+	{
+		Debug.Log("Combat EndPhase " + mCombatPhase);
+
+		// update to the next phase
 		mCurrentCombatantIndex = -1;
 		mCombatPhase++;
 		switch (mCombatPhase)
@@ -450,7 +500,7 @@ public class MRCombatManager
 				StartRound();
 				break;
 			case eCombatPhase.Lure:
-				EndPhase();
+				RunPhase();
 				break;
 			case eCombatPhase.RandomAssignment:
 				AssignEnemies();
@@ -458,18 +508,18 @@ public class MRCombatManager
 			case eCombatPhase.Deployment:
 				break;
 			case eCombatPhase.TakeAction:
-				EndPhase();
+				RunPhase();
 				break;
 			case eCombatPhase.SelectTarget:
-				FlipNativeHorses();
-				AssignUncontrolledTargets();
-				EndPhase();
+				RunPhase();
 				break;
 			case eCombatPhase.ActivateSpells:
+				SortSpells();
+				RunPhase();
 				break;
 			case eCombatPhase.SelectAttackAndManeuver:
 				AssignUnassignedTargets();
-				EndPhase();
+				RunPhase();
 				break;
 			case eCombatPhase.RandomizeAttacks:
 				RandomizeEnemies();
@@ -479,7 +529,7 @@ public class MRCombatManager
 				break;
 			case eCombatPhase.FatigueChits:
 				// loop back to the pre update phase
-				EndPhase();
+				RunPhase();
 				break;
 			case eCombatPhase.Disengage:
 				Disengage();
@@ -495,7 +545,7 @@ public class MRCombatManager
 	/// </summary>
 	private void StartCombat()
 	{
-		mRound = 1;
+		mRound = 0;
 		mRoundsWithNothing = 0;
 		mAllowEndCombat = true;
 		MRGame.TheGame.CombatSheet.Combat = this;
@@ -554,6 +604,11 @@ public class MRCombatManager
 					}
 					mCombatSheets.Add(sheetData);
 				}
+				else if (controllable is MRNative)
+				{
+					// todo: check meeting table
+					// for now, natives are always non-hostile
+				}
 				else if (controllable is MRDenizen)
 				{
 					// if the denizen is hostile, put it in the enemies list
@@ -593,6 +648,7 @@ public class MRCombatManager
 				}
 				else
 				{
+					((MRCharacter)combatant).CastingSpell = false;
 					((MRCharacter)combatant).PositionAttentionChit(null, Vector3.zero);
 					((MRCharacter)combatant).ClearCombatChits();
 				}
@@ -600,6 +656,7 @@ public class MRCombatManager
 			}
 			mClearing.Pieces.SortBySize();
 		}
+		mCasters.Clear();
 		mCombatants.Clear();
 		mCombatSheets.Clear();
 		mFriends.Clear();
@@ -636,7 +693,10 @@ public class MRCombatManager
 	/// </summary>
 	private void StartRound()
 	{
+		++mRound;
+
 		// clear targets
+		mCasters.Clear();
 		foreach (MRControllable combatant in mCombatants)
 		{
 			// clear all targets except for red-side tremendous monsters and uncontrolled denizens on a character sheet
@@ -653,6 +713,11 @@ public class MRCombatManager
 			else
 			{
 				combatant.CombatSheet.CharacterData.pendingWounds = 0;
+				((MRCharacter)combatant).CastingSpell = false;
+				combatant.CombatSheet.CharacterData.spell = null;
+				combatant.CombatSheet.CharacterData.spellColor = null;
+				combatant.CombatSheet.CharacterData.spellMagic = null;
+				combatant.CombatSheet.CharacterData.spellTargets.Clear();
 			}
 			combatant.CombatTarget = null;
 			combatant.Lurer = null;
@@ -701,7 +766,7 @@ public class MRCombatManager
 		else
 			mAllowEndCombat = false;
 
-		EndPhase();
+		RunPhase();
 	}
 
 	/// <summary>
@@ -921,6 +986,84 @@ public class MRCombatManager
 	}
 
 	/// <summary>
+	/// Assign the target(s) of any spells being cast.
+	/// </summary>
+	private void AssignSpellTargets() 
+	{
+		MRCharacter character = (MRCharacter)CurrentCombatant;
+		foreach (MRCombatSheetData combatData in mCombatSheets)
+		{
+			MRSpell spell = combatData.CharacterData.spell;	
+			if (combatData.SheetOwner == character && spell != null && spell.Targets.Count > 0)
+			{
+				if (spell.Targets.Count > 1)
+				{
+					// caster need to choose a target or targets
+					mTargetingSpell = spell;
+				}
+				else
+				{
+					switch (spell.Targets[0])
+					{
+						// caster need to choose a target or targets
+						case MRGame.eSpellTarget.Artifact:
+						case MRGame.eSpellTarget.CaveClearing:
+						case MRGame.eSpellTarget.Character:
+						case MRGame.eSpellTarget.Characters:
+						case MRGame.eSpellTarget.ControlledMonster:
+						case MRGame.eSpellTarget.Curse:
+						case MRGame.eSpellTarget.Demon:
+						case MRGame.eSpellTarget.Goblin:
+						case MRGame.eSpellTarget.HiredLeader:
+						case MRGame.eSpellTarget.LightCharacter:
+						case MRGame.eSpellTarget.Monster:
+						case MRGame.eSpellTarget.Monsters:
+						case MRGame.eSpellTarget.Native:
+						case MRGame.eSpellTarget.Natives:
+						case MRGame.eSpellTarget.NativeGroup:
+						case MRGame.eSpellTarget.Octopus:
+						case MRGame.eSpellTarget.Ogre:
+						case MRGame.eSpellTarget.SoundChit:
+						case MRGame.eSpellTarget.Spell:
+						case MRGame.eSpellTarget.SpellBook:
+						case MRGame.eSpellTarget.SpellChitAny:
+						case MRGame.eSpellTarget.SpellChit1:
+						case MRGame.eSpellTarget.SpellChit2:
+						case MRGame.eSpellTarget.SpellChit3:
+						case MRGame.eSpellTarget.SpellChit4:
+						case MRGame.eSpellTarget.SpellChit5:
+						case MRGame.eSpellTarget.SpellChit6:
+						case MRGame.eSpellTarget.SpellChit7:
+						case MRGame.eSpellTarget.SpellChit8:
+						case MRGame.eSpellTarget.Spider:
+						case MRGame.eSpellTarget.Weapon:
+						case MRGame.eSpellTarget.WingedDemon:
+							mTargetingSpell = spell;
+							break;
+						// auto targets, no choice needed
+						case MRGame.eSpellTarget.Bats:
+						case MRGame.eSpellTarget.Clearing:
+						case MRGame.eSpellTarget.Giants:
+						case MRGame.eSpellTarget.Goblins:
+						case MRGame.eSpellTarget.Hex:
+						case MRGame.eSpellTarget.Ogres:
+							RunPhase();
+							break;
+						case MRGame.eSpellTarget.None:
+						default:
+							Debug.LogError("Unhandled spell target type " + spell.Targets[0] + " for spell " + spell.Name);
+							RunPhase();
+							break;
+					}
+				}
+				return;
+			}
+		}
+		Debug.LogError("AssignSpellTargets called with no valid spell");
+		RunPhase();
+	}
+
+	/// <summary>
 	/// Puts unassigned denizens that are being attacked on their own combat sheet.
 	/// </summary>
 	private void AssignUnassignedTargets()
@@ -991,6 +1134,17 @@ public class MRCombatManager
 				}
 				// todo: test horse and items
 			}
+
+			// see if the character can cast any spells
+			mSelectableSpells.Clear();
+			foreach (var spell in character.LearnedSpells)
+			{
+				if (character.CanCastSpell(spell, fastestTime))
+				{
+					canCastSpell = true;
+					mSelectableSpells.Add(spell);
+				}
+			}
 		}
 
 		if (canActivateWeapon || canRunAway || canCastSpell)
@@ -999,7 +1153,7 @@ public class MRCombatManager
 		}
 		else
 		{
-			EndPhase();
+			RunPhase();
 		}
 	}
 
@@ -1040,6 +1194,21 @@ public class MRCombatManager
 		                                                    heaviest, MRSelectChitEvent.eCompare.GreaterThanEqualTo,
 		                                                    fastestTime, MRSelectChitEvent.eCompare.LessThan,
 		                                                    OnFlipWeaponChitSeleted));
+	}
+
+	/// <summary>
+	/// Called when the current combatant wants to cast a spell.
+	/// </summary>
+	private void SelectSpell()
+	{
+		if (mSelectableSpells.Count == 0)
+		{
+			RunPhase();
+			return;
+		}
+		MRCharacter character = (MRCharacter)CurrentCombatant;
+		int fastestTime = FastestOpponentTime(character);
+		MRGame.TheGame.AddUpdateEvent(new MRSelectSpellEvent(character, fastestTime, mSelectableSpells, OnSpellSelected));
 	}
 
 	/// <summary>
@@ -1093,7 +1262,7 @@ public class MRCombatManager
 			// go back and ask for an encounter selection
 			character.SelectChitData = null;
 			--mCurrentCombatantIndex;
-			EndPhase();
+			RunPhase();
 		}
 	}
 
@@ -1117,7 +1286,7 @@ public class MRCombatManager
 			--mCurrentCombatantIndex;
 		}
 		character.SelectChitData = null;
-		EndPhase();
+		RunPhase();
 	}
 
 	/// <summary>
@@ -1133,7 +1302,172 @@ public class MRCombatManager
 		{
 			// go back and ask for an encounter selection
 			--mCurrentCombatantIndex;
+			RunPhase();
+		}
+	}
+
+	/// <summary>
+	/// Called when the user has selected what spell they want to cast.
+	/// </summary>
+	/// <param name="spell">Spell.</param>
+	private void OnSpellSelected(MRSpell spell)
+	{
+		if (spell == null || !mSelectableSpells.Contains(spell))
+		{
+			RunPhase();
+			return;
+		}
+		Debug.Log("Selected spell " + spell.Name);
+		MRCharacter character = (MRCharacter)CurrentCombatant;
+		foreach (MRCombatSheetData combatData in mCombatSheets)
+		{
+			if (combatData.SheetOwner == character)
+			{
+				combatData.CharacterData.spell = spell;
+
+				// select what chit to use for casting the spell
+				// todo: test if spell came from artifact supplying magic
+				int fastestTime = FastestOpponentTime(character);
+				MRGame.TheGame.AddUpdateEvent(new MRSelectChitEvent(character, MRActionChit.eAction.CastSpell,
+					new int[] {spell.CurrentMagicType},
+					fastestTime, MRSelectChitEvent.eCompare.LessThanEqualTo,
+					false,
+					OnMagicChitSelected));
+				break;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Called when the user has selected what chit they want to use to cast a spell.
+	/// </summary>
+	/// <param name="chit">Chit selected.</param>
+	private void OnMagicChitSelected(MRActionChit chit)
+	{
+		Debug.Log("Selected magic chit " + chit.Name);
+
+		MRCharacter character = (MRCharacter)CurrentCombatant;
+		HashSet<MRGame.eMagicColor> availableColors = new HashSet<MRGame.eMagicColor>(mClearing.MagicSupplied);
+
+		foreach (MRCombatSheetData combatData in mCombatSheets)
+		{
+			if (combatData.SheetOwner == character && combatData.CharacterData.spell != null)
+			{
+				chit.UsedThisRound = true;
+				combatData.CharacterData.spellMagic = chit as MRMagicChit;
+				character.CastingSpell = true;
+
+				if (!availableColors.Contains(combatData.CharacterData.spell.Color))
+				{
+					MRGame.TheGame.AddUpdateEvent(new MRSelectChitEvent(character, MRActionChit.eAction.SupplyColor, 
+						new MRGame.eMagicColor[] { combatData.CharacterData.spell.Color }, true, OnMagicColorSelected));
+					return;	
+				}
+				break;
+			}
+		}
+
+		RunPhase();
+	}
+
+	/// <summary>
+	/// Called when the user has selected what chit they want to use to supply the color for a spell.
+	/// </summary>
+	/// <param name="chit">Chit selected.</param>
+	private void OnMagicColorSelected(MRActionChit chit)
+	{
+		Debug.Log("Selected color chit " + chit.Name);
+
+		MRCharacter character = (MRCharacter)CurrentCombatant;
+		foreach (MRCombatSheetData combatData in mCombatSheets)
+		{
+			if (combatData.SheetOwner == character && combatData.CharacterData.spell != null)
+			{
+				combatData.CharacterData.spellColor = chit as MRMagicChit;
+				// the color chit disenchants and fatigues as soon as it is selected
+				// note the magic chit used to power the spell fatigues after the spell activates
+				character.ForceFatigueChit(chit);
+			}
+		}
+
+		RunPhase();
+	}
+
+	/// <summary>
+	/// Sorts all spells being cast into their casting order.
+	/// </summary>
+	private void SortSpells()
+	{
+		mCasters.Clear();
+		foreach (MRCombatSheetData combatData in mCombatSheets)
+		{
+			if (combatData.CharacterData.spell != null)
+			{
+				mCasters.Add(combatData);
+			}
+		}
+		if (mCasters.Count > 1)
+		{
+			mCasters.Sort(delegate(MRCombatSheetData x, MRCombatSheetData y) {
+				return x.CharacterData.spellMagic.CurrentTime - y.CharacterData.spellMagic.CurrentTime;
+			});
+		}
+	}
+
+	/// <summary>
+	/// Activates the next spell to be cast.
+	/// </summary>
+	private void ActivateNextSpell()
+	{
+		if (mCasters.Count == 0)
+		{
 			EndPhase();
+			return;
+		}
+		MRCombatSheetData casterData = mCasters[0];
+		mCasters.RemoveAt(0);
+
+		MRCharacter caster = (MRCharacter)casterData.SheetOwner;
+		if (casterData.CharacterData.spell != null)
+		{
+			MRMainUI.TheUI.DisplayMessageDialog(caster.Name.DisplayName() + " casts " + 
+				casterData.CharacterData.spell.Name.DisplayName(), "", delegate (int butonId)
+				{
+					// if the target is another caster, this spell will cancel the target's spell if it is slower
+					foreach (var target in casterData.CharacterData.spellTargets)
+					{
+						if (target is MRCharacter && target != caster)
+						{
+							foreach (var otherCasterData in mCasters)
+							{
+								MRCharacter otherCaster = (MRCharacter)otherCasterData.SheetOwner;
+								if (otherCaster == target)
+								{
+									if (otherCasterData.CharacterData.spellMagic.CurrentTime > casterData.CharacterData.spellMagic.CurrentTime)
+									{
+										otherCaster.CastingSpell = false;
+										otherCasterData.CharacterData.spell = null;
+										otherCaster.ForceFatigueChit(otherCasterData.CharacterData.spellMagic);
+									}
+									break;
+								}
+							}
+						}
+					}
+
+					casterData.CharacterData.spellMagic.UsedThisRound = false;
+					casterData.CharacterData.spell.Activate(caster, 
+						casterData.CharacterData.spellMagic,
+						casterData.CharacterData.spellColor,
+						casterData.CharacterData.spellTargets);
+
+					if (casterData.CharacterData.spell.Duration == MRGame.eSpellDuration.Instant)
+					{
+						caster.ForceFatigueChit(casterData.CharacterData.spellMagic);
+					}
+
+					RunPhase();
+				});
 		}
 	}
 
@@ -1168,6 +1502,7 @@ public class MRCombatManager
 						combatData.CharacterData.weapon = attacker.ActiveWeapon;
 						combatData.CharacterData.attackChit = chit;
 						combatData.CharacterData.attackType = attackType;
+						chit.Selectable = false;
 						success = true;
 					}
 				}
@@ -1215,6 +1550,7 @@ public class MRCombatManager
 						chit.UsedThisRound = true;
 						combatData.CharacterData.maneuverChit = chit;
 						combatData.CharacterData.maneuverType = maneuverType;
+						chit.Selectable = false;
 						success = true;
 					}
 				}
@@ -1255,13 +1591,17 @@ public class MRCombatManager
 			// change the attacker/defense direction of the combatants
 			if (combatSheet.SheetOwner is MRCharacter)
 			{
-				MRDiePool repositionRoll = MRDiePool.NewDiePool;
-				repositionRoll.RollDiceNow();
-				IDictionary<eDefenseType, eDefenseType> repositionTable = DefenderReposition[repositionRoll.Roll];
-				// randomize the defenders
-				foreach (MRCombatSheetData.DefenderData defender in combatSheet.Defenders)
+				if (combatSheet.Defenders.Count > 0)
 				{
-					defender.defenseType = repositionTable[defender.defenseType];
+					MRDiePool repositionRoll = MRDiePool.NewDiePool;
+					Debug.Log("Reposition defenders for character sheet");
+					repositionRoll.RollDiceNow();
+					IDictionary<eDefenseType, eDefenseType> repositionTable = DefenderReposition[repositionRoll.Roll];
+					// randomize the defenders
+					foreach (MRCombatSheetData.DefenderData defender in combatSheet.Defenders)
+					{
+						defender.defenseType = repositionTable[defender.defenseType];
+					}
 				}
 			}
 			else
@@ -1270,6 +1610,7 @@ public class MRCombatManager
 				{
 					// randomize the denizen target
 					MRDiePool repositionRoll = MRDiePool.NewDiePool;
+					Debug.Log("Reposition defenders for denizen sheet");
 					repositionRoll.RollDiceNow();
 					IDictionary<eDefenseType, eDefenseType> repositionTable = DefenderReposition[repositionRoll.Roll];
 					combatSheet.DefenderTarget.defenseType = repositionTable[combatSheet.DefenderTarget.defenseType];
@@ -1278,6 +1619,7 @@ public class MRCombatManager
 				{
 					// randomize the denizen's attackers
 					MRDiePool repositionRoll = MRDiePool.NewDiePool;
+					Debug.Log("Reposition attackers for denizen sheet");
 					repositionRoll.RollDiceNow();
 					IDictionary<eAttackType, eAttackType> repositionTable = AttackerReposition[repositionRoll.Roll];
 					foreach (MRCombatSheetData.AttackerData attacker in combatSheet.Attackers)
@@ -1289,6 +1631,7 @@ public class MRCombatManager
 				{
 					// randomize the defender
 					MRDiePool repositionRoll = MRDiePool.NewDiePool;
+					Debug.Log("Reposition defenders for uncontrolled denizen sheet");
 					repositionRoll.RollDiceNow();
 					IDictionary<eDefenseType, eDefenseType> repositionTable = DefenderReposition[repositionRoll.Roll];
 					// randomize the defender (there should be only 1, unless the other is a head/club)
@@ -1311,34 +1654,60 @@ public class MRCombatManager
 			// See if denizens change tactics. Tremendous monsters (and their head/club), native horses, and hirelings on their own sheet never change tactics.
 			foreach (eAttackType attack in Enum.GetValues(typeof(eAttackType)))
 			{
-				if (attack == eAttackType.None)
+				if (attack == eAttackType.None || combatSheet.Attackers.Count == 0)
 					continue;
-				MRDiePool changeTacticsRoll = MRDiePool.NewDicePool;
-				changeTacticsRoll.RollDiceNow();
-				if (changeTacticsRoll.Roll == 6)
+				bool doRoll = false;
+				foreach (MRCombatSheetData.AttackerData attacker in combatSheet.Attackers)
 				{
-					foreach (MRCombatSheetData.AttackerData attacker in combatSheet.Attackers)
+					if (attacker.attackType == attack)
 					{
-						if (attacker.attackType == attack)
+						doRoll = true;
+						break;
+					}
+				}
+				if (doRoll)
+				{
+					Debug.Log("Change tactics roll for attacker");
+					MRDiePool changeTacticsRoll = MRDiePool.NewDicePool;
+					changeTacticsRoll.RollDiceNow();
+					if (changeTacticsRoll.Roll == 6)
+					{
+						foreach (MRCombatSheetData.AttackerData attacker in combatSheet.Attackers)
 						{
-							FlipDenizen(attacker.attacker);
+							if (attacker.attackType == attack)
+							{
+								FlipDenizen(attacker.attacker);
+							}
 						}
 					}
 				}
 			}
 			foreach (eDefenseType defense in Enum.GetValues(typeof(eDefenseType)))
 			{
-				if (defense == eDefenseType.None)
+				if (defense == eDefenseType.None || combatSheet.Defenders.Count == 0)
 					continue;
-				MRDiePool changeTacticsRoll = MRDiePool.NewDicePool;
-				changeTacticsRoll.RollDiceNow();
-				if (changeTacticsRoll.Roll == 6)
+				bool doRoll = false;
+				foreach (MRCombatSheetData.DefenderData defender in combatSheet.Defenders)
 				{
-					foreach (MRCombatSheetData.DefenderData defender in combatSheet.Defenders)
+					if (defender.defenseType == defense)
 					{
-						if (defender.defenseType == defense)
+						doRoll = true;
+						break;
+					}
+				}
+				if (doRoll)
+				{
+					MRDiePool changeTacticsRoll = MRDiePool.NewDicePool;
+					Debug.Log("Change tactics roll for defender");
+					changeTacticsRoll.RollDiceNow();
+					if (changeTacticsRoll.Roll == 6)
+					{
+						foreach (MRCombatSheetData.DefenderData defender in combatSheet.Defenders)
 						{
-							FlipDenizen(defender.defender);
+							if (defender.defenseType == defense)
+							{
+								FlipDenizen(defender.defender);
+							}
 						}
 					}
 				}
@@ -1347,6 +1716,7 @@ public class MRCombatManager
 			{
 				MRDenizen denizen = combatSheet.DefenderTarget.defender;
 				MRDiePool changeTacticsRoll = MRDiePool.NewDicePool;
+                Debug.Log("Change tactics roll for defender target");
 				changeTacticsRoll.RollDiceNow();
 				if (changeTacticsRoll.Roll == 6)
 				{
@@ -1363,7 +1733,7 @@ public class MRCombatManager
 	{
 		mCombatants.Sort(SortCombatants);
 		mCurrentCombatantIndex = -1;
-		EndPhase();
+		RunPhase();
 	}
 
 	/// <summary>
@@ -1378,7 +1748,7 @@ public class MRCombatManager
 		    (combatant is MRDenizen && ((MRDenizen)combatant).CurrentStrength == MRGame.eStrength.Negligable) ||
 		    (combatant is MRCharacter && combatant.CombatSheet.CharacterData.attackChit == null))
 		{
-			EndPhase();
+			RunPhase();
 			return;
 		}
 
@@ -1389,8 +1759,8 @@ public class MRCombatManager
 		{
 			// miss
 			combatant.MissTarget(target);
-			MRMainUI.TheUI.DisplayMessageDialog(MRUtility.DisplayName(combatant.Name) + " attacks " + 
-			                                    MRUtility.DisplayName(target.Name) + ", misses", "", OnAttackMessageClicked);
+			MRMainUI.TheUI.DisplayMessageDialog(combatant.Name.DisplayName() + " attacks " + 
+			                                    target.Name.DisplayName() + ", misses", "", OnAttackMessageClicked);
 			return;
 		}
 
@@ -1458,7 +1828,7 @@ public class MRCombatManager
 
 		combatant.HitTarget(target, targetDead);
 
-		String message = MRUtility.DisplayName(combatant.Name) + hitName + MRUtility.DisplayName(target.Name);
+		String message = combatant.Name.DisplayName() + hitName + target.Name.DisplayName();
 		if (targetDead)
 		{
 			message += " killing them";
@@ -1740,17 +2110,17 @@ public class MRCombatManager
 				RunAway();
 				break;
 			case (int)MRMainUI.eCombatActionButton.CastSpell:
-				EndPhase();
+				SelectSpell();
 				break;
 			default:
-				EndPhase();
+				RunPhase();
 				break;
 		}
 	}
 
 	private void OnAttackMessageClicked(int butonId)
 	{
-		EndPhase();
+		RunPhase();
 	}
 
 	/// <summary>
@@ -1858,17 +2228,43 @@ public class MRCombatManager
 				Lure((MRControllable)selector, (MRControllable)piece);
 				break;
 			case eCombatPhase.SelectTarget:
-				if (selector == piece)
-					break;
-				if (selector is MRCharacter)
+				if (mTargetingSpell != null)
 				{
-					// don't allow selecting head/club
-					if (piece is MRMonster && ((MRMonster)piece).OwnedBy != null)
-						break;
-					if (selector.CombatTarget != piece)
+					Debug.Log("OnControllableSelected testing spell target");
+					if (piece is MRISpellTarget && ((MRISpellTarget)piece).IsValidTarget(mTargetingSpell))
+					{
+						Debug.Log("OnControllableSelected valid target");
 						selector.CombatTarget = piece;
+						foreach (MRCombatSheetData combatData in mCombatSheets)
+						{
+							if (combatData.SheetOwner == selector)
+							{
+								// @todo handle select multiple targets
+								combatData.CharacterData.spellTargets.Clear();
+								combatData.CharacterData.spellTargets.Add((MRISpellTarget)piece);
+								break;
+							}
+						}
+					}
 					else
-						selector.CombatTarget = null;
+					{
+						Debug.Log("OnControllableSelected invalid target");
+					}
+				}
+				else
+				{
+					if (selector == piece)
+						break;
+					if (selector is MRCharacter)
+					{
+						// don't allow selecting head/club
+						if (piece is MRMonster && ((MRMonster)piece).OwnedBy != null)
+							break;
+						if (selector.CombatTarget != piece)
+							selector.CombatTarget = piece;
+						else
+							selector.CombatTarget = null;
+					}
 				}
 				break;
 			default:
@@ -1895,7 +2291,11 @@ public class MRCombatManager
 	private List<MRControllable> mCombatants = new List<MRControllable>();
 	private List<MRControllable> mFriends = new List<MRControllable>();
 	private List<MRDenizen> mEnemies = new List<MRDenizen>();
+	private List<MRSpell> mSelectableSpells = new List<MRSpell>();
+	private List<MRCombatSheetData> mCasters = new List<MRCombatSheetData>();
+	private MRSpell mTargetingSpell;
 
 	#endregion
 }
 
+}

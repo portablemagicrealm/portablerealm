@@ -118,7 +118,7 @@
 			"astrength":"h",
 			"istrength":"h",
 			"asharp":1,
-			"isharp":0,
+			"isharp":1,
 			"aspeed":0,
 			"ispeed":6,
 			"missile":false,
@@ -520,6 +520,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"7-league boots",
@@ -535,6 +537,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"alchemist's mixture",
@@ -550,6 +554,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"amulet",
@@ -565,6 +571,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"ancient telescope",
@@ -580,6 +588,8 @@
 			"isgreat":false,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"battle bracelets",
@@ -595,6 +605,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"beast pipes",
@@ -610,6 +622,8 @@
 			"isgreat":true,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":10,
+			"sellfamegroup":"soldiers",
 			"MRItem":
 			{
 				"name":"bejeweled dwarf vest",
@@ -625,6 +639,8 @@
 			"isgreat":false,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"belt of strength",
@@ -640,6 +656,8 @@
 			"isgreat":true,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"black book",
@@ -655,6 +673,8 @@
 			"isgreat":true,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"blasted jewel",
@@ -670,6 +690,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"book of lore",
@@ -685,6 +707,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":true,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"chest",
@@ -700,6 +724,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"cloak of mist",
@@ -715,6 +741,8 @@
 			"isgreat":true,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"cloven hoof",
@@ -730,6 +758,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":true,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"crypt of the knight",
@@ -745,6 +775,8 @@
 			"isgreat":false,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"crystal ball",
@@ -760,6 +792,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":5,
+			"sellfamegroup":"order",
 			"MRItem":
 			{
 				"name":"deft gloves",
@@ -775,6 +809,8 @@
 			"isgreat":true,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"dragon essence",
@@ -790,6 +826,8 @@
 			"isgreat":true,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":12,
+			"sellfamegroup":"lancers",
 			"MRItem":
 			{
 				"name":"dragonfang necklace",
@@ -805,6 +843,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"draught of speed",
@@ -820,6 +860,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"elusive cloak",
@@ -835,6 +877,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"elven slippers",
@@ -850,6 +894,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":true,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"enchanted meadow",
@@ -865,6 +911,8 @@
 			"isgreat":true,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"enchanter's skull",
@@ -880,6 +928,8 @@
 			"isgreat":false,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"eye of the idol",
@@ -895,6 +945,8 @@
 			"isgreat":false,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"eye of the moon",
@@ -910,6 +962,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"flowers of rest",
@@ -925,6 +979,8 @@
 			"isgreat":false,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"flying carpet",
@@ -940,6 +996,8 @@
 			"isgreat":false,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"garb of speed",
@@ -955,6 +1013,8 @@
 			"isgreat":false,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"girtle of energy",
@@ -970,6 +1030,8 @@
 			"isgreat":false,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"glimmering ring",
@@ -985,6 +1047,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":5,
+			"sellfamegroup":"order",
 			"MRItem":
 			{
 				"name":"gloves of strength",
@@ -1000,6 +1064,8 @@
 			"isgreat":false,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":5,
+			"sellfamegroup":"soldiers",
 			"MRItem":
 			{
 				"name":"glowing gem",
@@ -1015,6 +1081,8 @@
 			"isgreat":false,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":3,
+			"sellfamegroup":"lancers",
 			"MRItem":
 			{
 				"name":"golden arm band",
@@ -1030,6 +1098,8 @@
 			"isgreat":true,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":20,
+			"sellfamegroup":"guard",
 			"MRItem":
 			{
 				"name":"golden crown",
@@ -1045,6 +1115,8 @@
 			"isgreat":true,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"golden icon",
@@ -1060,6 +1132,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"good book",
@@ -1075,6 +1149,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"gripping dust",
@@ -1090,6 +1166,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"handy gloves",
@@ -1105,6 +1183,8 @@
 			"isgreat":true,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"hidden ring",
@@ -1120,6 +1200,8 @@
 			"isgreat":true,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":20,
+			"sellfamegroup":"guard",
 			"MRItem":
 			{
 				"name":"imperial tabard",
@@ -1135,6 +1217,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"lost keys",
@@ -1150,6 +1234,8 @@
 			"isgreat":false,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"lucky charm",
@@ -1165,6 +1251,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"magic spectacles",
@@ -1180,6 +1268,8 @@
 			"isgreat":true,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"magic wand",
@@ -1195,6 +1285,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"map of lost castle",
@@ -1210,6 +1302,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"map of lost city",
@@ -1225,6 +1319,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"map of ruins",
@@ -1240,6 +1336,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":true,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"mouldy skeleton",
@@ -1255,6 +1353,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"oil of poison",
@@ -1270,6 +1370,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"ointment of bite",
@@ -1285,6 +1387,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"ointment of steel",
@@ -1300,6 +1404,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"penetrating grease",
@@ -1315,6 +1421,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"phantom glass",
@@ -1330,6 +1438,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"potion of energy",
@@ -1345,6 +1455,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"poultice of health",
@@ -1360,6 +1472,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"power boots",
@@ -1375,6 +1489,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"power gauntlets",
@@ -1390,6 +1506,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"quick boots",
@@ -1405,6 +1523,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"reflecting grease",
@@ -1420,6 +1540,8 @@
 			"isgreat":true,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":10,
+			"sellfamegroup":"soldiers",
 			"MRItem":
 			{
 				"name":"regent of jewels",
@@ -1435,6 +1557,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":true,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"remains of thief",
@@ -1450,6 +1574,8 @@
 			"isgreat":true,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":20,
+			"sellfamegroup":"guard",
 			"MRItem":
 			{
 				"name":"royal sceptre",
@@ -1465,6 +1591,8 @@
 			"isgreat":true,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":50,
+			"sellfamegroup":"order",
 			"MRItem":
 			{
 				"name":"sacred grail",
@@ -1480,6 +1608,8 @@
 			"isgreat":true,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":10,
+			"sellfamegroup":"order",
 			"MRItem":
 			{
 				"name":"sacred statue",
@@ -1495,6 +1625,8 @@
 			"isgreat":true,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"scroll of alchemy",
@@ -1510,6 +1642,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"scroll of nature",
@@ -1525,6 +1659,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"shielded lantern",
@@ -1540,6 +1676,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"shoes of stealth",
@@ -1555,6 +1693,8 @@
 			"isgreat":false,
 			"islarge":true,
 			"istwit":false,
+			"sellfame":5,
+			"sellfamegroup":"soldiers",
 			"MRItem":
 			{
 				"name":"timeless jewel",
@@ -1570,6 +1710,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":true,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"toadstool circle",
@@ -1585,6 +1727,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"toadstool ring",
@@ -1600,6 +1744,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"vial of healing",
@@ -1615,6 +1761,8 @@
 			"isgreat":false,
 			"islarge":false,
 			"istwit":false,
+			"sellfame":0,
+			"sellfamegroup":"",
 			"MRItem":
 			{
 				"name":"withered claw",

@@ -26,6 +26,9 @@
 
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRHideActivity : MRActivity
 {
 	#region Methods
@@ -62,3 +65,4 @@ public class MRHideActivity : MRActivity
 	#endregion
 }
 
+}

@@ -28,6 +28,9 @@ using UnityEngine;
 using System.Collections;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public abstract class MRActivity : MRISerializable
 {
 	#region Properties
@@ -222,3 +225,4 @@ public abstract class MRActivity : MRISerializable
 	#endregion
 }
 
+}

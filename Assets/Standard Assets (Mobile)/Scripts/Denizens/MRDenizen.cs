@@ -29,6 +29,9 @@ using System.Collections;
 using System.Text;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public abstract class MRDenizen : MRControllable
 {
 	#region Internal Classes
@@ -439,9 +442,16 @@ public abstract class MRDenizen : MRControllable
 		Side = eSide.Light;
 	}
 	
-	// Tests if the controllable is allowed to do the activity.
+	/// <summary>
+	/// Tests if the denizen is allowed to do the activity.
+	/// </summary>
+	/// <returns><c>true</c> if this instance can execute the specified activity; otherwise, <c>false</c>.</returns>
+	/// <param name="activity">Activity.</param>
 	public override bool CanExecuteActivity(MRActivity activity)
 	{
+		if (activity is MREnchantActivity)
+			return false;
+
 		return true;
 	}
 	
@@ -513,3 +523,4 @@ public abstract class MRDenizen : MRControllable
 	#endregion
 }
 
+}

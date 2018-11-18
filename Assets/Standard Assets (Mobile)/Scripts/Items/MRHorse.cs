@@ -28,6 +28,9 @@ using System.Collections;
 using System.Text;
 using AssemblyCSharp;
 
+namespace PortableRealm
+{
+	
 public class MRHorse : MRItem
 {
 	#region Constants
@@ -224,3 +227,4 @@ public class MRHorse : MRItem
 	#endregion
 }
 
+}

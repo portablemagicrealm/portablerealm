@@ -26,6 +26,9 @@
 using UnityEngine;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRUpdateActivityListEvent : MRUpdateEvent
 {
 	#region Properties
@@ -82,3 +85,4 @@ public class MRUpdateActivityListEvent : MRUpdateEvent
 	#endregion
 }
 
+}

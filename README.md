@@ -2,7 +2,7 @@
 
 Implementation of Magic Realm board game for tablets.
 
-Requires Unity 5.3 to build.
+Requires Unity 2018.2.14f1 to build.
 
 Instructions:
 

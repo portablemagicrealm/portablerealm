@@ -28,6 +28,9 @@ using UnityEngine.UI;
 using System;
 using System.Collections;
 
+namespace PortableRealm
+{
+	
 public class MRMainUI : MonoBehaviour
 {
 	#region Callback class for dialog buttons
@@ -79,12 +82,14 @@ public class MRMainUI : MonoBehaviour
 
 	public GameObject SelectionDialogPrototype;
 	public GameObject MessageDialogPrototype;
+	public GameObject YesNoDialogPrototype;
 	public GameObject TimedMessagePrototype;
 	public GameObject InstructionMessagePrototype;
 	public GameObject AttackManeuverDialogPrototype;
 	public GameObject CombatActionDialogPrototype;
 	public GameObject VictoryPointsSelectionDialogPrototype;
 	public GameObject SaveLoadSelectDialogPrototype;
+	public GameObject GameTypeSelectDialogPrototype;
 	public GameObject InstructionsDialogPrototype;
 	public GameObject CreditsDialogPrototype;
 
@@ -249,6 +254,85 @@ public class MRMainUI : MonoBehaviour
 		mOkCallback = callback;
 		
 		mMessageDialog.transform.SetParent(transform, false);
+		MRGame.ShowingUI = true;
+	}
+
+	/// <summary>
+	/// Displays a simple message dialog with an ok/cancel response.
+	/// </summary>
+	/// <param name="message">The message.</param>
+	/// <param name="title">Title of the message dialog.</param>
+	/// <param name="okCallback">Class that will be called when "ok" is pressed.</param>
+	/// <param name="cancelCallback">Class that will be called when "cancel" is pressed.</param>
+	public void DisplayOkCancelDialog(string message, string title, OnButtonPressed okCallback, OnButtonPressed cancelCallback)
+	{
+		DisplayYesNoDialog(message, title, "Ok", "Cancel", okCallback, cancelCallback);
+	}
+
+	/// <summary>
+	/// Displays a simple message dialog with a yes/no response.
+	/// </summary>
+	/// <param name="message">The message.</param>
+	/// <param name="title">Title of the message dialog.</param>
+	/// <param name="yesCallback">Class that will be called when "yes" is pressed.</param>
+	/// <param name="noCallback">Class that will be called when "yes" is pressed.</param>
+	public void DisplayYesNoDialog(string message, string title, OnButtonPressed yesCallback, OnButtonPressed noCallback)
+	{
+		DisplayYesNoDialog(message, title, "Yes", "No", yesCallback, noCallback);
+	}
+
+	/// <summary>
+	/// Displays a simple message dialog with a yes/no response.
+	/// </summary>
+	/// <param name="message">The message.</param>
+	/// <param name="title">Title of the message dialog.</param>
+	/// <param name="yesText">Text to display on the "yes" button.</param>
+	/// <param name="noText">Text to display on the "no" button.</param>
+	/// <param name="yesCallback">Class that will be called when "yes" is pressed.</param>
+	/// <param name="noCallback">Class that will be called when "yes" is pressed.</param>
+	public void DisplayYesNoDialog(string message, string title, string yesText, string noText, OnButtonPressed yesCallback, OnButtonPressed noCallback)
+	{
+		mYesNoDialog = (GameObject)Instantiate(YesNoDialogPrototype);
+
+		// set the title and message
+		if (title == null)
+			title = "";
+		foreach (Text text in mYesNoDialog.GetComponentsInChildren<Text>())
+		{
+			if (text.gameObject.name == "Title")
+			{
+				text.text = title;
+			}
+			else if (text.gameObject.name == "Message")
+			{
+				text.text = message;
+			}
+			else if (text.gameObject.name == "YesText")
+			{
+				text.text = yesText;
+			}
+			else if (text.gameObject.name == "NoText")
+			{
+				text.text = noText;
+			}
+		}
+		
+		// set the ok button callback
+		foreach (Button button in mYesNoDialog.GetComponentsInChildren<Button>())
+		{
+			if (button.name == "yesButton")
+			{
+				button.onClick.AddListener(OnYesClicked);
+				mYesCallback = yesCallback;
+			}
+			else if (button.name == "noButton")
+			{
+				button.onClick.AddListener(OnNoClicked);
+				mNoCallback = noCallback;
+			}
+		}
+		
+		mYesNoDialog.transform.SetParent(transform, false);
 		MRGame.ShowingUI = true;
 	}
 
@@ -472,6 +556,29 @@ public class MRMainUI : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Displaies the game type selection dialog.
+	/// </summary>
+	public void DisplayGameTypeSelectDialog()
+	{
+		if (mGameTypeSelectDialog == null)
+		{
+			mGameTypeSelectDialog = (GameObject)Instantiate(GameTypeSelectDialogPrototype);
+			mGameTypeSelectDialog.transform.SetParent(transform, false);
+			MonoBehaviour[] scripts = mGameTypeSelectDialog.GetComponents<MonoBehaviour>();
+			for (int i = 0; i < scripts.Length; ++i)
+			{
+				if (scripts[i] is MRGameTypeSelectionDialog)
+				{
+					MRGameTypeSelectionDialog dialogScript = (MRGameTypeSelectionDialog)scripts[i];
+					dialogScript.Callback = OnGameTypeSelected;
+					MRGame.ShowingUI = true;
+					break;
+				}
+			}
+		}
+	}
+
+	/// <summary>
 	/// Displays the instructions dialog.
 	/// </summary>
 	public void DisplayInstructionsDialog()
@@ -540,6 +647,34 @@ public class MRMainUI : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Called when the player clicks the "yes" button of the yesno dialog.
+	/// </summary>
+	private void OnYesClicked()
+	{
+		MRGame.ShowingUI = false;
+
+		Destroy (mYesNoDialog);
+		mYesNoDialog = null;
+
+		if (mYesCallback != null)
+			mYesCallback(0);
+	}
+
+	/// <summary>
+	/// Called when the player clicks the "no" button of the yesno dialog.
+	/// </summary>
+	private void OnNoClicked()
+	{
+		MRGame.ShowingUI = false;
+
+		Destroy (mYesNoDialog);
+		mYesNoDialog = null;
+
+		if (mNoCallback != null)
+			mNoCallback(1);
+	}
+
+	/// <summary>
 	/// Called when the player clicks the "none" button of the attack/maneuver dialog.
 	/// </summary>
 	private void OnAttackManeuverNoneClicked()
@@ -589,6 +724,50 @@ public class MRMainUI : MonoBehaviour
 		
 		Destroy(mVictoryPointsSelectionDialog);
 		mVictoryPointsSelectionDialog = null;
+	}
+
+	/// <summary>
+	/// Called when the player selected the game type for a new game.
+	/// </summary>
+	/// <param name="buttonId">Button identifier, 0 = ok.</param>
+	private void OnGameTypeSelected(int buttonId)
+	{
+		MRGame.eGameType type = MRGame.eGameType.Default;
+		int bolChapter = 1;
+
+		MonoBehaviour[] scripts = mGameTypeSelectDialog.GetComponents<MonoBehaviour>();
+		for (int i = 0; i < scripts.Length; ++i)
+		{
+			if (scripts[i] is MRGameTypeSelectionDialog)
+			{
+				MRGameTypeSelectionDialog dialogScript = (MRGameTypeSelectionDialog)scripts[i];
+				type = dialogScript.GameType;
+				bolChapter = dialogScript.BookOfLearningChapter;
+				break;
+			}
+		}
+
+		MRGame.ShowingUI = false;
+		Destroy(mGameTypeSelectDialog);
+		mGameTypeSelectDialog = null;
+
+		switch (type)
+		{
+			case MRGame.eGameType.BookOfLearning:
+			{
+				string bolChapterName = "bol_";
+				if (bolChapter < 10)
+					bolChapterName += "0";
+				bolChapterName += bolChapter.ToString();
+				bolChapterName += "_world";
+				MRGame.TheGame.Main.StartPregeneratedGame(bolChapterName);
+				break;
+			}
+			case MRGame.eGameType.Default:
+			default:
+				MRGame.TheGame.Main.StartNewGame();
+				break;
+		}
 	}
 
 	/// <summary>
@@ -686,19 +865,24 @@ public class MRMainUI : MonoBehaviour
 	private static MRMainUI msTheUI;
 	private GameObject mSelectionDialog;
 	private GameObject mMessageDialog;
+	private GameObject mYesNoDialog;
 	private GameObject mTimedMessageBox;
 	private GameObject mInstructionMessage;
 	private GameObject mAttackManeuverDialog;
 	private GameObject mCombatActionDialog;
 	private GameObject mVictoryPointsSelectionDialog;
 	private GameObject mLoadSaveGameSelectDialog;
+	private GameObject mGameTypeSelectDialog;
 	private GameObject mInstructionsDialog;
 	private GameObject mCreditsDialog;
 	private Button[] mDialogButtons;
 	private ButtonClickedAction[] mDialogCallbacks;
 	private OnButtonPressed mOkCallback;
+	private OnButtonPressed mYesCallback;
+	private OnButtonPressed mNoCallback;
 	private float mTimedMessageBoxStartTime;
 
 	#endregion
 }
 
+}
